@@ -97,22 +97,23 @@ Construct a `Barycentric` rational function.
 
 # Examples
 ```jldoctest
-julia> r = Barycentric([1,2,3], [1,2,3], [1,1,1])
-Barycentric rational function of type (2,2)
+julia> r = Barycentric([1, 2, 3], [1, 2, 3], [1/2, -1, 1/2])
+Barycentric function with 3 nodes and values:
+    1.0=>1.0,  2.0=>2.0,  3.0=>3.0
 
 julia> r(1.5)
 1.5
 ```
 """
 function Barycentric(node, value, weight, wf=value.*weight; stats=missing)
-    Barycentric( promote(node, value, weight)..., wf; stats )
+    Barycentric( promote(float(node), float(value), float(weight))..., float(wf); stats )
 end
 
 function Barycentric(
     node::Vector{S}, value::Vector{S}, weight::Vector{S}, wf=value.*weight;
     stats=missing
-    ) where {T<:Number, S<:RealComplex{T}}
-    return Barycentric{float(T)}(node, value, weight, wf; stats)
+    ) where {T<:AbstractFloat, S<:RealComplex{T}}
+    return Barycentric{T}(node, value, weight, wf; stats)
 end
 
 # convenience accessors and overloads
