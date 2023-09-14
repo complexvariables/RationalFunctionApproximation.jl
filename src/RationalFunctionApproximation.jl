@@ -21,6 +21,15 @@ include("lawson.jl")
 
 include("operations.jl")
 
-# include("plotrecipes.jl")
+# These are overloaded by plotting extensions.
+export convergenceplot, errorplot
+
+function convergenceplot(r::Union{Barycentric,Approximation})
+    @error "Load the Makie package to make a convergence plot"
+end
+
+function errorplot(r::Approximation; args...)
+    @error "Load the Makie package to make an error plot"
+end
 
 end

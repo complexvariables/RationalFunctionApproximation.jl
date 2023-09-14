@@ -207,12 +207,12 @@ function approximate(f::Function, d::ComplexPath;
 end
 
 """
-    check(F, f)
+    check(r)
 
-Check the accuracy of a rational approximation `F` to a function `f` on its domain.
+Check the accuracy of a rational approximation `r` on its domain.
 
 # Arguments
-- `F::Approximation`: rational approximation
+- `r::Approximation`: rational approximation
 
 # Returns
 - `τ::Vector`: test points
