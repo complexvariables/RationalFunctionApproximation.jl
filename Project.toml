@@ -3,11 +3,19 @@ uuid = "c92886a3-cb30-4e18-b84f-372dde475ecc"
 authors = ["Toby Driscoll <driscoll@udel.edu> and contributors"]
 version = "1.0.0-DEV"
 
+[deps]
+ComplexRegions = "c64915e2-6c82-11e9-38e9-1f159a780463"
+ComplexValues = "41a84b80-6cf2-11e9-379d-9df124847946"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+PyFormattedStrings = "5f89f4a4-a228-4886-b223-c468a82ed5b9"
+
 [compat]
 julia = "1.6"
 
 [extras]
+ComplexRegions = "c64915e2-6c82-11e9-38e9-1f159a780463"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test"]
+test = ["Test", "LinearAlgebra", "ComplexRegions"]
