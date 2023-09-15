@@ -117,20 +117,20 @@ function Barycentric(
 end
 
 # convenience accessors and overloads
-"nodes(r::Barycentric) returns the nodes of the interpolant as a vector."
+"nodes(r) returns the nodes of the rational interpolant `r` as a vector."
 nodes(r::Barycentric) = r.nodes
 nodes(r::Barycentric, m::Integer) = r.stats.nodes[m]
-"values(r::Barycentric) returns the nodal values of the interpolant as a vector."
+"values(r) returns the nodal values of the rational interpolant `r` as a vector."
 Base.values(r::Barycentric) = r.values
 Base.values(r::Barycentric, m::Integer) = r.stats.values[m]
-"weights(r::Barycentric) returns the weights of the interpolant as a vector."
+"weights(r) returns the weights of the rational interpolant `r` as a vector."
 weights(r::Barycentric) = r.weights
 weights(r::Barycentric, m::Integer) = r.stats.weights[m]
-"stats(r::Barycentric) returns the convergence statistics of the interpolant."
+"stats(r) returns the convergence statistics of the rational interpolant `r`."
 stats(r::Barycentric) = r.stats
 Base.eltype(r::Barycentric{T}) where T = eltype(nodes(r))
 Base.length(r::Barycentric) = length(nodes(r))
-"degree(r::Barycentric) returns the degree of the numerator and denominator."
+"degree(r) returns the degree of the numerator and denominator of the rational `r`."
 degree(r::Barycentric) = length(r.nodes) - 1
 
 """
