@@ -1,5 +1,8 @@
 [deps]
+CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
+ComplexPlots = "1fd36721-02e5-4f31-ac70-029fcd7253d3"
 ComplexRegions = "c64915e2-6c82-11e9-38e9-1f159a780463"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+DomainColoring = "c24f3079-adb7-4533-8329-9f66732e5e85"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 RationalFunctionApproximation = "c92886a3-cb30-4e18-b84f-372dde475ecc"
