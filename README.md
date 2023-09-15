@@ -2,4 +2,7 @@
 
 [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://complexvariables.github.io/RationalFunctionApproximation.jl/stable/)
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://complexvariables.github.io/RationalFunctionApproximation.jl/dev/)
-[![Build Status](https://github.com/complexvariables/RationalFunctionApproximation.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/complexvariables/RationalFunctionApproximation.jl/actions/workflows/CI.yml?query=branch%3Amain)
+
+This package uses the continuous form of the AAA algorithm to adaptively compute rational approximations of functions on intervals and other domains in the complex plane.  For the mathematical description, see [AAA rational approximation on a continuum](https://arxiv.org/abs/2305.03677), which is to appear in SISC.
+
+The [documentation](https://complexvariables.github.io/RationalFunctionApproximation.jl/stable/) includes a walkthrough showing off the main capabilities of the package.
