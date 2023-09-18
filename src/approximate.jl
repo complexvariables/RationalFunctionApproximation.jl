@@ -198,7 +198,7 @@ function approximate(f::Function, d::ComplexPath;
         end
         weights = collect(i.weights for i in iteration)
         pole = collect(i.poles for i in iteration)
-        st = ConvergenceStats(bestidx, err, nbad, nodes, vals, weights, pole)
+        st = ConvergenceStats(bestidx, err, nbad, nodes, vals, weights, complex.(pole))
         r = Barycentric(z, y, w; stats=st)
     else
         r = Barycentric(z, y, w)
