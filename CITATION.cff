@@ -1,0 +1,11 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Driscoll"
+  given-names: "Tobin A."
+  orcid: "https://orcid.org/0000-0002-1490-2545"
+title: "RationalFunctionApproximation.jl: Approximation by rational functions on intervals and domains in the complex plane"
+version: 0.1.0
+doi: 10.5281/zenodo.8355791
+date-released: 2023-09-18
+url: "https://github.com/complexvariables/RationalFunctionApproximation.jl"
