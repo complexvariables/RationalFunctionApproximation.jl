@@ -5,7 +5,7 @@ UC = unit_circle
 @testset "Unit disk" begin
     f = z -> sin(10z) * exp(-z^2); @test pass(f, approximate(f, UD), pts, rtol=2e-11)
     f = z -> sin(1/(1.1 - z)); @test pass(f, approximate(f, UD), pts, rtol=2e-13)
-    f = sec; @test pass(f, approximate(f, UD, degree=6), pts, rtol=1e-6)
+    f = sec; @test pass(f, approximate(f, UD, max_degree=6), pts, rtol=1e-6)
     f = z -> cos(sin(z)) + exp(z)/(z-1.1); @test pass(f, approximate(f,UD), pts, rtol=2e-13)
     f = x -> cis(x);  @test pass(f, approximate(f, UD), pts, atol=2e-13)
 end
@@ -49,21 +49,21 @@ end
 
 @testset "Vertical scaling" begin
     f = z -> 1e100sin(z); @test pass(f, approximate(f, UD), pts, rtol=2e-13)
-    @test pass(f, approximate(f, UD, degree=5), pts, rtol=1e-6)
+    @test pass(f, approximate(f, UD, max_degree=5), pts, rtol=1e-6)
     # f = z -> 1e-100cos(z); @test pass(f, approximate(f, UD), pts, rtol=2e-13)
-    # @test_broken pass(f, approximate(f, UD, degree=5), pts, rtol=1e-6)
+    # @test_broken pass(f, approximate(f, UD, =5), pts, rtol=1e-6)
 end
 
 # @testset "Lawson" begin
-#     f = z -> exp(z); r = @test pass(f, approximate(f, UD, degree=3, lawson=20), pts, atol=1e-3)
-#     f = z -> cis(3z); @test pass(f, approximate(f, UD, degree=6, lawson=20), pts, atol=1e-3)
+#     f = z -> exp(z); r = @test pass(f, approximate(f, UD, =3, lawson=20), pts, atol=1e-3)
+#     f = z -> cis(3z); @test pass(f, approximate(f, UD, =6, lawson=20), pts, atol=1e-3)
 # end
 
 @testset "Polynomials and reciprocals" begin
     for R in (UC, UD)
         for f in (z->0, z->z, z->1im*z, z->z+z^2, z->z+z^3)
             @test pass(f, approximate(f, R), pts, atol=2e-13)
-            @test pass(f, approximate(f, R, degree=3), pts, rtol=2e-13)
+            @test pass(f, approximate(f, R, max_degree=3), pts, rtol=2e-13)
         end
     end
     for f in (z->1/(1.1+z), z->1/(2+1im*z), z->1/(3+z+z^2), z->1/(1.01+z^3))
@@ -71,12 +71,12 @@ end
     end
 end
 
-@testset "Specified degree" begin
-    f = x -> x+x^2; @test pass(f, approximate(f, degree=2, UD), pts, atol=2e-13)
-    f = x -> x+x^3; @test pass(f, approximate(f, degree=3, UD), pts, atol=2e-13)
-    f = x -> x+x^3; @test !pass(f, approximate(f, degree=2, UD), pts, atol=2e-13)
-    f = x -> 1/(3im + x + x^2); @test pass(f, approximate(f, degree=2, UC), pts, rtol=2e-13)
-    f = x -> 1/(3im + x + x^2); @test !pass(f, approximate(f, degree=1, UC), pts, rtol=2e-13)
-    f = x -> 1/(1.01 + x^3); @test pass(f, approximate(f, degree=3, UD), pts, rtol=2e-13)
-    f = x -> 1/(1.01 + x^3); @test !pass(f, approximate(f, degree=2, UD), pts, rtol=2e-13)
+@testset "Specified " begin
+    f = x -> x+x^2; @test pass(f, approximate(f, max_degree=2, UD), pts, atol=2e-13)
+    f = x -> x+x^3; @test pass(f, approximate(f, max_degree=3, UD), pts, atol=2e-13)
+    f = x -> x+x^3; @test !pass(f, approximate(f, max_degree=2, UD), pts, atol=2e-13)
+    f = x -> 1/(3im + x + x^2); @test pass(f, approximate(f, max_degree=2, UC), pts, rtol=2e-13)
+    f = x -> 1/(3im + x + x^2); @test !pass(f, approximate(f, max_degree=1, UC), pts, rtol=2e-13)
+    f = x -> 1/(1.01 + x^3); @test pass(f, approximate(f, max_degree=3, UD), pts, rtol=2e-13)
+    f = x -> 1/(1.01 + x^3); @test !pass(f, approximate(f, max_degree=2, UD), pts, rtol=2e-13)
 end

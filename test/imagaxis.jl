@@ -1,5 +1,7 @@
+# TODO: WIP
+
 @testset "varied and random stuff" begin
-    _,_,_,_,err,_ = aaax( x->abs(x) ) 
+    _,_,_,_,err,_ = aaax( x->abs(x) )
     @test abs(err) < 1e-3
     _,pol,_ = aaaz( z->cos(sin(z)) + exp(z)/(z-11//10) )
     @test isapprox(minimum(abs.(pol)), 1.1, atol=1e-8)
@@ -20,24 +22,24 @@ end
 end
 
 @testset "Low-accuracy computations" begin
-    f = x -> exp(3*x); @test !pass(f, aaax(f, degree=150, lawson=0, tol=1e-4), xx, atol=1e-8)
-    f = z -> exp(3*z); @test !pass(f, aaaz(f, degree=150, lawson=0, tol=1e-4), zz, atol=1e-8)
-    f = z -> 1 / sqrt(z+3); @test !pass(f, aaai(f, degree=150, lawson=0, tol=1e-4), ii, atol=1e-8)
+    f = x -> exp(3*x); @test !pass(f, aaax(f, max_degree=150, lawson=0, tol=1e-4), xx, atol=1e-8)
+    f = z -> exp(3*z); @test !pass(f, aaaz(f, max_degree=150, lawson=0, tol=1e-4), zz, atol=1e-8)
+    f = z -> 1 / sqrt(z+3); @test !pass(f, aaai(f, max_degree=150, lawson=0, tol=1e-4), ii, atol=1e-8)
 end
 
 @testset "Miscellaneous functions" begin
-    f = z -> sin(10z) * exp(-z^2); @test pass(f, aaaz(f), zz, rtol=2e-11) 
+    f = z -> sin(10z) * exp(-z^2); @test pass(f, aaaz(f), zz, rtol=2e-11)
     f = z -> sin(1/(1.1 - z)); @test pass(f, aaaz(f), zz, rtol=2e-13)
-    f = sec; @test pass(f, aaaz(f,degree=6), zz, rtol=1e-6) 
-    f = z -> z^4; @test pass(f, aaaz(f,degree=3), zz, rtol=20) 
-    f = z -> tan(π*z); r,pol,_ = aaaz(f,degree=150,lawson=0,tol=1e-13,mero=true)
+    f = sec; @test pass(f, aaaz(f,max_degree=6), zz, rtol=1e-6)
+    f = z -> z^4; @test pass(f, aaaz(f,max_degree=3), zz, rtol=20)
+    f = z -> tan(π*z); r,pol,_ = aaaz(f,max_degree=150,lawson=0,tol=1e-13,mero=true)
     @test sort(abs.(pol))[1:5] ≈ 0.5*[1;1;3;3;5] atol=1e-3
 
-    f = x -> sin(1/(1.05-x)); @test pass(f, aaax(f), xx, atol=2e-13) 
+    f = x -> sin(1/(1.05-x)); @test pass(f, aaax(f), xx, atol=2e-13)
     f = x -> exp(-1/(x^2)); @test pass(f, aaax(f), xx, rtol=2e-13)
     f = x -> exp(-100*x^2); @test pass(f, aaax(f), xx, rtol=2e-13)
     f = x -> exp(-10/(1.2-x)); @test pass(f, aaax(f), xx, rtol=1e-12)
-    f = x -> exp(-10/(1.2-x)); @test pass(f, aaax(f,degree=8,lawson=20), xx, rtol=1e-8)
+    f = x -> exp(-10/(1.2-x)); @test pass(f, aaax(f,max_degree=8,lawson=20), xx, rtol=1e-8)
     # f = x -> gamma(x+2); [r,pol] = aaax(f); pass(f,abs(min(pol+2))<1e-5)
     f = x -> 1/(1+exp(100*(x+.5))); @test pass(f, aaax(f), xx, atol=2e-13)
 end
@@ -50,12 +52,12 @@ end
 
     f = z -> (z-(3+3im))/(z+2)
     for aaa in (aaax, aaaz, aaai)
-        r,pol,res,zer,_ = aaa(f, degree=150, lawson=0, tol=1e-13) 
+        r,pol,res,zer,_ = aaa(f, lawson=0, tol=1e-13)
         @test isapprox(pol[1]*zer[1], -6-6im, atol=1e-12)
     end
 end
 
-@testset "Imaginary axis" begin 
+@testset "Imaginary axis" begin
     for scl in (1.0, 1e100, 1e-100)
         f = z -> scl/((z+(1+2im))*(z+.1)); r,pol,_ = aaai(f)
         @test isapprox(prod(pol),0.1+0.2im, atol=1e-11)
@@ -68,33 +70,33 @@ end
     f = x -> 1e100*sin(x); @test pass(f, aaax(f), xx, rtol=2e-13)
     f = x -> 1e-100*cos(x); @test pass(f, aaax(f), xx, rtol=2e-13)
     f = z -> 1e100*sin(z); @test pass(f, aaaz(f), zz, rtol=2e-13)
-    f = z -> 1e-100*cos(z); @test pass(f, aaaz(f), zz, rtol=2e-13) 
-    f = x -> 1e100*sin(x); @test pass(f, aaax(f, degree=5, lawson=20), xx, rtol=1e-6) 
-    f = x -> 1e-100*cos(x); @test pass(f, aaax(f, degree=5, lawson=20), xx, rtol=1e-6) 
-    f = z -> 1e100*sin(z); @test pass(f, aaaz(f,degree=5,lawson=20), zz, rtol=1e-6)
-    f = z -> 1e-100*cos(z); @test pass(f, aaaz(f,degree=5,lawson=20), zz, rtol=1e-6)
+    f = z -> 1e-100*cos(z); @test pass(f, aaaz(f), zz, rtol=2e-13)
+    f = x -> 1e100*sin(x); @test pass(f, aaax(f, max_degree=5, lawson=20), xx, rtol=1e-6)
+    f = x -> 1e-100*cos(x); @test pass(f, aaax(f, max_degree=5, lawson=20), xx, rtol=1e-6)
+    f = z -> 1e100*sin(z); @test pass(f, aaaz(f,max_degree=5,lawson=20), zz, rtol=1e-6)
+    f = z -> 1e-100*cos(z); @test pass(f, aaaz(f,max_degree=5,lawson=20), zz, rtol=1e-6)
 end
 
 @testset "Lawson" begin
-    f = x -> exp(x); @test pass(f, aaax(f, degree=3, lawson=20), xx, atol=1e-3)
-    f = x -> cis(3x); @test pass(f, aaax(f, degree=3, lawson=20), xx, atol=1e-3)
-    f = z -> exp(z); r = @test pass(f, aaaz(f, degree=3, lawson=20), zz, atol=1e-3)
-    f = z -> cis(3z); @test pass(f, aaaz(f, degree=6, lawson=20), zz, atol=1e-3)
+    f = x -> exp(x); @test pass(f, aaax(f, max_degree=3, lawson=20), xx, atol=1e-3)
+    f = x -> cis(3x); @test pass(f, aaax(f, max_degree=3, lawson=20), xx, atol=1e-3)
+    f = z -> exp(z); r = @test pass(f, aaaz(f, max_degree=3, lawson=20), zz, atol=1e-3)
+    f = z -> cis(3z); @test pass(f, aaaz(f, max_degree=6, lawson=20), zz, atol=1e-3)
 end
 
 @testset "Polynomials and reciprocals" begin
-    args = Dict(:degree=>150, :lawson=>0, :tol=>1e-13)
+    args = Dict(:=>150, :lawson=>0, :tol=>1e-13)
     f = x -> 0; @test pass(f, aaax(f; args...), xx, atol=2e-13)
     f = x -> x; @test pass(f, aaax(f; args...), xx, atol=2e-13)
     f = x -> 1im*x; @test pass(f, aaax(f; args...), xx, atol=2e-13)
     f = x -> x+x^2; @test pass(f, aaax(f; args...), xx, atol=2e-13)
-    f = x -> x+x^3; @test pass(f, aaax(f; args...), xx, atol=2e-13) 
-    f = x -> 1/(1.1+x); @test pass(f, aaax(f; args...), xx, atol=2e-13) 
+    f = x -> x+x^3; @test pass(f, aaax(f; args...), xx, atol=2e-13)
+    f = x -> 1/(1.1+x); @test pass(f, aaax(f; args...), xx, atol=2e-13)
     f = x -> 1/(1+1im*x); @test pass(f, aaax(f; args...), xx, atol=2e-13)
     f = x -> 1/(3+x+x^2); @test pass(f, aaax(f; args...), xx, atol=2e-13)
     f = x -> 1/(1.01+x^3); @test pass(f, aaax(f; args...), xx, atol=2e-13)
-    
-    args = Dict(:degree=>150, :lawson=>0, :tol=>1e-13, :mero=>true)
+
+    args = Dict(:=>150, :lawson=>0, :tol=>1e-13, :mero=>true)
     f = z -> 0; @test pass(f, aaaz(f; args...), zz, atol=2e-13)
     f = z -> z; @test pass(f, aaaz(f; args...), zz, atol=2e-13)
     f = z -> 1im*z; @test pass(f, aaaz(f; args...), zz, atol=2e-13)
@@ -106,23 +108,23 @@ end
     f = z -> 1/(1.01+z^3); @test pass(f, aaaz(f; args...), zz, atol=1e-11)
 end
 
-@testset "Specified degree" begin
-    f = x -> 0; @test pass(f, aaax(f, degree=0, lawson=0), xx, atol=2e-13) 
-    f = x -> x; @test pass(f, aaax(f, degree=1, lawson=0), xx, atol=2e-13) 
-    f = x -> 1im*x; @test pass(f, aaax(f, degree=3, lawson=0), xx, atol=2e-13) 
-    f = x -> x+x^2; @test pass(f, aaax(f, degree=2, lawson=0), xx, atol=2e-13) 
-    f = x -> x+x^3; @test pass(f, aaax(f, degree=3, lawson=0), xx, atol=2e-13) 
-    f = x -> 1/(1.1+x); @test pass(f, aaax(f, degree=3, lawson=0), xx, atol=2e-13) 
-    f = x -> 1/(1+1im*x); @test pass(f, aaax(f, degree=3, lawson=0), xx, atol=2e-13) 
-    f = x -> 1/(3+x+x^2); @test pass(f, aaax(f, degree=2, lawson=0), xx, atol=2e-13) 
-    f = x -> 1/(1.01+x^3); @test pass(f, aaax(f, degree=3, lawson=0), xx, atol=2e-13) 
-    f = x -> tanh(100x); @test pass(f, aaax(f), xx, atol=2e-13) 
-    f = x -> tanh(100*(x-.2)); @test pass(f, aaax(f), xx, atol=2e-13) 
-    f = x -> exp(x); @test pass(f, aaax(f, tol=1e-13), xx, atol=2e-13) 
-    f = x -> cis(x); @test pass(f, aaax(f), xx, atol=2e-13) 
-    f = x -> cis(x); r,_ = aaax(f); 
+@testset "Specified " begin
+    f = x -> 0; @test pass(f, aaax(f, max_degree=0, lawson=0), xx, atol=2e-13)
+    f = x -> x; @test pass(f, aaax(f, max_degree=1, lawson=0), xx, atol=2e-13)
+    f = x -> 1im*x; @test pass(f, aaax(f, max_degree=3, lawson=0), xx, atol=2e-13)
+    f = x -> x+x^2; @test pass(f, aaax(f, max_degree=2, lawson=0), xx, atol=2e-13)
+    f = x -> x+x^3; @test pass(f, aaax(f, max_degree=3, lawson=0), xx, atol=2e-13)
+    f = x -> 1/(1.1+x); @test pass(f, aaax(f, max_degree=3, lawson=0), xx, atol=2e-13)
+    f = x -> 1/(1+1im*x); @test pass(f, aaax(f, max_degree=3, lawson=0), xx, atol=2e-13)
+    f = x -> 1/(3+x+x^2); @test pass(f, aaax(f, max_degree=2, lawson=0), xx, atol=2e-13)
+    f = x -> 1/(1.01+x^3); @test pass(f, aaax(f, max_degree=3, lawson=0), xx, atol=2e-13)
+    f = x -> tanh(100x); @test pass(f, aaax(f), xx, atol=2e-13)
+    f = x -> tanh(100*(x-.2)); @test pass(f, aaax(f), xx, atol=2e-13)
+    f = x -> exp(x); @test pass(f, aaax(f, tol=1e-13), xx, atol=2e-13)
+    f = x -> cis(x); @test pass(f, aaax(f), xx, atol=2e-13)
+    f = x -> cis(x); r,_ = aaax(f);
     @test mean(@. abs(r(xx))-1) < 2e-13
-    f = x -> exp(exp(x))/(x-0.2im); r,pol,_ = aaax(f); 
+    f = x -> exp(exp(x))/(x-0.2im); r,pol,_ = aaax(f);
     @test minimum(@. abs(pol-.2im)) < 1e-10
 end
 
@@ -135,7 +137,7 @@ end
 # this set requres DoubleFloats to be installed
 # functions must not introduce any standard floats
 # (note that // creates exact rational numbers)
-@testset "Extended precision" begin 
+@testset "Extended precision" begin
     using DoubleFloats
     T = Double64
     xx = T(10) .^ range(T(-15),T(0),500); xx = [-reverse(xx); 0; xx]

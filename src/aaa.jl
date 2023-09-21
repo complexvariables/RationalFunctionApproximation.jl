@@ -18,7 +18,7 @@ Adaptively compute a rational interpolant.
 - `f::Function`: function to approximate on the interval [-1,1]
 
 # Keyword arguments
-- `degree::Integer=150`: maximum numerator/denominator degree to use
+- `max_degree::Integer=150`: maximum numerator/denominator degree to use
 - `float_type::Type=Float64`: floating point type to use for the computation
 - `tol::Real=1000*eps(float_type)`: tolerance for stopping
 - `lookahead::Integer=10`: number of iterations to determines stagnation
@@ -31,7 +31,7 @@ Adaptively compute a rational interpolant.
 See also [`approximate`](@ref) for approximating a function on a region.
 """
 function aaa(z::AbstractVector{<:Number}, y::AbstractVector{<:Number};
-    degree = 150, float_type = Float64, tol = 1000*eps(float_type),
+    max_degree = 150, float_type = Float64, tol = 1000*eps(float_type),
     lookahead = 10, stats = false
     )
 
@@ -86,7 +86,7 @@ function aaa(z::AbstractVector{<:Number}, y::AbstractVector{<:Number};
 
         # Are we done?
         if (besterr <= tol*fmax) ||
-            (n == degree + 1) ||
+            (n == max_degree + 1) ||
             ((length(iteration) - bestidx >= lookahead) && (besterr < 1e-2*fmax))
             break
         end
@@ -119,7 +119,7 @@ end
 
 function aaa(
     f::Function;
-    degree=150, float_type=Float64, tol=1000*eps(float_type),
+    max_degree=150, float_type=Float64, tol=1000*eps(float_type),
     refinement=3, lookahead=10, stats=false
     )
     @assert float_type <: AbstractFloat
@@ -158,7 +158,7 @@ function aaa(
         fmax = max( norm(fS, Inf), norm(fX, Inf) )     # scale of f
         # Check stopping:
         if (besterr <= tol*fmax) ||                                # goal met
-            (m == degree + 1) ||                                   # max degree reached
+            (m == max_degree + 1) ||                                   # max degree reached
             ((m - bestm >= lookahead) && (besterr < 1e-2*fmax))    # stagnation
             break
         end

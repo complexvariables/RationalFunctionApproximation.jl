@@ -39,18 +39,18 @@ end
 @testset "Vertical scaling" begin
     f = x -> 1e100*sin(x); @test pass(f, approx(f), pts, rtol=2e-13)
     f = x -> 1e-100*cos(x); @test pass(f, approx(f), pts, rtol=2e-13)
-    # f = x -> 1e100*sin(x); @test pass(f, approx(f, degree=5, lawson=20), pts, rtol=1e-6)
-    # f = x -> 1e-100*cos(x); @test pass(f, approx(f, degree=5, lawson=20), pts, rtol=1e-6)
+    # f = x -> 1e100*sin(x); @test pass(f, approx(f, =5, lawson=20), pts, rtol=1e-6)
+    # f = x -> 1e-100*cos(x); @test pass(f, approx(f, =5, lawson=20), pts, rtol=1e-6)
 end
 
 # @testset "Lawson" begin
-#     f = x -> exp(-10/(1.2-x)); @test pass(f, approx(f, degree=8, lawson=20), pts, rtol=1e-8)
-#     f = x -> exp(x); @test pass(f, approx(f, degree=3, lawson=20), pts, atol=1e-3)
-#     f = x -> cis(3x); @test pass(f, approx(f, degree=3, lawson=20), pts, atol=1e-3)
+#     f = x -> exp(-10/(1.2-x)); @test pass(f, approx(f, =8, lawson=20), pts, rtol=1e-8)
+#     f = x -> exp(x); @test pass(f, approx(f, =3, lawson=20), pts, atol=1e-3)
+#     f = x -> cis(3x); @test pass(f, approx(f, =3, lawson=20), pts, atol=1e-3)
 # end
 
 @testset "Polynomials and reciprocals" begin
-    args = Dict(:degree=>150, :tol=>1e-13)
+    args = Dict(:max_degree=>150, :tol=>1e-13)
     f = x -> 0; @test pass(f, approx(f; args...), pts, atol=2e-13)
     f = x -> x; @test pass(f, approx(f; args...), pts, atol=2e-13)
     f = x -> 1im*x; @test pass(f, approx(f; args...), pts, atol=2e-13)
@@ -62,16 +62,16 @@ end
     f = x -> 1/(1.01 + x^3); @test pass(f, approx(f; args...), pts, atol=2e-13)
 end
 
-@testset "Specified degree" begin
-    f = x -> 0; @test pass(f, approx(f, degree=0), pts, atol=2e-13)
-    f = x -> x; @test pass(f, approx(f, degree=1), pts, atol=2e-13)
-    f = x -> 1im*x; @test pass(f, approx(f, degree=3), pts, atol=2e-13)
-    f = x -> x+x^2; @test pass(f, approx(f, degree=2), pts, atol=2e-13)
-    f = x -> x+x^3; @test pass(f, approx(f, degree=3), pts, atol=2e-13)
-    f = x -> 1/(1.1+x); @test pass(f, approx(f, degree=3), pts, atol=2e-13)
-    f = x -> 1/(1+1im*x); @test pass(f, approx(f, degree=3), pts, atol=2e-13)
-    f = x -> 1/(3+x+x^2); @test pass(f, approx(f, degree=2), pts, atol=2e-13)
-    f = x -> 1/(1.01+x^3); @test pass(f, approx(f, degree=3), pts, atol=2e-13)
+@testset "Specified " begin
+    f = x -> 0; @test pass(f, approx(f, max_degree=0), pts, atol=2e-13)
+    f = x -> x; @test pass(f, approx(f, max_degree=1), pts, atol=2e-13)
+    f = x -> 1im*x; @test pass(f, approx(f, max_degree=3), pts, atol=2e-13)
+    f = x -> x+x^2; @test pass(f, approx(f, max_degree=2), pts, atol=2e-13)
+    f = x -> x+x^3; @test pass(f, approx(f, max_degree=3), pts, atol=2e-13)
+    f = x -> 1/(1.1+x); @test pass(f, approx(f, max_degree=3), pts, atol=2e-13)
+    f = x -> 1/(1+1im*x); @test pass(f, approx(f, max_degree=3), pts, atol=2e-13)
+    f = x -> 1/(3+x+x^2); @test pass(f, approx(f, max_degree=2), pts, atol=2e-13)
+    f = x -> 1/(1.01+x^3); @test pass(f, approx(f, max_degree=3), pts, atol=2e-13)
     f = x -> tanh(100x); @test pass(f, approx(f), pts, atol=2e-13)
     f = x -> tanh(100*(x-.2)); @test pass(f, approx(f), pts, atol=2e-13)
     f = x -> exp(x); @test pass(f, approx(f, tol=1e-13), pts, atol=2e-13)

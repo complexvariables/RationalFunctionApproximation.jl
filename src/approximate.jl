@@ -24,7 +24,7 @@ Adaptively compute a rational interpolant on a curve, path, or region.
 - `domain`: curve, path, or region from ComplexRegions
 
 # Keyword arguments
-- `degree::Integer=150`: maximum numerator/denominator degree to use
+- `max_degree::Integer=150`: maximum numerator/denominator degree to use
 - `float_type::Type=Float64`: floating point type to use for the computation
 - `tol::Real=1000*eps(float_type)`: relative tolerance for stopping
 - `isbad::Function`: function to determine if a pole is bad
@@ -47,7 +47,7 @@ approximate(f::Function, d::ComplexCurve; kw...) = approximate(f, Path(d); kw...
 approximate(f::Function, d::ComplexClosedCurve; kw...) = approximate(f, ClosedPath(d); kw...)
 
 function approximate(f::Function, d::ComplexPath;
-    degree = 150,
+    max_degree = 150,
     float_type = typeof(float(1)),
     tol = 1000*eps(float_type),
     isbad = z->dist(z, d) < tol,
@@ -78,12 +78,12 @@ function approximate(f::Function, d::ComplexPath;
     besterr, bestidx, best = Inf, NaN, nothing
 
     numref = 16
-    test = Matrix{float_type}(undef, numref, degree+1)    # parameter values of test points
-    τ = similar(σ, numref, degree+1)             # test points
-    fτ = similar(fσ, numref, degree+1)           # f at test points
-    C = similar(τ, 17*(degree+1), degree+2)    # Cauchy matrix
+    test = Matrix{float_type}(undef, numref, max_degree+1)    # parameter values of test points
+    τ = similar(σ, numref, max_degree+1)             # test points
+    fτ = similar(fσ, numref, max_degree+1)           # f at test points
+    C = similar(τ, 17*(max_degree+1), max_degree+2)    # Cauchy matrix
     ty = promote_type(eltype(τ), eltype(fτ))
-    L = Matrix{ty}(undef, 17*(degree+1), degree+2)    # Lowener matrix
+    L = Matrix{ty}(undef, 17*(max_degree+1), max_degree+2)    # Lowener matrix
 
     # Update the matrices of test points and f values.
     # Each column belongs to one of the node parameter values and contains points
@@ -141,7 +141,7 @@ function approximate(f::Function, d::ComplexPath;
         # Are we done?
         fmax = norm(fτm, Inf)     # scale of f
         if (besterr <= tol*fmax) ||     # goal met
-            (n-1 == degree) ||          # max degree reached
+            (n-1 == max_degree) ||          # max degree reached
             ((numiter - bestidx >= lookahead) && (besterr < 1e-2*fmax))    # stagnation
             break
         end
