@@ -1,5 +1,12 @@
+"""
+    r(z)
+    evaluate(r, z)
+
+Evaluate the rational function at `z`.
+"""
 
 (r::Barycentric)(z) = evaluate(r, z)
+(f::Approximation)(z) = evaluate(f.fun, z)
 
 function evaluate(r::Barycentric, z::Number)
     if isinf(z)
@@ -14,8 +21,11 @@ function evaluate(r::Barycentric, z::Number)
     end
 end
 
-##
-# Decompose into partial fractions data
+"""
+    poles(r)
+
+Return the poles of the rational function `r`.
+"""
 poles(F::Approximation) = poles(F.fun)
 function poles(r::Barycentric{T}) where T
     w = weights(r)
@@ -35,9 +45,15 @@ function poles(r::Barycentric{T}) where T
     return pol
 end
 
-residues(F::Approximation, args...) = residues(F.fun, args...)
-residues(r::Barycentric) = residues(r, poles(r))
-function residues(r::Barycentric, pol)
+"""
+    residues(r)
+    residues(r, p=poles(r))
+
+Return the residues of the rational function `r`. If a vector `p` of poles is given, the
+residues are computed at those locations, preserving order.
+"""
+residues(f::Approximation, args...) = residues(f.fun, args...)
+function residues(r::Barycentric, pol::AbstractVector=poles(r))
     numer = t -> sum( w*y / (t-z) for (z, y, w) in zip(nodes(r), values(r), weights(r)))
     denomdiff = t -> -sum( w / (t-z)^2 for (z, w) in zip(nodes(r), weights(r)))
     res = similar( complex(pol) )
@@ -45,54 +61,37 @@ function residues(r::Barycentric, pol)
     return res
 end
 
-roots(F::Approximation) = roots(F.fun)
+"""
+    roots(r)
+
+Return the roots (zeros) of the rational function `r`.
+"""
+roots(f::Approximation) = roots(f.fun)
 function roots(r::Barycentric)
     wf = r.w_times_f
     m = length(wf)
     B = diagm( [0; ones(m)] )
-    # Thanks to Daan Huybrechs
+    # Thanks to Daan Huybrechs:
     E = [0 transpose(wf); ones(m) diagm(nodes(r))]
     return filter(isfinite, eigvals(E, B))
 end
 
-# remove poles on the curve
-function cleanup_poles(F::Approximation, isbad=z->dist(z, F.domain)==0 )
-    r = F.fun
-    k = sum(weights(r) .* values(r)) / sum(weights(r))
-    res = residues(r, pol)
-    good = @. !isbad(pol)
-    data = zip(res[good], pol[good])
-    pfd(s) = k + sum(a/(s-z) for (a,z) in data)
-    return pfd
-end
+"""
+    decompose(r)
 
+Return the roots, poles, and residues of the rational function `r`.
+"""
 function decompose(r::Barycentric)
     p = poles(r)
-    return roots(r),p,residues(r,p)
+    return roots(r), p, residues(r,p)
 end
 
-function diffmat(r::Barycentric{T}) where T
-    x, y, w = nodes(r), values(r), weights(r)
-    n = length(x)
-    entry(i,j) = i==j ? T(0) : w[j] / ( w[i] * (x[i] - x[j]) )
-    D = [ entry(i,j) for i in 1:n, j in 1:n ]
-    for i in 1:n
-        D[i,i] = -sum(D[i,:])
-    end
-    return D
-end
-
-# needs to recompute weights
-Base.diff(r::Barycentric) = Barycentric(nodes(r), diffmat(r)*values(r), weights(r))
-
-# needs to recompute weights
-function integrate(r::Barycentric)
-    x = nodes(r)
-    n = length(x)
-    j = argmin(x)
-    D = diffmat(r)
-    idx = [1:j-1; j+1:n]
-    y = zeros(eltype(x), n)σ
-    y[idx] = D[idx, idx] \ values(r)[idx]
-    return Barycentric(x, y, weights(r))
+# Remove any poles on the domain.
+function cleanup_poles(f::Approximation, isbad=z->dist(z, f.domain)==0 )
+    r = f.fun
+    p = filter(!isbad, poles(r))
+    res = residues(r, p)
+    k = sum(weights(r) .* values(r)) / sum(weights(r))
+    pfd(s) = k + sum(a/(s-z) for (a,z) in zip(res, p))
+    return pfd
 end

@@ -212,12 +212,9 @@ struct Approximation{T,S} <: Function
     prenodes::Vector{T}
 end
 
-(f::Approximation)(z) = evaluate(f.fun, z)
-
 function Base.show(io::IO, ::MIME"text/plain", f::Approximation)
     print(io, f.fun, " on the domain: ", f.domain)
 end
-
 
 nodes(r::Approximation, args...) = nodes(r.fun, args...)
 Base.values(r::Approximation, args...) = values(r.fun, args...)
