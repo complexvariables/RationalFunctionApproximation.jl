@@ -10,3 +10,10 @@ The [documentation](https://complexvariables.github.io/RationalFunctionApproxima
 Example: Approximation of $f(z) = (z^3 - 1) / \sin(z - 0.9 - i)$ to more than 13 digits on the unit circle:
 
 ![](https://complexvariables.github.io/RationalFunctionApproximation.jl/stable/index-099466ee.png)
+
+## Related work
+
+* The [Polynomials](https://juliamath.github.io/Polynomials.jl/stable/) package provides rational functions, but not in a way related to function approximation.
+* The [BaryRational](https://juliahub.com/ui/Packages/General/BaryRational) package implements the original (fully discrete) version of the AAA algorithm, as well as Floater–Hormann rational interpolation.
+* The [ApproxFun](https://juliaapproximation.github.io/ApproxFun.jl/stable) package provides 1D and multidimensional function approximation using Chebyshev polynomials and Fourier series. It also has extensive functionality for manipulating the approximations and for solving differential equations.
+* There is an [ApproxFunRational](https://github.com/tomtrogdon/ApproxFunRational.jl) package, but it is undocumented.
