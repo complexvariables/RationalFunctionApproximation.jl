@@ -17,6 +17,7 @@ makedocs(;
     ),
     pages=[
         "Walkthrough" => "index.md",
+        "Convergence" => "convergence.md",
         "Minimax" => "minimax.md",
         "Discrete vs. continuous" => "mode.md",
         "Functions" => "functions.md",
