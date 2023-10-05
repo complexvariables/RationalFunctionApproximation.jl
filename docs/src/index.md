@@ -25,7 +25,7 @@ The result is a type (19,19) rational approximant that can be evaluated like a f
 f(0.5) - r(0.5)
 ```
 
-We see that this approximation has more than 13 accurate over most of the interval:
+We see that this approximation has more than 13 accurate digits over most of the interval:
 
 ```@example interval
 lines(-1..1, x -> f(x)-r(x))
