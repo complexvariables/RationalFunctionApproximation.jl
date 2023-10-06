@@ -47,5 +47,13 @@ println("error = $(maximum(abs, @. g(xx) - r(xx) ))")
 r = approximate(z -> tanh(1/z^4), exterior(unit_circle))
 domaincolor(r, [-1.5, 1.5, -1.5, 1.5], abs=true,
 figure = (resolution = (600, 400),))
-
 save("tanh.pdf", current_figure())
+current_figure()
+
+##
+import ComplexRegions.Shapes, ComplexPlots
+r = approximate(z -> log(0.35 + 0.4im - z), interior(Shapes.cross))
+domaincolor(r, [-1.5, 1.5, -1.5, 1.5], abs=true)
+lines!(boundary(r.domain), color=:white, linewidth=5)
+save("cross.pdf", current_figure())
+current_figure()
