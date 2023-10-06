@@ -44,10 +44,11 @@ r = approximate(g, unit_interval)
 println("error = $(maximum(abs, @. g(xx) - r(xx) ))")
 
 ##
-r = approximate(z -> tanh(1/z^4), exterior(unit_circle))
+r = approximate(z -> tan(1/z^4), exterior(unit_circle))
 domaincolor(r, [-1.5, 1.5, -1.5, 1.5], abs=true,
 figure = (resolution = (600, 400),))
-save("tanh.pdf", current_figure())
+lines!(boundary(r.domain), color=:white, linewidth=5)
+save("tan.pdf", current_figure())
 current_figure()
 
 ##
