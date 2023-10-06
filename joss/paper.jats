@@ -1,0 +1,441 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE article PUBLIC "-//NLM//DTD JATS (Z39.96) Journal Publishing DTD v1.2 20190208//EN"
+                  "JATS-publishing1.dtd">
+<article xmlns:mml="http://www.w3.org/1998/Math/MathML" xmlns:xlink="http://www.w3.org/1999/xlink" dtd-version="1.2" article-type="other">
+<front>
+<journal-meta>
+<journal-id></journal-id>
+<journal-title-group>
+<journal-title>Journal of Open Source Software</journal-title>
+<abbrev-journal-title>JOSS</abbrev-journal-title>
+</journal-title-group>
+<issn publication-format="electronic">2475-9066</issn>
+<publisher>
+<publisher-name>Open Journals</publisher-name>
+</publisher>
+</journal-meta>
+<article-meta>
+<article-id pub-id-type="publisher-id">0</article-id>
+<article-id pub-id-type="doi">N/A</article-id>
+<title-group>
+<article-title>RationalFunctionApproximation.jl: A Julia package for
+approximation by rational functions</article-title>
+</title-group>
+<contrib-group>
+<contrib contrib-type="author">
+<contrib-id contrib-id-type="orcid">https://orcid.org/0000-0002-1490-2545</contrib-id>
+<name>
+<surname>Driscoll</surname>
+<given-names>Tobin A.</given-names>
+</name>
+<xref ref-type="aff" rid="aff-1"/>
+</contrib>
+<aff id="aff-1">
+<institution-wrap>
+<institution>Department of Mathematical Sciences, University of
+Delaware, Newark, DE, USA</institution>
+</institution-wrap>
+</aff>
+</contrib-group>
+<volume>¿VOL?</volume>
+<issue>¿ISSUE?</issue>
+<fpage>¿PAGE?</fpage>
+<permissions>
+<copyright-statement>Authors of papers retain copyright and release the
+work under a Creative Commons Attribution 4.0 International License (CC
+BY 4.0)</copyright-statement>
+<copyright-year>2022</copyright-year>
+<copyright-holder>The article authors</copyright-holder>
+<license license-type="open-access" xlink:href="https://creativecommons.org/licenses/by/4.0/">
+<license-p>Authors of papers retain copyright and release the work under
+a Creative Commons Attribution 4.0 International License (CC BY
+4.0)</license-p>
+</license>
+</permissions>
+<kwd-group kwd-group-type="author">
+<kwd>Julia</kwd>
+<kwd>complex analysis</kwd>
+<kwd>function approximation</kwd>
+<kwd>rational approximation</kwd>
+</kwd-group>
+</article-meta>
+</front>
+<body>
+<sec id="summary">
+  <title>Summary</title>
+  <p>In scientific and engineering problems, it is often necessary or
+  useful to replace an exact but lengthy, or even unknown, expression
+  for a varying value by an efficient approximation. Classically, this
+  is known as the problem of <italic>function approximation</italic> in
+  mathematics. In function approximation, the ideal is to find a
+  constructive procedure that achieves high accuracy with as succinct a
+  representation as possible. One class of approximations that can do an
+  outstanding job in this regard are the <italic>rational
+  functions</italic>. A rational function is the ratio of two
+  polynomials, which themselves are the combination of repeated
+  multiplication and addition. For theoretical reasons, it is known that
+  rational functions are excellent for representing many commonly
+  encountered functions. Algorithmic developments within the last five
+  years have opened a way to rapidly find rational approximations that
+  are customized to a given problem. This package provides that
+  capability to the Julia language.</p>
+</sec>
+<sec id="statement-of-need">
+  <title>Statement of need</title>
+  <p>The <monospace>RationalFunctionApproximation.jl</monospace> package
+  provides the automatic approximation of a function of a single
+  variable by means of a rational function. Function approximation is a
+  useful tool in scientific computation, as evidenced by the success of
+  Chebfun in Matlab
+  (<xref alt="Tobin A. Driscoll et al., 2014" rid="ref-DriscollChebfunGuide2014" ref-type="bibr">Tobin
+  A. Driscoll et al., 2014</xref>) and ApproxFun in Julia
+  (<xref alt="Olver &amp; Townsend, 2014" rid="ref-OlverPracticalFramework2014" ref-type="bibr">Olver
+  &amp; Townsend, 2014</xref>), both of which are based on Chebyshev and
+  trigonometric polynomial approximations.</p>
+  <p>Rational functions are a generalization of polynomials that are
+  well-known to improve on polynomials’ approximation power for
+  functions that have singularities located near the approximation
+  domain. The AAA algorithm
+  (<xref alt="Nakatsukasa et al., 2018" rid="ref-NakatsukasaAAAAlgorithm2018a" ref-type="bibr">Nakatsukasa
+  et al., 2018</xref>) opened the door to fast adaptive construction of
+  rational interpolants of a function. A number of interesting
+  applications rapidly followed, e. g., Budisa et al.
+  (<xref alt="2022" rid="ref-BudisaRationalApproximation2022" ref-type="bibr">2022</xref>),
+  Costa &amp; Trefethen
+  (<xref alt="2023" rid="ref-CostaAAAleastSquares2023" ref-type="bibr">2023</xref>),
+  Deng &amp; Lustri
+  (<xref alt="2023" rid="ref-DengExponentialAsymptotics2023a" ref-type="bibr">2023</xref>),
+  Derevianko et al.
+  (<xref alt="2023" rid="ref-DereviankoESPRITESPIRA2023" ref-type="bibr">2023</xref>),
+  Gopal &amp; Trefethen
+  (<xref alt="2019" rid="ref-GopalSolvingLaplace2019a" ref-type="bibr">2019</xref>).
+  The
+  <ext-link ext-link-type="uri" xlink:href="https://github.com/macd/BaryRational.jl"><monospace>BaryRational</monospace></ext-link>
+  package implements the original AAA algorithm in Julia.</p>
+  <p>More recently, a new variation of AAA
+  (<xref alt="Tobin A. Driscoll et al., 2023" rid="ref-DriscollAAARational2023" ref-type="bibr">Tobin
+  A. Driscoll et al., 2023</xref>) treats the domain of the given
+  function as a continuum, rather than requiring it to be discretized.
+  This can have significant advantages when singularities are very close
+  to the domain, since exponential spacing of nodes is required.
+  <monospace>RationalFunctionApproximation.jl</monospace> implements
+  this new algorithm in Julia, incorporating the
+  <ext-link ext-link-type="uri" xlink:href="https://github.com/complexvariables/ComplexRegions.jl"><monospace>ComplexRegions.jl</monospace></ext-link>
+  package(<xref alt="Tobin A. Driscoll, 2019" rid="ref-DriscollComplexRegionsJl2019a" ref-type="bibr">Tobin
+  A. Driscoll, 2019</xref>) to provide general curves and regions as
+  domains in the complex plane.</p>
+</sec>
+<sec id="usage-examples">
+  <title>Usage examples</title>
+  <p>We approximate the function</p>
+  <p><disp-formula><alternatives>
+  <tex-math><![CDATA[
+  f(x) = \frac{0.01}{\sin(x^2 + 0.2x + 0.02)},
+  ]]></tex-math>
+  <mml:math display="block" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mrow><mml:mi>f</mml:mi><mml:mrow><mml:mo stretchy="true" form="prefix">(</mml:mo><mml:mi>x</mml:mi><mml:mo stretchy="true" form="postfix">)</mml:mo></mml:mrow><mml:mo>=</mml:mo><mml:mfrac><mml:mn>0.01</mml:mn><mml:mrow><mml:mo>sin</mml:mo><mml:mrow><mml:mo stretchy="true" form="prefix">(</mml:mo><mml:msup><mml:mi>x</mml:mi><mml:mn>2</mml:mn></mml:msup><mml:mo>+</mml:mo><mml:mn>0.2</mml:mn><mml:mi>x</mml:mi><mml:mo>+</mml:mo><mml:mn>0.02</mml:mn><mml:mo stretchy="true" form="postfix">)</mml:mo></mml:mrow></mml:mrow></mml:mfrac><mml:mo>,</mml:mo></mml:mrow></mml:math></alternatives></disp-formula></p>
+  <p>which has an off-center hump over the interval
+  <inline-formula><alternatives>
+  <tex-math><![CDATA[[-1,1]]]></tex-math>
+  <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mrow><mml:mo stretchy="true" form="prefix">[</mml:mo><mml:mo>−</mml:mo><mml:mn>1</mml:mn><mml:mo>,</mml:mo><mml:mn>1</mml:mn><mml:mo stretchy="true" form="postfix">]</mml:mo></mml:mrow></mml:math></alternatives></inline-formula>,
+  using the following:</p>
+  <code language="julia">julia&gt; using RationalFunctionApproximation
+julia&gt; f = x -&gt; 1/10^2 / sin(x^2 + 2x/10 + 2/10^2);
+julia&gt; r = approximate(f, unit_interval)
+Barycentric rational function of type (10,10) on the domain: Path with 1 curve</code>
+  <p>The result is a rational function of type
+  <inline-formula><alternatives>
+  <tex-math><![CDATA[(10,10)]]></tex-math>
+  <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mrow><mml:mo stretchy="true" form="prefix">(</mml:mo><mml:mn>10</mml:mn><mml:mo>,</mml:mo><mml:mn>10</mml:mn><mml:mo stretchy="true" form="postfix">)</mml:mo></mml:mrow></mml:math></alternatives></inline-formula>,
+  meaning that the numerator and denominator are polynomials of degree
+  10. The approximation interpolates the original function at 11
+  greedily selected points retrievable as
+  <monospace>nodes(r)</monospace>, and it is accurate to over 13 digits
+  over the domain, as shown in
+  <xref alt="[fig:error_sin]" rid="figU003Aerror_sin">[fig:error_sin]</xref>.</p>
+  <fig>
+    <caption><p>Error in a rational
+    approximation.<styled-content id="figU003Aerror_sin"></styled-content></p></caption>
+    <graphic mimetype="application" mime-subtype="pdf" xlink:href="media/error_sin.pdf" />
+  </fig>
+  <p>The approximation can be visualized in the complex plane using the
+  <monospace>DomainColoring</monospace> package, which uses hue to
+  indicate phase and brightness to show contours of log magnitude. The
+  result is shown in
+  <xref alt="[fig:complex]" rid="figU003Acomplex">[fig:complex]</xref>.</p>
+  <fig>
+    <caption><p>Rational approximation in the complex
+    plane.<styled-content id="figU003Acomplex"></styled-content></p></caption>
+    <graphic mimetype="application" mime-subtype="pdf" xlink:href="media/complex.pdf" />
+  </fig>
+  <p>As one sees in the figure, there are poles in the approximation
+  that are extremely close to the exact poles of
+  <inline-formula><alternatives>
+  <tex-math><![CDATA[f]]></tex-math>
+  <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>f</mml:mi></mml:math></alternatives></inline-formula>
+  at <inline-formula><alternatives>
+  <tex-math><![CDATA[x = -0.1 \pm 0.1i]]></tex-math>
+  <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mrow><mml:mi>x</mml:mi><mml:mo>=</mml:mo><mml:mo>−</mml:mo><mml:mn>0.1</mml:mn><mml:mo>±</mml:mo><mml:mn>0.1</mml:mn><mml:mi>i</mml:mi></mml:mrow></mml:math></alternatives></inline-formula>:</p>
+  <code language="julia">julia&gt; p = poles(r)
+10-element Vector{ComplexF64}:
+   -2.515988566699771 + 0.0im
+  -1.8696464689420669 + 0.0im
+  -0.1012939445069749 - 1.784487403808564im
+ -0.10129394450697489 + 1.784487403808564im
+ -0.09999999999999569 - 0.09999999999998077im
+ -0.09999999999999569 + 0.09999999999998077im
+ -0.08503139961597209 - 2.1919510617575773im
+ -0.08503139961597207 + 2.1919510617575777im
+   1.6697943872716796 + 0.0im
+   2.3073258267815193 + 0.0im</code>
+  <p>We can also find the residues at those poles:</p>
+  <code language="julia">julia&gt; residues(r, p[5:6])
+ -4.686750511456871e-15 + 0.049999999999976126im
+ -4.686750511456871e-15 - 0.049999999999976126im</code>
+  <p>As seen in
+  <xref alt="[fig:error_sin]" rid="figU003Aerror_sin">[fig:error_sin]</xref>,
+  the rational approximation is not quite uniformly accurate over the
+  domain, because the AAA algorithm uses a least-squares criterion.
+  However, there is an iteration due to Lawson that is employed by
+  <monospace>minimax(r)</monospace> to more nearly recover the rational
+  approximation that is optimal in the infinity norm. The resulting
+  error, shown in
+  <xref alt="[fig:error_minimax]" rid="figU003Aerror_minimax">[fig:error_minimax]</xref>,
+  is roughly equioscillatory.</p>
+  <fig>
+    <caption><p>Error in a nearly-minimax rational
+    approximation.<styled-content id="figU003Aerror_minimax"></styled-content></p></caption>
+    <graphic mimetype="application" mime-subtype="pdf" xlink:href="media/error_minimax.pdf" />
+  </fig>
+  <p>We can see the usefulness of the improved, continuous AAA algorithm
+  (<xref alt="Tobin A. Driscoll et al., 2023" rid="ref-DriscollAAARational2023" ref-type="bibr">Tobin
+  A. Driscoll et al., 2023</xref>) by approximating a function that has
+  a singularity very close to its domain, such as</p>
+  <p><disp-formula><alternatives>
+  <tex-math><![CDATA[
+  g(x) = \tanh \bigl(5000(x-0.2)\bigr).
+  ]]></tex-math>
+  <mml:math display="block" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mrow><mml:mi>g</mml:mi><mml:mrow><mml:mo stretchy="true" form="prefix">(</mml:mo><mml:mi>x</mml:mi><mml:mo stretchy="true" form="postfix">)</mml:mo></mml:mrow><mml:mo>=</mml:mo><mml:mo>tanh</mml:mo><mml:mo minsize="1.2" maxsize="1.2" stretchy="false" form="prefix">(</mml:mo><mml:mn>5000</mml:mn><mml:mrow><mml:mo stretchy="true" form="prefix">(</mml:mo><mml:mi>x</mml:mi><mml:mo>−</mml:mo><mml:mn>0.2</mml:mn><mml:mo stretchy="true" form="postfix">)</mml:mo></mml:mrow><mml:mo minsize="1.2" maxsize="1.2" stretchy="false" form="postfix">)</mml:mo><mml:mi>.</mml:mi></mml:mrow></mml:math></alternatives></disp-formula></p>
+  <p>If the proximity of the pole is comparable to or less than the
+  sample spacing, the approximation by the original, discrete AAA method
+  (which is implemented in the package) will be poor:</p>
+  <code language="julia">julia&gt; g = x -&gt; tanh(5000 * (x - 0.2));
+julia&gt; x = -1:0.001:1;
+julia&gt; r = aaa(x, g.(x));
+julia&gt; xx = -1:.0001:1;
+julia&gt; println(&quot;error = $(maximum(abs, @. g(xx) - r(xx) ))&quot;);
+error = 0.1401166557529342</code>
+  <p>The error could be much reduced by using a finer grid of samples.
+  But the continuous AAA algorithm finds those samples
+  automatically:</p>
+  <code language="julia">julia&gt; r = approximate(g, unit_interval);
+julia&gt; println(&quot;error = $(maximum(abs, @. g(xx) - r(xx) ))&quot;);
+error = 4.0453862482081604e-11</code>
+  <p>The domain of an approximation can be any region defined using the
+  <monospace>ComplexRegions</monospace> package. Here, we approximate
+  the function <inline-formula><alternatives>
+  <tex-math><![CDATA[\tan(1/z^4)]]></tex-math>
+  <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mrow><mml:mo>tan</mml:mo><mml:mrow><mml:mo stretchy="true" form="prefix">(</mml:mo><mml:mn>1</mml:mn><mml:mi>/</mml:mi><mml:msup><mml:mi>z</mml:mi><mml:mn>4</mml:mn></mml:msup><mml:mo stretchy="true" form="postfix">)</mml:mo></mml:mrow></mml:mrow></mml:math></alternatives></inline-formula>
+  by a rational function that is analytic in the exterior of the unit
+  circle, resulting in
+  <xref alt="[fig:tan]" rid="figU003Atan">[fig:tan]</xref>.</p>
+  <code language="julia">r = approximate(z -&gt; tanh(1/z^4), exterior(unit_circle));</code>
+  <fig>
+    <caption><p>Approximation of <inline-formula><alternatives>
+    <tex-math><![CDATA[\tan(1/z^4)]]></tex-math>
+    <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mrow><mml:mo>tan</mml:mo><mml:mrow><mml:mo stretchy="true" form="prefix">(</mml:mo><mml:mn>1</mml:mn><mml:mi>/</mml:mi><mml:msup><mml:mi>z</mml:mi><mml:mn>4</mml:mn></mml:msup><mml:mo stretchy="true" form="postfix">)</mml:mo></mml:mrow></mml:mrow></mml:math></alternatives></inline-formula>.<styled-content id="figU003Atan"></styled-content></p></caption>
+    <p><named-content content-type="image">Approximation of
+    <inline-formula><alternatives>
+    <tex-math><![CDATA[\tan(1/z^4)]]></tex-math>
+    <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mrow><mml:mo>tan</mml:mo><mml:mrow><mml:mo stretchy="true" form="prefix">(</mml:mo><mml:mn>1</mml:mn><mml:mi>/</mml:mi><mml:msup><mml:mi>z</mml:mi><mml:mn>4</mml:mn></mml:msup><mml:mo stretchy="true" form="postfix">)</mml:mo></mml:mrow></mml:mrow></mml:math></alternatives></inline-formula>.<styled-content id="figU003Atan"></styled-content></named-content></p>
+  </fig>
+  <p>Finally, here is the approximation of a function with a branch cut
+  over the interior of a cross-shaped region:</p>
+  <code language="julia">julia&gt; import ComplexRegions.Shapes, ComplexPlots
+julia&gt; r = approximate(z -&gt; log(0.35 + 0.4im - z), interior(Shapes.cross))
+Barycentric rational function of type (5,5) on the domain: Region interior to Polygon with 12 sides</code>
+  <p>The result is shown in
+  <xref alt="[fig:cross]" rid="figU003Across">[fig:cross]</xref>.</p>
+  <fig>
+    <caption><p>Approximation of a log
+    function.<styled-content id="figU003Across"></styled-content></p></caption>
+    <graphic mimetype="application" mime-subtype="pdf" xlink:href="media/cross.pdf" />
+  </fig>
+</sec>
+<sec id="acknowledgements">
+  <title>Acknowledgements</title>
+  <p>I acknowledge with gratitude the help and support of my paper
+  coauthors, Yuji Nakatsukasa and Nick Trefethen. I also thank Daan
+  Huybrechs for a valuable Julia-specific suggestion.</p>
+</sec>
+</body>
+<back>
+<ref-list>
+  <ref id="ref-BudisaRationalApproximation2022">
+    <element-citation>
+      <person-group person-group-type="author">
+        <name><surname>Budisa</surname><given-names>Ana</given-names></name>
+        <name><surname>Hu</surname><given-names>Xiaozhe</given-names></name>
+        <name><surname>Kuchta</surname><given-names>Miroslav</given-names></name>
+        <name><surname>Mardal</surname><given-names>Kent-Andre</given-names></name>
+        <name><surname>Zikatanov</surname><given-names>Ludmil</given-names></name>
+      </person-group>
+      <article-title>Rational approximation preconditioners for multiphysics problems</article-title>
+      <publisher-name>arXiv</publisher-name>
+      <year iso-8601-date="2022-11">2022</year><month>11</month>
+      <date-in-citation content-type="access-date"><year iso-8601-date="2023-04-12">2023</year><month>04</month><day>12</day></date-in-citation>
+      <uri>https://arxiv.org/abs/2209.11659</uri>
+    </element-citation>
+  </ref>
+  <ref id="ref-CostaAAAleastSquares2023">
+    <element-citation publication-type="chapter">
+      <person-group person-group-type="author">
+        <name><surname>Costa</surname><given-names>Stefano</given-names></name>
+        <name><surname>Trefethen</surname><given-names>Lloyd N.</given-names></name>
+      </person-group>
+      <article-title>AAA-least squares rational approximation and solution of Laplace problems</article-title>
+      <source>European Congress of Mathematics</source>
+      <person-group person-group-type="editor">
+        <name><surname>Hujdurović</surname><given-names>Ademir</given-names></name>
+        <name><surname>Kutnar</surname><given-names>Klavdija</given-names></name>
+        <name><surname>Marušič</surname><given-names>Dragan</given-names></name>
+        <name><surname>Miklavič</surname><given-names>Štefko</given-names></name>
+        <name><surname>Pisanski</surname><given-names>Tomaž</given-names></name>
+        <name><surname>Šparl</surname><given-names>Primož</given-names></name>
+      </person-group>
+      <publisher-name>EMS Press</publisher-name>
+      <year iso-8601-date="2023-07">2023</year><month>07</month>
+      <date-in-citation content-type="access-date"><year iso-8601-date="2023-10-05">2023</year><month>10</month><day>05</day></date-in-citation>
+      <edition>1</edition>
+      <isbn>978-3-9854755-1-3</isbn>
+      <pub-id pub-id-type="doi">10.4171/8ecm/16</pub-id>
+      <fpage>511</fpage>
+      <lpage>534</lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-DengExponentialAsymptotics2023a">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Deng</surname><given-names>Guo</given-names></name>
+        <name><surname>Lustri</surname><given-names>Christopher J.</given-names></name>
+      </person-group>
+      <article-title>Exponential asymptotics of woodpile chain nanoptera using numerical analytic continuation</article-title>
+      <source>Studies in Applied Mathematics</source>
+      <year iso-8601-date="2023">2023</year>
+      <date-in-citation content-type="access-date"><year iso-8601-date="2023-10-05">2023</year><month>10</month><day>05</day></date-in-citation>
+      <volume>150</volume>
+      <issue>2</issue>
+      <issn>1467-9590</issn>
+      <pub-id pub-id-type="doi">10.1111/sapm.12548</pub-id>
+      <fpage>520</fpage>
+      <lpage>557</lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-DereviankoESPRITESPIRA2023">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Derevianko</surname><given-names>Nadiia</given-names></name>
+        <name><surname>Plonka</surname><given-names>Gerlind</given-names></name>
+        <name><surname>Petz</surname><given-names>Markus</given-names></name>
+      </person-group>
+      <article-title>From ESPRIT to ESPIRA: Estimation of signal parameters by iterative rational approximation</article-title>
+      <source>IMA Journal of Numerical Analysis</source>
+      <year iso-8601-date="2023-04">2023</year><month>04</month>
+      <date-in-citation content-type="access-date"><year iso-8601-date="2023-10-05">2023</year><month>10</month><day>05</day></date-in-citation>
+      <volume>43</volume>
+      <issue>2</issue>
+      <issn>0272-4979</issn>
+      <pub-id pub-id-type="doi">10.1093/imanum/drab108</pub-id>
+      <fpage>789</fpage>
+      <lpage>827</lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-DriscollAAARational2023">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Driscoll</surname><given-names>Tobin A.</given-names></name>
+        <name><surname>Nakatsukasa</surname><given-names>Yuji</given-names></name>
+        <name><surname>Trefethen</surname><given-names>Lloyd N.</given-names></name>
+      </person-group>
+      <article-title>AAA rational approximation on a continuum</article-title>
+      <source>SIAM Journal on Scientific Computing</source>
+      <year iso-8601-date="2023-05">2023</year><month>05</month>
+      <date-in-citation content-type="access-date"><year iso-8601-date="2023-05-08">2023</year><month>05</month><day>08</day></date-in-citation>
+      <fpage>to appear</fpage>
+      <lpage></lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-DriscollChebfunGuide2014">
+    <element-citation publication-type="book">
+      <person-group person-group-type="author">
+        <name><surname>Driscoll</surname><given-names>Tobin A</given-names></name>
+        <name><surname>Hale</surname><given-names>Nicholas</given-names></name>
+        <name><surname>Trefethen</surname><given-names>Lloyd N</given-names></name>
+      </person-group>
+      <source>Chebfun guide</source>
+      <publisher-name>Pafnuty Publications, Oxford</publisher-name>
+      <year iso-8601-date="2014">2014</year>
+    </element-citation>
+  </ref>
+  <ref id="ref-DriscollComplexRegionsJl2019a">
+    <element-citation>
+      <person-group person-group-type="author">
+        <name><surname>Driscoll</surname><given-names>Tobin A</given-names></name>
+      </person-group>
+      <article-title>ComplexRegions.jl: A Julia package for regions in the complex plane</article-title>
+      <year iso-8601-date="2019">2019</year>
+    </element-citation>
+  </ref>
+  <ref id="ref-GopalSolvingLaplace2019a">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Gopal</surname><given-names>Abinand</given-names></name>
+        <name><surname>Trefethen</surname><given-names>Lloyd N.</given-names></name>
+      </person-group>
+      <article-title>Solving Laplace Problems with Corner Singularities via Rational Functions</article-title>
+      <source>SIAM Journal on Numerical Analysis</source>
+      <year iso-8601-date="2019-01">2019</year><month>01</month>
+      <date-in-citation content-type="access-date"><year iso-8601-date="2019-11-01">2019</year><month>11</month><day>01</day></date-in-citation>
+      <volume>57</volume>
+      <issue>5</issue>
+      <issn>0036-1429</issn>
+      <pub-id pub-id-type="doi">10.1137/19m125947x</pub-id>
+      <fpage>2074</fpage>
+      <lpage>2094</lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-NakatsukasaAAAAlgorithm2018a">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Nakatsukasa</surname><given-names>Yuji</given-names></name>
+        <name><surname>Sète</surname><given-names>Olivier</given-names></name>
+        <name><surname>Trefethen</surname><given-names>Lloyd N.</given-names></name>
+      </person-group>
+      <article-title>The AAA Algorithm for Rational Approximation</article-title>
+      <source>SIAM Journal on Scientific Computing</source>
+      <publisher-name>Society for Industrial and Applied Mathematics</publisher-name>
+      <year iso-8601-date="2018-01">2018</year><month>01</month>
+      <date-in-citation content-type="access-date"><year iso-8601-date="2020-07-14">2020</year><month>07</month><day>14</day></date-in-citation>
+      <volume>40</volume>
+      <issue>3</issue>
+      <issn>1064-8275</issn>
+      <pub-id pub-id-type="doi">10.1137/16m1106122</pub-id>
+      <fpage>A1494</fpage>
+      <lpage>A1522</lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-OlverPracticalFramework2014">
+    <element-citation publication-type="paper-conference">
+      <person-group person-group-type="author">
+        <name><surname>Olver</surname><given-names>Sheehan</given-names></name>
+        <name><surname>Townsend</surname><given-names>Alex</given-names></name>
+      </person-group>
+      <article-title>A practical framework for infinite-dimensional linear algebra</article-title>
+      <source>Roceedings of the 1st Workshop for High Performance Technical Computing in Dynamic Languages – HPTCDL ’14</source>
+      <publisher-name>IEEE</publisher-name>
+      <year iso-8601-date="2014">2014</year>
+      <pub-id pub-id-type="doi">10.1109/HPTCDL.2014.10</pub-id>
+    </element-citation>
+  </ref>
+</ref-list>
+</back>
+</article>
