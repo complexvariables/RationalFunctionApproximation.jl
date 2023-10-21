@@ -7,8 +7,8 @@ const ComplexSCRegion = ComplexRegions.AbstractSimplyConnectedRegion
 isclosed(p::ComplexCurve) = isa(p, ComplexClosedCurve)
 isclosed(p::ComplexPath) = isa(p, ComplexClosedPath)
 const RealComplex{T} = Union{T, ComplexValues.AnyComplex{T}}
-const VectorRealComplex{T} = Union{Vector{T}, Vector{ComplexValues.AnyComplex{T}}}
-const VectorVectorRealComplex{T} = Union{Vector{Vector{T}},Vector{Vector{ComplexValues.AnyComplex{T}}}}
+const VectorRealComplex{T} = Union{Vector{T}, Vector{Complex{T}}}
+const VectorVectorRealComplex{T} = Union{Vector{Vector{T}},Vector{Vector{Complex{T}}}}
 
 #####
 ##### convergence statistics
@@ -70,7 +70,7 @@ struct Barycentric{T,S} <: Function
     values::Vector{S}
     weights::Vector{S}
     w_times_f::Vector{S}
-    stats::Union{Missing,ConvergenceStats{S}}
+    stats::Union{Missing,ConvergenceStats{T}}
     function Barycentric{T}(
         node::AbstractVector{S},
         value::AbstractVector{S},
