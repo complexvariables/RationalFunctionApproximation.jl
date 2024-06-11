@@ -24,12 +24,22 @@ include("operations.jl")
 # These are overloaded by plotting extensions.
 export convergenceplot, errorplot
 
-function convergenceplot()
-    @error "Load the Makie or Plots package to make a convergence plot"
+function convergenceplot(args...; kwargs...)
+    ext = Base.get_extension(@__MODULE__, :Extension)
+    if ext === nothing
+        error("Load the Makie or Plots package first.")
+    else
+        return ext.convergenceplot(args...; kwargs...)
+    end
 end
 
-function errorplot()
-    @error "Load the Makie or Plots package to make an error plot"
+function errorplot(args...; kwargs...)
+    ext = Base.get_extension(@__MODULE__, :Extension)
+    if ext === nothing
+        error("Load the Makie or Plots package first.")
+    else
+        return ext.errorplot(args...; kwargs...)
+    end
 end
 
-end
+end  # module
