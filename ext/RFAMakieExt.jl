@@ -10,7 +10,7 @@ Plot the convergence history of a `Barycentric` or `Approximation` rational func
 
 Markers show the maximum error on (the boundary of) the domain as a function of the numerator/denominator degree. A red marker indicates that the approximation has disallowed poles in its domain. A gold halo highlights the best approximation.
 """
-RFA.convergenceplot(r::RFA.Approximation) = RFA.convergenceplot(r.fun)
+RFA.convergenceplot(r::RFA.Approximation) = convergenceplot(r.fun)
 function RFA.convergenceplot(r::Barycentric)
     ismissing(r.stats) && error("No convergence data")
     fig = Figure( )
