@@ -2,7 +2,8 @@
 
 The AAA algorithm can be used to approximate functions on other domains as defined in the [`ComplexRegions`](https://complexvariables.github.io/ComplexRegions.jl/stable/) package. 
 
-For example, here's a function defined on the unit circle:
+## Unit circle and disk
+The domain `unit_circle` is predefined. Here's a function approximated on the unit circle:
 
 ```@example shapes
 using RationalFunctionApproximation, CairoMakie, DomainColoring
@@ -31,7 +32,7 @@ shg()
 
 Above, you can also see the zeros at roots of unity.
 
-This function has infinitely many poles and an essential singularity inside the unit disk:
+This next function has infinitely many poles and an essential singularity inside the unit disk:
 
 ```@example shapes
 f = z -> tan(1 / z^4)

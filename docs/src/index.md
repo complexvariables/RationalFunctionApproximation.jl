@@ -2,9 +2,7 @@
 
 *Documentation for [RationalFunctionApproximation.jl](https://github.com/complexvariables/RationalFunctionApproximation.jl).*
 
-This package uses the continuous form of the AAA algorithm to adaptively compute rational approximations of functions on intervals and other domains in the complex plane.  See [AAA rational approximation on a continuum](https://arxiv.org/abs/2305.03677), which is to appear in SISC.
-
-## Approximation on [-1, 1]
+This package uses the continuous form of the AAA algorithm to adaptively compute rational approximations of functions on intervals and other domains in the complex plane.  See [AAA rational approximation on a continuum](https://doi.org/10.1137/23M1570508) (or the [arXiv version](https://arxiv.org/abs/2305.03677)).
 
 Here's a smooth, gentle function on the interval $[-1, 1]$:
 
