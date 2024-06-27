@@ -19,6 +19,7 @@ makedocs(;
         "Walkthrough" => "index.md",
         "Convergence" => "convergence.md",
         "Minimax" => "minimax.md",
+        "Domains" => "domains.md",
         "Discrete vs. continuous" => "mode.md",
         "Functions" => "functions.md",
     ],
