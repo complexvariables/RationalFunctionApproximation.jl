@@ -57,7 +57,7 @@ Since the sech function has poles in the complex plane, the rational approximant
 
 ```@example interval
 using DomainColoring
-domaincolor(r, [-8, 8], abs=true)
+domaincolor(r, [-8, 8, -8, 8], abs=true)
 ```
 
 The poles closest to the interval are found to about 10 digits, while more distant ones are less accurate:
