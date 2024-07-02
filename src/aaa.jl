@@ -109,7 +109,8 @@ end
 #####
 ##### Adaptive AAA on [-1, 1] only
 #####
-# refinement in parameter space
+
+# Refinement in parameter space
 function refine(t, N)
     x = sort(t)
     Δx = diff(x)
