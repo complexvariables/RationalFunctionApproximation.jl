@@ -21,7 +21,8 @@ makedocs(;
         "Minimax" => "minimax.md",
         "Domains" => "domains.md",
         "Discrete vs. continuous" => "mode.md",
-        "Functions" => "functions.md",
+        "Usage from Python" => "python.md",
+        "Function API" => "functions.md",
     ],
 )
 
