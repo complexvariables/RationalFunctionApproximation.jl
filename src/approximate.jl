@@ -30,12 +30,26 @@ Adaptively compute a rational interpolant on a curve, path, or region.
 - `isbad::Function`: function to determine if a pole is bad
 - `refinement::Integer=3`: number of test points between adjacent nodes
 - `lookahead::Integer=10`: number of iterations to determine stagnation
-- `stats::Bool=false`: return convergence statistics with the approximation? (slower)
+- `stats::Bool=false`: whether to return convergence statistics with the approximation (slower)
 
 # Returns
 - `r::Approximation`: the rational interpolant
 
 See also [`Approximation`](@ref), [`check`](@ref), [`aaa`](@ref).
+
+# Examples
+```jldoctest
+julia> f(x) = tanh( 40*(x - 0.15) );
+
+julia> r = approximate(f, unit_interval)
+Barycentric rational function of type (22,22) on the domain: Path with 1 curve
+
+julia> ( r(0.3), f(0.3) )
+(0.9999877116507944, 0.9999877116507956)
+
+julia> check(r);   # accuracy over the domain
+[ Info: Max error is 7.09e-14
+```
 """
 function approximate(f::Function, R::ComplexRegions.AbstractRegion; kw...)
     r = approximate(f, R.boundary; isbad=z->in(z,R), kw...)
@@ -217,6 +231,8 @@ Check the accuracy of a rational approximation `r` on its domain.
 # Returns
 - `τ::Vector`: test points
 - `err::Vector`: error at test points
+
+See also [`approximate`](@ref), [`aaa`](@ref).
 """
 function check(F::Approximation)
     p = F.domain

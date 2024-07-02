@@ -34,11 +34,14 @@ The `nsteps` argument controls the number of Lawson iterations. The default valu
 # Examples
 ```jldoctest
 julia> f(x) = tanh( 40*(x - 0.15) );
+
 julia> r = approximate(f, unit_interval, max_degree=8);  # least-squares approximation
+
 julia> check(r);
 [ Info: Max error is 1.06e-02
 
 julia> r̂ = minimax(r);
+
 julia> check(r̂);
 [ Info: Max error is 1.40e-03
 ```

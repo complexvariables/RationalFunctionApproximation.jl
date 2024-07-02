@@ -28,7 +28,29 @@ Adaptively compute a rational interpolant.
 - `r::Barycentric`: the rational interpolant
 - `stats::NamedTuple`: convergence statistics, if keyword `stats=true`
 
-See also [`approximate`](@ref) for approximating a function on a region.
+# Examples
+```jldoctest
+julia> z = 1im * range(-10, 10, 500);
+
+julia> y = @. exp(z);
+
+julia> r = aaa(z, y);
+
+julia> degree(r)   # both numerator and denominator
+12
+
+julia> first(nodes(r), 4)
+4-element Vector{ComplexF64}:
+ 0.0 - 6.272545090180361im
+ 0.0 + 9.43887775551102im
+ 0.0 - 1.1022044088176353im
+ 0.0 + 4.909819639278557im
+
+julia> r(1im * π / 2)
+-2.637151617496356e-15 + 1.0000000000000002im
+```
+
+See also [`approximate`](@ref) for approximating a function on a curve or region.
 """
 function aaa(z::AbstractVector{<:Number}, y::AbstractVector{<:Number};
     max_degree = 150, float_type = Float64, tol = 1000*eps(float_type),
