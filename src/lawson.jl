@@ -32,7 +32,7 @@ as the first input argument.
 The `nsteps` argument controls the number of Lawson iterations. The default value is 20.
 
 # Examples
-```jldoctest
+```julia-repl
 julia> f(x) = tanh( 40*(x - 0.15) );
 
 julia> r = approximate(f, unit_interval, max_degree=8);  # least-squares approximation

@@ -38,7 +38,7 @@ Adaptively compute a rational interpolant on a curve, path, or region.
 See also [`Approximation`](@ref), [`check`](@ref), [`aaa`](@ref).
 
 # Examples
-```jldoctest
+```julia-repl
 julia> f(x) = tanh( 40*(x - 0.15) );
 
 julia> r = approximate(f, unit_interval)

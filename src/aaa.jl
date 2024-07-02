@@ -29,7 +29,7 @@ Adaptively compute a rational interpolant.
 - `stats::NamedTuple`: convergence statistics, if keyword `stats=true`
 
 # Examples
-```jldoctest
+```julia-repl
 julia> z = 1im * range(-10, 10, 500);
 
 julia> y = @. exp(z);
