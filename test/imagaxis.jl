@@ -85,7 +85,7 @@ end
 end
 
 @testset "Polynomials and reciprocals" begin
-    args = Dict(:=>150, :lawson=>0, :tol=>1e-13)
+    args = Dict(:max_degree=>150, :lawson=>0, :tol=>1e-13)
     f = x -> 0; @test pass(f, aaax(f; args...), xx, atol=2e-13)
     f = x -> x; @test pass(f, aaax(f; args...), xx, atol=2e-13)
     f = x -> 1im*x; @test pass(f, aaax(f; args...), xx, atol=2e-13)
@@ -96,7 +96,7 @@ end
     f = x -> 1/(3+x+x^2); @test pass(f, aaax(f; args...), xx, atol=2e-13)
     f = x -> 1/(1.01+x^3); @test pass(f, aaax(f; args...), xx, atol=2e-13)
 
-    args = Dict(:=>150, :lawson=>0, :tol=>1e-13, :mero=>true)
+    args = Dict(:max_degree=>150, :lawson=>0, :tol=>1e-13, :mero=>true)
     f = z -> 0; @test pass(f, aaaz(f; args...), zz, atol=2e-13)
     f = z -> z; @test pass(f, aaaz(f; args...), zz, atol=2e-13)
     f = z -> 1im*z; @test pass(f, aaaz(f; args...), zz, atol=2e-13)
