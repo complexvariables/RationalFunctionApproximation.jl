@@ -12,10 +12,12 @@ PyFormattedStrings = "5f89f4a4-a228-4886-b223-c468a82ed5b9"
 [weakdeps]
 Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
+PythonCall = "6099a3de-0909-46bc-b1f4-468b9a2dfc0d"
 
 [extensions]
 RFAMakieExt = "Makie"
 RFAPlotsExt = "Plots"
+RFAPythonCallExt = "PythonCall"
 
 [compat]
 ComplexRegions = "0.2"
