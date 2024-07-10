@@ -87,10 +87,11 @@ function aaa(z::AbstractVector{<:Number}, y::AbstractVector{<:Number};
         fσ = view(y, node_index)
         # Fill in matrices for the latest node
         @inbounds @fastmath for i in test_index
-            C[i, n] = 1 / (z[i] - σ[n])
+            δ = z[i] - σ[n]
+            # δ can be zero if there are repeats in z
+            C[i, n] = iszero(δ) ? 1 / eps() : 1 / δ
             L[i, n] = (y[i] - fσ[n]) * C[i, n]
         end
-
         istest = collect(test_index)
         _, _, V = svd( view(L, istest, 1:n) )
         w = V[:, end]    # barycentric weights

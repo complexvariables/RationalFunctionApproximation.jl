@@ -114,7 +114,8 @@ function approximate(f::Function, d::ComplexPath;
     # Update the Cauchy and Loewner matrices.
     function update_matrices!(C, L, τ, fτ, σ, fσ, rows, cols)
         @inbounds @fastmath for i in rows, j in cols
-            C[i, j] = 1 / (τ[i] - σ[j])
+            Δ = τ[i] - σ[j]
+            C[i, j] = iszero(δ) ? 1 / eps() : 1 / Δ
             L[i, j] = (fτ[i] - fσ[j]) * C[i, j]
         end
         return nothing
