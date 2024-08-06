@@ -1,3 +1,4 @@
+import Pkg; Pkg.update();
 using RationalFunctionApproximation
 using Documenter
 

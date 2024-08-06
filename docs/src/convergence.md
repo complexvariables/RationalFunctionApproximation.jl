@@ -22,16 +22,16 @@ When the AAA iteration encounters an approximation with such undesired poles, or
 When a singularity is very close to the approximation domain, it can cause stagnation and a large number of bad-pole failures:
 
 ```@example convergence
-f = x -> tanh(3000*(x - 1/5))
+f = x -> tanh(3000*(x - 1//5))
 r = approximate(f, unit_interval, stats=true)
 convergenceplot(r)
 ```
 
-This effect is thought to be mainly due to roundoff and conditioning of the problem. If we use more accurate floating-point arithmetic, we can see that the AAA convergence continues steadily  past the previous plateau:
+This effect is thought to be mainly due to roundoff and conditioning of the problem. If we use more accurate floating-point arithmetic, we can see that the AAA convergence continues steadily past the previous plateau. In the following, we apply `Double64` arithmetic, having used exact rational numbers already in the definition of `f`:
 
 ```@example convergence
-using DoubleFloats
-r = approximate(f, unit_interval, float_type=Double64, stats=true)
+using DoubleFloats, ComplexRegions
+r = approximate(f, Segment{Double64}(-1, 1), stats=true)
 convergenceplot(r)
 ```
 
