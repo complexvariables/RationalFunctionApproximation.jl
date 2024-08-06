@@ -62,7 +62,7 @@ approximate(f::Function, d::ComplexClosedCurve; kw...) = approximate(f, ClosedPa
 
 function approximate(f::Function, d::ComplexPath;
     max_degree = 150,
-    float_type = typeof(float(1)),
+    float_type = promote_type(typeof(float(1)), real_type(d)),
     tol = 1000*eps(float_type),
     isbad = z->dist(z, d) < tol,
     refinement = 3,
