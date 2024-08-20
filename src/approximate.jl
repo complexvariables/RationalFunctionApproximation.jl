@@ -60,9 +60,10 @@ end
 approximate(f::Function, d::ComplexCurve; kw...) = approximate(f, Path(d); kw...)
 approximate(f::Function, d::ComplexClosedCurve; kw...) = approximate(f, ClosedPath(d); kw...)
 
+# all methods end up here
 function approximate(f::Function, d::ComplexPath;
     max_degree = 150,
-    float_type = promote_type(typeof(float(1)), real_type(d)),
+    float_type = promote_type(real_type(d), typeof(float(1))),
     tol = 1000*eps(float_type),
     isbad = z->dist(z, d) < tol,
     refinement = 3,
@@ -70,7 +71,6 @@ function approximate(f::Function, d::ComplexPath;
     stats = false
     )
 
-    @assert float_type <: AbstractFloat
     err, nbad = float_type[], Int[]
     iteration = NamedTuple[]
 

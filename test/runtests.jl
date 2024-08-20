@@ -1,4 +1,4 @@
-using RationalFunctionApproximation, Test, LinearAlgebra, ComplexRegions
+using RationalFunctionApproximation, Test, LinearAlgebra, ComplexRegions, DoubleFloats
 
 # ii = 1im * range(-300,400,500)
 # zz = cispi.(2 * (0:500) / 500)

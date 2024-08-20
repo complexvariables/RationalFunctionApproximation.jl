@@ -6,6 +6,7 @@ version = "0.1.4"
 [deps]
 ComplexRegions = "c64915e2-6c82-11e9-38e9-1f159a780463"
 ComplexValues = "41a84b80-6cf2-11e9-379d-9df124847946"
+GenericLinearAlgebra = "14197337-ba66-59df-a3e3-ca00e7dcff7a"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 PyFormattedStrings = "5f89f4a4-a228-4886-b223-c468a82ed5b9"
 
@@ -28,10 +29,10 @@ julia = "1.9"
 [extras]
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 ComplexRegions = "c64915e2-6c82-11e9-38e9-1f159a780463"
-LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 DoubleFloats = "497a8b3b-efae-58df-a0af-a86822472b78"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-docs = ["CairoMakie", "ComplexRegions", "DoubleFloats"]
-test = ["Test", "LinearAlgebra", "ComplexRegions"]
+docs = ["CairoMakie"]
+test = ["Test", "LinearAlgebra", "ComplexRegions", "DoubleFloats"]

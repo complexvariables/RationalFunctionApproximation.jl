@@ -1,6 +1,6 @@
 module RationalFunctionApproximation
 
-using LinearAlgebra, ComplexRegions
+using LinearAlgebra, GenericLinearAlgebra, ComplexRegions
 using PyFormattedStrings
 
 export Barycentric, nodes, weights, degree, rewind,

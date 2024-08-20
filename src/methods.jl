@@ -70,10 +70,21 @@ roots(f::Approximation) = roots(f.fun)
 function roots(r::Barycentric)
     wf = r.w_times_f
     m = length(wf)
-    B = diagm( [0; ones(m)] )
+    ty = eltype(nodes(r))
+    B = diagm( [ty(0); ones(m)] )
     # Thanks to Daan Huybrechs:
     E = [0 transpose(wf); ones(m) diagm(nodes(r))]
-    return filter(isfinite, eigvals(E, B))
+    if ty in (Float64,)
+        return filter(isfinite, eigvals(E, B))
+    else
+        # super kludgy; thanks to Daan Huybrechs
+        μ = 11 - 17im  # shift since 0 may well be a root
+        E -= μ*B
+        EB = inv(E)*B
+        pp = eigvals(EB)
+        large_enough = abs.(pp) .> 1e-10
+        return μ .+ 1 ./ pp[large_enough]
+    end
 end
 
 """

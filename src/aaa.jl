@@ -53,16 +53,17 @@ julia> r(1im * π / 2)
 See also [`approximate`](@ref) for approximating a function on a curve or region.
 """
 function aaa(z::AbstractVector{<:Number}, y::AbstractVector{<:Number};
-    max_degree = 150, float_type = Float64, tol = 1000*eps(float_type),
-    lookahead = 10, stats = false
+    max_degree = 150,
+    float_type = promote_type(typeof(float(1)), eltype(z), eltype(y)),
+    tol = 1000*eps(float_type),
+    lookahead = 10,
+    stats = false
     )
 
-    @assert float_type <: AbstractFloat
-    T = float_type
     fmax = norm(y, Inf)    # for scaling
     m = length(z)
     iteration = NamedTuple[]
-    err = T[]
+    err = float_type[]
     besterr, bestidx, best = Inf, NaN, nothing
 
     # Allocate space for Cauchy matrix, Loewner matrix, and residual
@@ -143,17 +144,20 @@ end
 
 function aaa(
     f::Function;
-    max_degree=150, float_type=Float64, tol=1000*eps(float_type),
-    refinement=3, lookahead=10, stats=false
+    max_degree=150,
+    float_type = promote_type(typeof(float(1)), real_type(f(11//23))),
+    tol=1000*eps(float_type),
+    refinement=3,
+    lookahead=10,
+    stats=false
     )
-    @assert float_type <: AbstractFloat
-    T = float_type
-    CT = Complex{T}
-    # arrays for tracking convergence progress
-    err, nbad = T[], Int[]
-    nodes, vals, pol, weights = Vector{T}[], Vector{CT}[], Vector{CT}[], Vector{CT}[]
 
-    S = [-one(T), one(T)]                       # initial nodes
+    CT = Complex{float_type}
+    # arrays for tracking convergence progress
+    err, nbad = float_type[], Int[]
+    nodes, vals, pol, weights = Vector{float_type}[], Vector{CT}[], Vector{CT}[], Vector{CT}[]
+
+    S = [-one(float_type), one(float_type)]     # initial nodes
     fS = f.(S)
     besterr, bestm = Inf, NaN
     while true                                  # main loop
