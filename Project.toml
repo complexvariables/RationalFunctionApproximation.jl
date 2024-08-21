@@ -23,6 +23,7 @@ RFAPythonCallExt = "PythonCall"
 [compat]
 ComplexRegions = "0.2, 0.3"
 ComplexValues = "0.3"
+GenericLinearAlgebra = "0.3"
 PyFormattedStrings = "0.1"
 julia = "1.9"
 
