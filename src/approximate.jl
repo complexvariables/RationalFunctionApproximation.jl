@@ -2,6 +2,8 @@
 ##### Approximation on a domain
 #####
 
+ComplexRegions.dist(z::Number, p::ComplexRegions.AbstractCurve) = minimum(abs(z - point(p, t)) for t in range(0, 1, length=300))
+
 # refinement on a curve
 refine(p::ComplexCurve, args...) = refine(Path(p), args...)
 function refine(p::ComplexPath, t::AbstractVector, N::Integer=3)
@@ -90,7 +92,6 @@ function approximate(f::Function, d::ComplexPath;
     m = length(s)        # number of prenodes having test points to the right
 
     besterr, bestidx, best = Inf, NaN, nothing
-
     numref = 16
     test = Matrix{float_type}(undef, numref, max_degree+1)    # parameter values of test points
     τ = similar(σ, numref, max_degree+1)             # test points
@@ -122,7 +123,7 @@ function approximate(f::Function, d::ComplexPath;
     end
 
     # Initial refinement
-    Δs = [one(float_type)]    # prenode spacings
+    Δs = [length(d) * one(float_type)]    # prenode spacings
     δ = float_type.((1:numref) / (numref+1))
     update_test!(test, τ, fτ, s, Δs, δ, 1:numref, [1])
     τm = vec(view(τ, 1:numref, 1:m))
@@ -140,6 +141,7 @@ function approximate(f::Function, d::ComplexPath;
         R = reshape((Cm*(w.*fσ)) ./ (Cm*w), numref, :)
         err_max, idx_max = findmax(abs, view(fτ, 1:numref, 1:m) - R)
         push!(err, err_max)
+        any(isnan.(view(fτ, 1:numref, 1:m))) && throw(ArgumentError("Function has NaN value at a test point"))
 
         # Poles:
         zp =  poles(Barycentric(σ, fσ, w))
