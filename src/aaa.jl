@@ -54,7 +54,7 @@ See also [`approximate`](@ref) for approximating a function on a curve or region
 """
 function aaa(z::AbstractVector{<:Number}, y::AbstractVector{<:Number};
     max_degree = 150,
-    float_type = promote_type(typeof(float(1)), eltype(z), eltype(y)),
+    float_type = promote_type(typeof(float(1)), real_type(eltype(z)), real_type(eltype(y))),
     tol = 1000*eps(float_type),
     lookahead = 10,
     stats = false
