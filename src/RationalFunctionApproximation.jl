@@ -3,12 +3,13 @@ module RationalFunctionApproximation
 using LinearAlgebra, GenericLinearAlgebra, ComplexRegions
 using PyFormattedStrings
 
-export Barycentric, nodes, weights, degree, rewind,
+export Barycentric, Thiele, nodes, weights, degree, rewind,
     unit_interval, unit_circle, unit_disk, isclosed
 include("types.jl")
 
 export poles, residues, roots
-include("methods.jl")
+include("barycentric.jl")
+include("thiele.jl")
 
 export aaa
 include("aaa.jl")

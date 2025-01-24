@@ -63,7 +63,7 @@ approximate(f::Function, d::ComplexCurve; kw...) = approximate(f, Path(d); kw...
 approximate(f::Function, d::ComplexClosedCurve; kw...) = approximate(f, ClosedPath(d); kw...)
 
 # all methods end up here
-function approximate(f::Function, d::ComplexPath;
+function approximate_bary(f::Function, d::ComplexPath;
     max_degree = 150,
     float_type = promote_type(real_type(d), typeof(float(1))),
     tol = 1000*eps(float_type),
@@ -198,7 +198,6 @@ function approximate(f::Function, d::ComplexPath;
             update_matrices!(C, L, τm, fτm, σ, fσ, vec(idx), [n])
         end
     end
-
     # Return the best stuff:
     z, y, w, s = best.nodes, best.vals, best.weights, best.prenodes
     if !isclosed(d)
@@ -249,4 +248,146 @@ function check(F::Approximation)
     err = F.original.(τ) - F.fun.(τ)
     @info f"Max error is {norm(err,Inf):.2e}"
     return τ, err
+end
+
+
+function approximate(f::Function, d::ComplexPath;
+    method = Barycentric,
+    max_degree = 150,
+    float_type = promote_type(real_type(d), typeof(float(1))),
+    tol = 1000*eps(float_type),
+    isbad = z->dist(z, d) < tol,
+    refinement = 3,
+    lookahead = 10,
+    stats = false
+    )
+
+    err, nbad = float_type[], Int[]
+    iteration = NamedTuple[]
+
+    # Vector of prenodes (except the last, which has no associated test points):
+    s = [zero(float_type)]
+    σ = point(d, s)            # node points
+    if !isclosed(d)
+        # Include both endpoints as nodes for open paths:
+        push!(σ, point(d, length(d)*one(float_type)))
+        test_last = false
+    else
+        test_last = true
+    end
+    if isreal(d)
+        # Enforce reality:
+        σ = real(σ)
+    end
+    fσ = f.(σ)           # f at nodes
+    n = length(σ)        # number of nodes
+
+    besterr, bestidx, best = Inf, NaN, nothing
+    numref = 16
+    test = Matrix{float_type}(undef, numref, max_degree+1)    # parameter values of test points
+    τ = similar(σ, numref, max_degree+1)             # test points
+    fτ = similar(fσ, numref, max_degree+1)           # f at test points
+
+    # Update the matrices of test points and f values.
+    # Each column belongs to one of the node parameter values and contains points
+    # that are equispaced up to the next one.
+    function update_test_points!(test, τ, fτ, s, Δs, δ, rows, cols)
+        @inbounds @fastmath for i in rows, j in cols
+            test[i, j] = s[j] + δ[i] * Δs[j]
+            τ[i, j] = point(d, test[i, j])
+            fτ[i, j] = f(τ[i, j])
+        end
+        return nothing
+    end
+
+    # Initial refinement
+    Δs = [length(d) * one(float_type)]    # prenode spacings
+    δ = float_type.((1:numref) / (numref+1))
+    last_col = 1
+    update_test_points!(test, τ, fτ, s, Δs, δ, 1:numref, [1])
+    number_type = promote_type(eltype(τ), eltype(fτ))
+    data = update_test_values!(method, number_type, numref, max_degree)
+    r = method(number_type[], number_type[], number_type[])
+    idx_new_test = idx_test = CartesianIndices((1:numref, 1:1))
+    @views add_nodes!(r, data, τ[idx_test], fτ[idx_test], σ, fσ)
+    while true
+        test_values = @views update_test_values!(r, data, τ[idx_test], fτ[idx_test], idx_new_test)
+        test_actual = view(fτ, idx_test)
+        any(isnan.(test_actual)) && throw(ArgumentError("Function has NaN value at a test point"))
+        err_max, idx_max = findmax(abs, test_actual - test_values)
+        push!(err, err_max)
+
+        # # Poles:
+        zp =  n > 1 ? poles(r) : number_type[]
+        I = isbad.(zp)
+        push!(iteration, (; weights=copy(r.weights), vals=copy(r.values), poles=zp, prenodes=copy(s), nodes=copy(r.nodes)))
+        push!(nbad, isempty(zp) ? 0 : sum(I))
+        # Record the best approximation so far:
+        numiter = length(iteration)
+        if (last(nbad) == 0) && (last(err) < besterr)
+            besterr, bestidx, best = last(err), numiter, last(iteration)
+        end
+
+        # Are we done?
+        fmax = norm(view(fτ, idx_test), Inf)     # scale of f
+        if (besterr <= tol*fmax) ||     # goal met
+            (n-1 == max_degree) ||          # max degree reached
+            ((numiter - bestidx >= lookahead) && (besterr < 1e-2*fmax))    # stagnation
+            break
+        end
+
+        # Add new node:
+        jnew = idx_max[2]           # which node owns the worst test point?
+        push!(s, test[idx_max])
+        push!(σ, τ[idx_max])
+        push!(fσ, fτ[idx_max])
+        n += 1
+
+        # Update the node spacings:
+        Δj = Δs[jnew]
+        Δs[jnew] = test[idx_max] - s[jnew]
+        push!(Δs, s[jnew] + Δj - test[idx_max])
+
+        # Update test points and matrices:
+        if numref > refinement   # initial phase
+            numref -= 1
+            δ = float_type.((1:numref) / (numref+1))
+            # Wipe out the old test points and start over:
+            last_col += 1
+            update_test_points!(test, τ, fτ, s, Δs, δ, 1:numref, 1:last_col)
+            idx_new_test = idx_test = CartesianIndices((1:numref, 1:last_col))
+            r = method(number_type[], number_type[], number_type[])
+            @views add_nodes!(r, data, τ[idx_test], fτ[idx_test], σ, fσ)
+        else                   # steady-state refinement size
+            # Replace one column and add a new column of test points:
+            last_col += 1
+            @views add_nodes!(r, data, τ[idx_test], fτ[idx_test], [σ[end]], [fσ[end]])
+            update_test_points!(test, τ, fτ, s, Δs, δ, 1:numref, [jnew, last_col])
+            idx_test = CartesianIndices((1:numref, 1:last_col))
+            idx_new_test = idx_test[:, [jnew, last_col]]
+        end
+    end
+
+    # Return the best stuff:
+    z, y, w, s = best.nodes, best.vals, best.weights, best.prenodes
+    if !isclosed(d)
+        push!(s, one(float_type))
+    end
+    if isreal(z) && isreal(w) && isreal(y)
+        z, y, w = real(z), real(y), real(w)
+    end
+    if stats
+        nodes = collect(i.nodes for i in iteration)
+        vals = collect(i.vals for i in iteration)
+        if isreal(z) && isreal(w) && isreal(y)
+            vals = real.(vals)
+        end
+        weights = collect(i.weights for i in iteration)
+        pole = collect(i.poles for i in iteration)
+        st = ConvergenceStats(bestidx, err, nbad, nodes, vals, weights, complex.(pole))
+        r = method(z, y, w; stats=st)
+    else
+        r = method(z, y, w)
+    end
+    return Approximation(f, d, r, s)
 end
