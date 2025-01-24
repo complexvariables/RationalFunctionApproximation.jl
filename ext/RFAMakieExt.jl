@@ -6,12 +6,12 @@ RFA = RationalFunctionApproximation
 """
     convergenceplot(r)
 
-Plot the convergence history of a `Barycentric` or `Approximation` rational function.
+Plot the convergence history of a rational approximation.
 
 Markers show the maximum error on (the boundary of) the domain as a function of the numerator/denominator degree. A red marker indicates that the approximation has disallowed poles in its domain. A gold halo highlights the best approximation.
 """
 RFA.convergenceplot(r::RFA.Approximation) = convergenceplot(r.fun)
-function RFA.convergenceplot(r::Barycentric)
+function RFA.convergenceplot(r::RFA.AbstractRationalInterpolant)
     ismissing(r.stats) && error("No convergence data")
     fig = Figure( )
     ax = Axis(
