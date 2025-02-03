@@ -16,16 +16,23 @@ struct Barycentric{T,S} <: AbstractRationalInterpolant{T,S}
     values::Vector{S}
     weights::Vector{S}
     w_times_f::Vector{S}
-    stats::Union{Missing,ConvergenceStats{T}}
     function Barycentric{T}(
         node::AbstractVector{S},
         value::AbstractVector{S},
         weight::AbstractVector{S},
-        wf::AbstractVector{S} = value.*weight;
-        stats::Union{Missing,ConvergenceStats{T}} = missing
+        wf::AbstractVector{S} = value.*weight
         )  where {T <: AbstractFloat, S <: RealComplex{T}}
         @assert length(node) == length(value) == length(weight) == length(wf)
-        new{T,S}(node, value, weight, wf, stats)
+        new{T,S}(node, value, weight, wf)
+    end
+    function Barycentric{T,S}(
+        node::AbstractVector{S},
+        value::AbstractVector{S},
+        weight::AbstractVector{S},
+        wf::AbstractVector{S} = value.*weight
+        )  where {T <: AbstractFloat, S <: RealComplex{T}}
+        @assert length(node) == length(value) == length(weight) == length(wf)
+        new{T,S}(node, value, weight, wf)
     end
 end
 
@@ -39,7 +46,6 @@ Construct a `Barycentric` rational function.
 - `value::Vector`: values at the interpolation nodes
 - `weight::Vector`: barycentric weights
 - `wf::Vector`: weights times values (optional)
-- `stats::ConvergenceStatistics``: convergence statistics (optional)
 
 # Examples
 ```jldoctest
@@ -51,24 +57,22 @@ julia> r(1.5)
 1.5
 ```
 """
-function Barycentric(node, value, weight, wf=value.*weight; stats=missing)
-    Barycentric( promote(float(node), float(value), float(weight))..., float(wf); stats )
+function Barycentric(node, value, weight, wf=value.*weight)
+    Barycentric( promote(float(node), float(value), float(weight))..., float(wf))
 end
 
 function Barycentric(
-    node::Vector{S}, value::Vector{S}, weight::Vector{S}, wf=value.*weight;
-    stats=missing
+    node::Vector{S}, value::Vector{S}, weight::Vector{S}, wf=value.*weight
     ) where {T<:AbstractFloat, S<:RealComplex{T}}
-    return Barycentric{T}(node, value, weight, wf; stats)
+    return Barycentric{T}(node, value, weight, wf)
 end
 
 # convenience accessors and overloads
 nodes(r::Barycentric) = r.nodes
 Base.values(r::Barycentric) = r.values
 weights(r::Barycentric) = r.weights
-stats(r::Barycentric) = r.stats
 "degree(r) returns the degree of the numerator and denominator of the rational `r`."
-degree(r::Barycentric) = length(r.nodes) - 1
+degree(r::Barycentric) = (length(r.nodes) - 1, length(r.nodes) - 1)
 
 """
     r(z)
@@ -165,34 +169,6 @@ function cleanup_poles(f::Approximation, isbad=z->dist(z, f.domain)==0 )
     return pfd
 end
 
-"""
-    rewind(r, degree)
-
-Rewind a `Barycentric` rational function to a lower degree using stored convergence data.
-
-# Arguments
-- `r::Union{Barycentric,Approximation}`: the rational function to rewind
-- `degree::Integer`: the degree to rewind to
-
-# Returns
-- the rational function of the specified degree (same type as input)
-
-# Examples
-```jldoctest
-julia> r = aaa(x -> cos(20x), stats=true)
-Barycentric function with 25 nodes and values:
-    -1.0=>0.408082,  -0.978022=>0.757786,  -0.912088=>0.820908,  …  1.0=>0.408082
-
-julia> rewind(r, 10)
-Barycentric function with 11 nodes and values:
-    -1.0=>0.408082,  1.0=>0.408082,  -0.466667=>-0.995822,  …  0.898413=>0.636147
-```
-"""
-function rewind(r::Barycentric, degree::Integer)
-    m = degree
-    return Barycentric(r.stats.nodes[m], r.stats.values[m], r.stats.weights[m])
-end
-
 function add_nodes!(r::Barycentric, data, τ, fτ, new_σ, new_f)
     C, L = data
     σ, fσ = r.nodes, r.values
@@ -213,8 +189,8 @@ function add_nodes!(r::Barycentric, data, τ, fτ, new_σ, new_f)
 end
 
 function update_test_values!(::Type{Barycentric}, numeric_type::Type, num_refine::Integer, max_degree::Integer)
-    C = Array{numeric_type}(undef, num_refine, max_degree+1, max_degree+1)
-    L = Array{numeric_type}(undef, num_refine, max_degree+1, max_degree+1)
+    C = Array{numeric_type}(undef, num_refine, max_degree+1, max_degree+2)
+    L = Array{numeric_type}(undef, num_refine, max_degree+1, max_degree+2)
     return C, L
 end
 

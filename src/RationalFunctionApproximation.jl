@@ -1,6 +1,6 @@
 module RationalFunctionApproximation
 
-using LinearAlgebra, GenericLinearAlgebra, ComplexRegions
+using LinearAlgebra, Statistics, GenericLinearAlgebra, ComplexRegions
 using PyFormattedStrings
 
 export Barycentric, Thiele, nodes, weights, degree, rewind,
@@ -23,7 +23,11 @@ include("lawson.jl")
 include("operations.jl")
 
 # These are overloaded by plotting extensions.
-export convergenceplot, errorplot
+export convergenceplot, errorplot, animate
+
+function animate(::Any)
+    error("Load the Makie or Plots package first.")
+end
 
 function convergenceplot(::Any)
     error("Load the Makie or Plots package first.")

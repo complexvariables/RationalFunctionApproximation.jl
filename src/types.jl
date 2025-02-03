@@ -11,8 +11,9 @@ const VectorRealComplex{T} = Union{Vector{T}, Vector{Complex{T}}}
 const VectorVectorRealComplex{T} = Union{Vector{Vector{T}},Vector{Vector{Complex{T}}}}
 
 #####
-##### generic rational interpolant
+##### abstract rational interpolant
 #####
+
 # types are T = float type, S = T or Complex{T}
 abstract type AbstractRationalInterpolant{T,S} <: Function end
 
@@ -22,8 +23,6 @@ nodes(::AbstractRationalInterpolant) = error("`nodes` not implemented for $(type
 "values(r) returns a vector of the nodal values of the rational interpolant `r`."
 Base.values(::AbstractRationalInterpolant) = error("`values` not implemented for $(typeof(r))")
 weights(::AbstractRationalInterpolant) = error("`weights` not implemented for $(typeof(r))")
-"stats(r) returns the convergence statistics of the rational interpolant `r`."
-stats(::AbstractRationalInterpolant) = error("`stats` not implemented for $(typeof(r))")
 Base.eltype(r::AbstractRationalInterpolant) = eltype(values(r))
 Base.length(r::AbstractRationalInterpolant) = length(nodes(r))
 Base.isempty(r::AbstractRationalInterpolant) = isempty(nodes(r))
@@ -78,6 +77,46 @@ function Base.show(io::IO, r::AbstractRationalInterpolant)
         )
 end
 
+#####
+##### convergence statistics
+#####
+
+"""
+    ConvergenceStats{T}(bestidx, error, nbad, nodes, values, weights, poles)
+
+Convergence statistics for a sequence of rational approximations.
+
+# Fields
+- `bestidx`: the index of the best approximation
+- `error`: the error of each approximation
+- `nodes`: the nodes of each approximation
+- `values`: the values of each approximation
+- `weights`: the weights of each approximation
+- `poles`: the poles of each approximation
+- `isbad`: vector indicating which poles are in the domain
+
+See also: [`approximate`](@ref), [`Barycentric`](@ref)
+"""
+struct ConvergenceStats{T}
+    bestidx::Int
+    error::Vector{<:AbstractFloat}
+    nodes::VectorVectorRealComplex{T}
+    values::VectorVectorRealComplex{T}
+    weights::VectorVectorRealComplex{T}
+    poles::Vector{Vector{Complex{T}}}
+    isbad::Vector{BitVector}
+end
+
+function Base.show(io::IO, ::MIME"text/plain", s::ConvergenceStats)
+    print(io, f"Convergence stats on {length(s.error)} iterations, best error {s.error[s.bestidx]:.2e}")
+end
+
+function Base.show(io::IO, s::ConvergenceStats)
+    print(
+        IOContext(io,:compact=>true),
+        f"Convergence stats on {length(s.error)} iterations, best error {s.error[s.bestidx]:.2e}"
+        )
+end
 
 
 #####
@@ -99,12 +138,14 @@ Approximation of a function on a domain.
 - `domain`: the domain of the approximation
 - `fun`: the barycentric representation of the approximation
 - `prenodes`: the prenodes of the approximation
+- `stats`: convergence statistics
 """
 struct Approximation{T,S} <: Function
     original::Function
     domain::Domain
     fun::AbstractRationalInterpolant{T,S}
     prenodes::Vector{T}
+    stats::Union{Missing,ConvergenceStats{T}}
 end
 
 (f::Approximation)(z) = f.fun(z)
@@ -116,50 +157,70 @@ end
 nodes(r::Approximation, args...) = nodes(r.fun, args...)
 Base.values(r::Approximation, args...) = values(r.fun, args...)
 weights(r::Approximation, args...) = weights(r.fun, args...)
-stats(r::Approximation) = stats(r.fun)
+"stats(r) returns the convergence statistics of the rational interpolant `r`."
+stats(r::Approximation) = r.stats
 degree(r::Approximation) = degree(r.fun)
-rewind(f::Approximation, degree::Integer) = Approximation(f.original, f.domain, rewind(f.fun, degree), f.prenodes)
 poles(F::Approximation) = poles(F.fun)
 residues(f::Approximation, args...) = residues(f.fun, args...)
 roots(f::Approximation) = roots(f.fun)
 
-#####
-##### convergence statistics
-#####
 
 """
-    ConvergenceStats{T}(bestidx, error, nbad, nodes, values, weights, poles)
+    rewind(r, degree)
 
-Convergence statistics for a sequence of rational approximations.
+Rewind a rational approximation to a lower degree using stored convergence data.
 
-# Fields
-- `bestidx`: the index of the best approximation
-- `error`: the error of each approximation
-- `nbad`: the number of bad nodes in each approximation
-- `nodes`: the nodes of each approximation
-- `values`: the values of each approximation
-- `weights`: the weights of each approximation
-- `poles`: the poles of each approximation
+# Arguments
+- `r::Union{Barycentric,Approximation}`: the rational function to rewind
+- `degree::Integer`: the degree to rewind to
 
-See also: [`approximate`](@ref), [`Barycentric`](@ref)
+# Returns
+- the rational function of the specified degree (same type as input)
+
+# Examples
+```jldoctest
+julia> r = aaa(x -> cos(20x))
+Barycentric function with 25 nodes and values:
+    -1.0=>0.408082,  -0.978022=>0.757786,  -0.912088=>0.820908,  …  1.0=>0.408082
+
+julia> rewind(r, 10)
+Barycentric function with 11 nodes and values:
+    -1.0=>0.408082,  1.0=>0.408082,  -0.466667=>-0.995822,  …  0.898413=>0.636147
+```
 """
-struct ConvergenceStats{T}
-    bestidx::Int
-    error::Vector{<:AbstractFloat}
-    nbad::Vector{Int}
-    nodes::VectorVectorRealComplex{T}
-    values::VectorVectorRealComplex{T}
-    weights::VectorVectorRealComplex{T}
-    poles::Vector{Vector{Complex{T}}}
+
+function rewind(r::Approximation, degree::Integer)
+    m = degree
+    M = typeof(r.fun)
+    new_r = M(r.stats.nodes[m], r.stats.values[m], r.stats.weights[m])
+    return Approximation(r.original, r.domain, new_r, r.prenodes, r.stats)
 end
 
-function Base.show(io::IO, ::MIME"text/plain", s::ConvergenceStats)
-    print(io, f"Convergence stats on {length(s.error)} iterations, best error {s.error[s.bestidx]:.2e}")
-end
 
-function Base.show(io::IO, s::ConvergenceStats)
-    print(
-        IOContext(io,:compact=>true),
-        f"Convergence stats on {length(s.error)} iterations, best error {s.error[s.bestidx]:.2e}"
-        )
+"""
+    check(r)
+
+Check the accuracy of a rational approximation `r` on its domain.
+
+# Arguments
+- `r::Approximation`: rational approximation
+
+# Returns
+- `τ::Vector`: test points
+- `err::Vector`: error at test points
+
+See also [`approximate`](@ref), [`aaa`](@ref).
+"""
+function check(F::Approximation)
+    p = F.domain
+    if p isa ComplexSCRegion
+        p = p.boundary
+    end
+    t, τ = refine(p, F.prenodes, 30)
+    if isreal(F.fun.nodes)
+        τ = real(τ)
+    end
+    err = F.original.(τ) - F.fun.(τ)
+    @info f"Max error is {norm(err,Inf):.2e}"
+    return τ, err
 end
