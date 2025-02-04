@@ -71,8 +71,8 @@ end
 nodes(r::Barycentric) = r.nodes
 Base.values(r::Barycentric) = r.values
 weights(r::Barycentric) = r.weights
-"degree(r) returns the degree of the numerator and denominator of the rational `r`."
-degree(r::Barycentric) = (length(r.nodes) - 1, length(r.nodes) - 1)
+degrees(r::Barycentric) = (length(r.nodes) - 1, length(r.nodes) - 1)
+degree(r::Barycentric) = length(r.nodes) - 1
 
 """
     r(z)

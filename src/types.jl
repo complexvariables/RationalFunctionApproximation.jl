@@ -27,6 +27,11 @@ Base.eltype(r::AbstractRationalInterpolant) = eltype(values(r))
 Base.length(r::AbstractRationalInterpolant) = length(nodes(r))
 Base.isempty(r::AbstractRationalInterpolant) = isempty(nodes(r))
 
+"degrees(r) returns the degrees of the numerator and denominator of the rational `r`."
+degrees(r::AbstractRationalInterpolant) = error("`degrees` not implemented for $(typeof(r))")
+"degree(r) returns the degree of the denominator of the rational `r`."
+degree(r::AbstractRationalInterpolant) = error("`degree` not implemented for $(typeof(r))")
+
 "poles(r) returns the poles of the rational interpolant `r`."
 poles(::AbstractRationalInterpolant) = error("`poles` not implemented for $(typeof(r))")
 "residues(r, z) returns the residues of the rational interpolant `r` at the poles in `z`."

@@ -23,11 +23,13 @@ end
 nodes(r::Thiele) = r.nodes
 Base.values(r::Thiele) = r.values
 weights(r::Thiele) = r.weights
-function degree(r::Thiele)
+degrees(r::Thiele) = (length(r.nodes) - 1, length(r.nodes) - 1)
+function degrees(r::Thiele)
     n = length(r.nodes) - 1
     q, s = divrem(n, 2)
     return q + s, q
 end
+degree(r::Thiele) = div(length(r.nodes) - 1, 2)
 
 function evaluate(r::Thiele, z::Number)
     n = length(r.nodes)
