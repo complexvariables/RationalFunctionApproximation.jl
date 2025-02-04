@@ -84,9 +84,6 @@ function approximate(f::Function, d::ComplexPath;
     if !isclosed(d)
         # Include both endpoints as nodes for open paths:
         push!(σ, point(d, length(d)*one(float_type)))
-        test_last = false
-    else
-        test_last = true
     end
     if isreal(d)
         # Enforce reality:
@@ -141,7 +138,7 @@ function approximate(f::Function, d::ComplexPath;
 
         # Are we done?
         if (!unacceptable[n] && (last(err) <= tol*fmax)) ||     # goal met
-            (n-1 == max_degree) ||          # max degree reached
+            (degree(r) == max_degree) ||          # max degree reached
             ((n > 5) && (median(last(err, lookahead)) < last(err) < 1e-2*fmax))    # stagnation
             break
         end
