@@ -56,7 +56,7 @@ function Base.show(io::IO, mimetype::MIME"text/plain", r::AbstractRationalInterp
         println(ioc, "Empty $(typeof(r)) rational interpolant")
         return
     end
-    println(ioc, "$(typeof(r)) rational interpolant with $len nodes and values:")
+    println(ioc, "$(typeof(r)) rational interpolant of type $(degrees(r)):")
     # print out 3 nodes=>values
     nv, rest = Iterators.peel( zip(nodes(r), values(r)) )
     print(ioc, "    ", Pair(nv...))
@@ -78,7 +78,7 @@ function Base.show(io::IO, r::AbstractRationalInterpolant)
     end
     print(
         IOContext(io,:compact=>true),
-        "$(typeof(r)) rational interpolant on $m nodes"
+        "$(typeof(r)) rational interpolant of type $(degrees(r))"
         )
 end
 
