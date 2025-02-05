@@ -1,17 +1,35 @@
 
-@testset "Basic functions in $T" for T in (Float64, Double64)
+@testset "Basic functions for $method" for method in (Barycentric, Thiele)
+    T = Float64
     pts = T(10) .^ range(T(-15), T(0), 500); pts = [-reverse(pts); 0; pts]
     tol = 2000*eps(T)
-    approx(f; kw...) = approximate(f, Segment{T}(-1, 1); kw...)
+    approx(f; kw...) = approximate(f, Segment{T}(-1, 1); method, kw...)
     f = x -> abs(x + 1//2 + 1im//100); @test pass(f, approx(f), pts; rtol=tol)
     f = x -> sin(1 / (21//20 - x)); @test pass(f, approx(f), pts; rtol=tol)
     f = x -> exp(-1 / x^2); @test pass(f, approx(f), pts; rtol=tol)
     f = x -> exp(-100x^2); @test pass(f, approx(f), pts; rtol=tol)
     f = x -> exp(-10 / (6//5 - x)); @test pass(f, approx(f), pts; rtol=tol)
-    f = x -> 1/(1 + exp(100*(x + 1//2))); @test pass(f, approx(f), pts; rtol=tol)
     f = x -> sin(100x) * exp(-10x^2); @test pass(f, approx(f), pts; rtol=tol)
     f = x -> tanh(100*(x - 1//5)); @test pass(f, approx(f), pts, rtol=tol)
     f = x -> tanh(100x); @test pass(f, approx(f), pts, rtol=tol)
+    f = x -> exp(x); @test pass(f, approx(f), pts, rtol=tol)
+    f = x -> cis(x); @test pass(f, approx(f), pts, rtol=tol)
+end
+
+@testset "Basic functions in Double64" begin
+    T = Double64
+    method = Barycentric
+    pts = T(10) .^ range(T(-15), T(0), 500); pts = [-reverse(pts); 0; pts]
+    tol = 2000*eps(T)
+    approx(f; kw...) = approximate(f, Segment{T}(-1, 1); method, kw...)
+    f = x -> abs(x + 1//2 + 1im//100); @test pass(f, approx(f), pts; rtol=tol)
+    f = x -> sin(1 / (21//20 - x)); @test pass(f, approx(f), pts; rtol=tol)
+    f = x -> exp(-1 / x^2); @test pass(f, approx(f), pts; rtol=tol)
+    f = x -> exp(-100*(x + 1//4)^2); @test pass(f, approx(f), pts; rtol=tol)
+    f = x -> exp(-10 / (6//5 - x)); @test pass(f, approx(f), pts; rtol=tol)
+    f = x -> 1/(1 + exp(100*(x + 1//2))); @test pass(f, approx(f), pts; rtol=tol)
+    f = x -> sin(100x) * exp(-10x^2); @test pass(f, approx(f), pts; rtol=tol)
+    f = x -> tanh(100*(x - 1//5)); @test pass(f, approx(f), pts, rtol=tol)
     f = x -> exp(x); @test pass(f, approx(f), pts, rtol=tol)
     f = x -> cis(x); @test pass(f, approx(f), pts, rtol=tol)
 end

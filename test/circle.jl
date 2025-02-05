@@ -2,12 +2,13 @@ pts = cispi.(2 * (0:500) / 500)
 UD = unit_disk
 UC = unit_circle
 
-@testset "Unit disk" begin
-    f = z -> sin(10z) * exp(-z^2); @test pass(f, approximate(f, UD), pts, rtol=2e-11)
-    f = z -> sin(1/(1.1 - z)); @test pass(f, approximate(f, UD), pts, rtol=2e-13)
-    f = sec; @test pass(f, approximate(f, UD, max_degree=6), pts, rtol=1e-6)
-    f = z -> cos(sin(z)) + exp(z)/(z-1.1); @test pass(f, approximate(f,UD), pts, rtol=2e-13)
-    f = x -> cis(x);  @test pass(f, approximate(f, UD), pts, atol=2e-13)
+@testset "Unit disk for $method" for method in (Barycentric, Thiele)
+    approx(f; kw...) = approximate(f, UD; method, kw...)
+    f = z -> sin(10z) * exp(-z^2); @test pass(f, approx(f), pts, rtol=2e-11)
+    f = z -> sin(1/(1.1 - z)); @test pass(f, approx(f), pts, rtol=2e-13)
+    f = sec; @test pass(f, approx(f, max_degree=6), pts, rtol=1e-6)
+    f = z -> cos(sin(z)) + exp(z)/(z-1.1); @test pass(f, approx(f), pts, rtol=2e-13)
+    f = x -> cis(x);  @test pass(f, approx(f), pts, atol=2e-13)
 end
 
 @testset "Unit circle" begin
