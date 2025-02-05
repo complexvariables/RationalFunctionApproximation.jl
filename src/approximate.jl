@@ -55,7 +55,7 @@ julia> check(r);   # accuracy over the domain
 """
 function approximate(f::Function, R::ComplexRegions.AbstractRegion; kw...)
     r = approximate(f, R.boundary; isbad=z->in(z,R), kw...)
-    return Approximation(f, R, r.fun, r.prenodes)
+    return Approximation(f, R, r.fun, r.prenodes, r.stats)
 end
 
 # Convert curves to paths:
@@ -139,7 +139,7 @@ function approximate(f::Function, d::ComplexPath;
         # Are we done?
         if (!unacceptable[n] && (last(err) <= tol*fmax)) ||     # goal met
             (degree(r) == max_degree) ||          # max degree reached
-            ((n > 5) && (median(last(err, lookahead)) < last(err) < 1e-2*fmax))    # stagnation
+            ((n > lookahead) && (0.9*median(last(err, lookahead)) < last(err) < 1e-2*fmax))    # stagnation
             break
         end
 
