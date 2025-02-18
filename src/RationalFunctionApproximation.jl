@@ -2,6 +2,7 @@ module RationalFunctionApproximation
 
 using LinearAlgebra, Statistics, GenericLinearAlgebra, ComplexRegions
 using PyFormattedStrings
+using Infiltrator
 
 export Barycentric, Thiele, nodes, weights, degree, rewind,
     unit_interval, unit_circle, unit_disk, isclosed

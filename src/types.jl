@@ -105,8 +105,8 @@ See also: [`approximate`](@ref), [`Barycentric`](@ref)
 struct ConvergenceStats{T}
     bestidx::Int
     error::Vector{<:AbstractFloat}
-    nodes::VectorVectorRealComplex{T}
-    values::VectorVectorRealComplex{T}
+    nodes::VectorRealComplex{T}
+    values::VectorRealComplex{T}
     weights::VectorVectorRealComplex{T}
     poles::Vector{Vector{Complex{T}}}
     isbad::Vector{BitVector}
@@ -194,10 +194,11 @@ Barycentric function with 11 nodes and values:
 ```
 """
 
-function rewind(r::Approximation, degree::Integer)
-    m = degree
+function rewind(r::Approximation, idx::Integer)
     M = typeof(r.fun)
-    new_r = M(r.stats.nodes[m], r.stats.values[m], r.stats.weights[m])
+    st = r.stats
+    len = length(st.weights[idx])
+    new_r = M(st.nodes[1:len], st.values[1:len], st.weights[idx])
     return Approximation(r.original, r.domain, new_r, r.prenodes, r.stats)
 end
 

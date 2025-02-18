@@ -90,9 +90,8 @@ function approximate(f::Function, d::ComplexPath;
         σ = real(σ)
     end
     fσ = f.(σ)           # f at nodes
-       # n = length(σ)        # number of nodes
     n = 1    # iteration counter
-    numref = 16
+    numref = 14
     test = Matrix{float_type}(undef, numref, max_degree+1)    # parameter values of test points
     τ = similar(σ, numref, max_degree+1)             # test points
     fτ = similar(fσ, numref, max_degree+1)           # f at test points
@@ -118,7 +117,8 @@ function approximate(f::Function, d::ComplexPath;
     r = method(number_type[], number_type[], number_type[])
     idx_new_test = idx_test = CartesianIndices((1:numref, 1:1))
     @views add_nodes!(r, data, τ[idx_test], fτ[idx_test], σ, fσ)
-    all_approx = Vector{Approximation}(undef, max_degree+1)
+    lengths = Vector{Int}(undef, max_degree+3)
+    all_weights = Matrix{float_type}(undef, max_degree+3, max_degree+3)
     while true
         test_values = @views update_test_values!(r, data, τ[idx_test], fτ[idx_test], idx_new_test)
         test_actual = view(fτ, idx_test)
@@ -126,10 +126,13 @@ function approximate(f::Function, d::ComplexPath;
         any(isnan.(test_actual)) && throw(ArgumentError("Function has NaN value at a test point"))
         err_max, idx_max = findmax(abs, test_actual - test_values)
         push!(err, err_max)
-        all_approx[n] = Approximation(f, d, deepcopy(r), copy(s), missing)
+        lengths[n] = L = length(nodes(r))
+        all_weights[1:L, L] .= weights(r)
 
-        if stats || (last(err) < tol*fmax)    # do we compute poles?
+        # Do we compute poles?
+        if stats || (last(err) < tol*fmax)
             all_poles[n] = poles(r)
+            n, length(all_poles[n])
             bad = isempty(all_poles[n]) ? BitVector() : isbad.(all_poles[n])
             if count(bad) > 0
                 unacceptable[n] = true   # confirmed unacceptable
@@ -178,11 +181,18 @@ function approximate(f::Function, d::ComplexPath;
     idx = 0
     while true
         idx = pop!(order)
+        L = lengths[idx]
         if unacceptable[idx]
             # continue, unless out of options
-            isempty(order) && break
+            if isempty(order)
+                r = method(σ[1:L], fσ[1:L], all_weights[1:L, L])
+                break
+            end
         else
-            all_poles[idx] =  poles(all_approx[idx])
+            r = method(σ[1:L], fσ[1:L], all_weights[1:L, L])
+            if isempty(all_poles[idx])
+                all_poles[idx] = poles(r)
+            end
             if any(isbad, all_poles[idx])
                 unacceptable[idx] = true
             else
@@ -192,25 +202,23 @@ function approximate(f::Function, d::ComplexPath;
     end
 
     # Return the best stuff:
-    r = all_approx[idx]
-    s = r.prenodes
+    s = first(s, idx)
     if !isclosed(d)
         push!(s, one(float_type))
     end
     return if stats
         all_poles = all_poles[1:n]
-        all_approx = all_approx[1:n]
-        _nodes = nodes.(all_approx)
-        _values = values.(all_approx)
-        _weights = weights.(all_approx)
-        for i in findall(isempty.(all_poles))
-            all_poles[i] = poles(all_approx[i])
-        end
-        _isbad = map(x -> BitVector(map(isbad,x)), all_poles)
-        st = ConvergenceStats(idx, err, _nodes, _values, _weights, complex.(all_poles), _isbad)
-        Approximation(f, d, r.fun, s, st)
+        _weights = [all_weights[1:lengths[i], lengths[i]] for i in 1:n]
+        # for i in findall(isempty.(all_poles))
+        #     ri = method(_nodes[i], _values[i], _weights[i])
+        #     all_poles[i] = poles(ri)
+        # end
+        _isbad = map(x -> BitVector(map(isbad, x)), all_poles)
+        len = lengths[n]
+        st = ConvergenceStats(idx, err, σ[1:len], fσ[1:len], _weights, complex.(all_poles), _isbad)
+        Approximation(f, d, r, s, st)
     else
-        r
+        Approximation(f, d, r, s, missing)
     end
 
 end

@@ -83,7 +83,7 @@ function Thiele(x::AbstractVector, y::AbstractVector)
 end
 
 function update_test_values!(::Type{Thiele}, numeric_type::Type, num_refine::Integer, max_degree::Integer)
-    Δ = Array{numeric_type}(undef, num_refine, max_degree+1, max_degree+2)
+    Δ = Array{numeric_type}(undef, num_refine, max_degree+1, max_degree+3)
     return Δ
 end
 
