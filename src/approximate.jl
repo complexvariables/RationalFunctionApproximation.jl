@@ -70,16 +70,17 @@ function approximate(f::Function, d::ComplexPath;
     tol = 1000*eps(float_type),
     isbad = z -> dist(z, d) < tol,
     refinement = 3,
-    lookahead = 10,
+    lookahead = 16,
     stats = false
     )
 
+    max_iter = 2*max_degree + 2
     err = float_type[]
-    all_poles = fill(complex(float_type[]), max_degree+1)
-    unacceptable = fill(false, max_degree+1)
+    all_poles = fill(complex(float_type[]), max_iter)
+    unacceptable = fill(false, max_iter)
 
     # Vector of prenodes (except the last, which has no associated test points):
-    s = [zero(float_type)]
+    s = [zero(float_type), 321//654]
     σ = point(d, s)            # node points
     if !isclosed(d)
         # Include both endpoints as nodes for open paths:
@@ -92,9 +93,9 @@ function approximate(f::Function, d::ComplexPath;
     fσ = f.(σ)           # f at nodes
     n = 1    # iteration counter
     numref = 14
-    test = Matrix{float_type}(undef, numref, max_degree+1)    # parameter values of test points
-    τ = similar(σ, numref, max_degree+1)             # test points
-    fτ = similar(fσ, numref, max_degree+1)           # f at test points
+    test = Matrix{float_type}(undef, numref, max_iter)    # parameter values of test points
+    τ = similar(σ, numref, max_iter)             # test points
+    fτ = similar(fσ, numref, max_iter)           # f at test points
 
     # Update the matrices of test points and f values.
     # Each column belongs to one of the node parameter values and contains points
@@ -109,16 +110,16 @@ function approximate(f::Function, d::ComplexPath;
     end
 
     # Initial refinement
-    Δs = [length(d) * one(float_type)]    # prenode spacings
+    Δs = length(d) * [s[2], 1 - s[2]]    # prenode spacings
     δ = float_type.((1:numref) / (numref+1))
     update_test_points!(test, τ, fτ, s, Δs, δ, 1:numref, [1])
     number_type = promote_type(eltype(τ), eltype(fτ))
-    data = update_test_values!(method, number_type, numref, max_degree)
+    data = update_test_values!(method, number_type, numref, max_iter)
     r = method(number_type[], number_type[], number_type[])
     idx_new_test = idx_test = CartesianIndices((1:numref, 1:1))
     @views add_nodes!(r, data, τ[idx_test], fτ[idx_test], σ, fσ)
-    lengths = Vector{Int}(undef, max_degree+3)
-    all_weights = Matrix{float_type}(undef, max_degree+3, max_degree+3)
+    lengths = Vector{Int}(undef, max_iter)
+    all_weights = Matrix{number_type}(undef, max_iter, max_iter)
     while true
         test_values = @views update_test_values!(r, data, τ[idx_test], fτ[idx_test], idx_new_test)
         test_actual = view(fτ, idx_test)
@@ -140,9 +141,12 @@ function approximate(f::Function, d::ComplexPath;
         end
 
         # Are we done?
+        plateau2 = exp(mean(log.(last(err, lookahead))))
+        # plateau2 = 0.9*median(last(err, lookahead))
+        plateau = 0.9*mean(last(err, lookahead))
         if (!unacceptable[n] && (last(err) <= tol*fmax)) ||     # goal met
             (degree(r) == max_degree) ||          # max degree reached
-            ((n > lookahead) && (0.9*median(last(err, lookahead)) < last(err) < 1e-2*fmax))    # stagnation
+            ((n > lookahead) && (plateau2 < last(err) < 1e-2*fmax))    # stagnation
             break
         end
 

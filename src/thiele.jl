@@ -66,6 +66,7 @@ function Thiele(nodes::AbstractVector, values::AbstractVector, weights::Abstract
     if isempty(nodes) && eltype(nodes) == Any
         nodes = values = weights = Float64[]
     end
+    nodes, values, weights = promote(nodes, values, weights)
     T = eltype(values)
     return Thiele{real_type(T)}(nodes, values, weights)
 end
@@ -83,7 +84,8 @@ function Thiele(x::AbstractVector, y::AbstractVector)
 end
 
 function update_test_values!(::Type{Thiele}, numeric_type::Type, num_refine::Integer, max_degree::Integer)
-    Δ = Array{numeric_type}(undef, num_refine, max_degree+1, max_degree+3)
+    N = 2*max_degree + 2
+    Δ = Array{numeric_type}(undef, num_refine, N, N)
     return Δ
 end
 
