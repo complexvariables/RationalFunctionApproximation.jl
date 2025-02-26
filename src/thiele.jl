@@ -62,6 +62,19 @@ function roots(r::Thiele{S,T}) where {S,T}
     return filter(isfinite, eigvals(D, C))
 end
 
+function residues(r::Thiele, pol::AbstractVector=poles(r))
+    # This is a low-accuracy version for speed.
+    res = similar( complex(pol) )
+    T = eltype(res)
+    circ = [cispi(T(2k // 9)) for k in 0:8]
+    for (i, z) in enumerate(pol)
+        δ = minimum(abs, pol[[1:i-1;i+1:end]] .- z) / 2
+        res[i] = (δ / 9) * sum(u * r(z + δ*u) for u in circ)
+    end
+    return res
+end
+
+
 function Thiele(nodes::AbstractVector, values::AbstractVector, weights::AbstractVector)
     if isempty(nodes) && eltype(nodes) == Any
         nodes = values = weights = Float64[]
@@ -127,6 +140,8 @@ function add_node!(r::Thiele, new_σ, new_f)
     push!(r.values, new_f)
     n += 1
     for k in 1:n-1
+        d = φ[n] - φ[k]
+        @infiltrate iszero(d)
         φ[n] = (σ[n] - σ[k]) / (φ[n] - φ[k])
     end
     return r
