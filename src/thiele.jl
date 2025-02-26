@@ -48,8 +48,8 @@ function poles(r::Thiele{T}) where {T}
     z = try
         filter(isfinite, eigvals(D, C))
     catch
-        @warn "Problem with generalized eigvals"
-        T[]
+        _, _, _, _, ⍺, β = schur(complex(D), complex(C))
+        filter(isfinite, ⍺ ./ β)
     end
     return z
 end

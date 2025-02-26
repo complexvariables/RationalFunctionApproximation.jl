@@ -1,6 +1,6 @@
 module RationalFunctionApproximation
 
-using LinearAlgebra, Statistics, GenericLinearAlgebra, ComplexRegions
+using LinearAlgebra, Statistics, GenericLinearAlgebra, ComplexRegions, GenericSchur
 using PyFormattedStrings
 using Infiltrator
 
