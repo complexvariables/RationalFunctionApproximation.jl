@@ -65,7 +65,7 @@ approximate(f::Function, d::ComplexClosedCurve; kw...) = approximate(f, ClosedPa
 # all methods end up here
 function approximate(f::Function, d::ComplexPath;
     method = Barycentric,
-    max_degree = 150,
+    max_iter = 100,
     float_type = promote_type(real_type(d), typeof(float(1))),
     tol = 1000*eps(float_type),
     isbad = z -> dist(z, d) < tol,
@@ -74,7 +74,6 @@ function approximate(f::Function, d::ComplexPath;
     stats = false
     )
 
-    max_iter = 2*max_degree + 2
     err = float_type[]
     all_poles = fill(complex(float_type[]), max_iter)
     unacceptable = fill(false, max_iter)
@@ -119,7 +118,7 @@ function approximate(f::Function, d::ComplexPath;
     idx_new_test = idx_test = CartesianIndices((1:numref, 1:1))
     @views add_nodes!(r, data, τ[idx_test], fτ[idx_test], σ, fσ)
     lengths = Vector{Int}(undef, max_iter)
-    all_weights = Matrix{number_type}(undef, max_iter, max_iter)
+    all_weights = Matrix{number_type}(undef, max_iter + 2, max_iter + 2)
     while true
         test_values = @views update_test_values!(r, data, τ[idx_test], fτ[idx_test], idx_new_test)
         test_actual = view(fτ, idx_test)
@@ -145,7 +144,7 @@ function approximate(f::Function, d::ComplexPath;
         # plateau2 = 0.9*median(last(err, lookahead))
         plateau = 0.9*mean(last(err, lookahead))
         if (!unacceptable[n] && (last(err) <= tol*fmax)) ||     # goal met
-            (degree(r) == max_degree) ||          # max degree reached
+            (n == max_iter) ||          # max iterations reached
             ((n > lookahead) && (plateau2 < last(err) < 1e-2*fmax))    # stagnation
             break
         end

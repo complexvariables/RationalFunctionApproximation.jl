@@ -188,9 +188,9 @@ function add_nodes!(r::Barycentric, data, τ, fτ, new_σ, new_f)
     return r
 end
 
-function update_test_values!(::Type{Barycentric}, numeric_type::Type, num_refine::Integer, max_degree::Integer)
-    C = Array{numeric_type}(undef, num_refine, max_degree+1, max_degree+2)
-    L = Array{numeric_type}(undef, num_refine, max_degree+1, max_degree+2)
+function update_test_values!(::Type{Barycentric}, numeric_type::Type, num_refine::Integer, max_iter::Integer)
+    C = Array{numeric_type}(undef, num_refine, max_iter+1, max_iter+2)
+    L = Array{numeric_type}(undef, num_refine, max_iter+1, max_iter+2)
     return C, L
 end
 

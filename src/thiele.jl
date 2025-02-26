@@ -96,9 +96,8 @@ function Thiele(x::AbstractVector, y::AbstractVector)
     return Thiele(x, y, d)
 end
 
-function update_test_values!(::Type{Thiele}, numeric_type::Type, num_refine::Integer, max_degree::Integer)
-    N = 2*max_degree + 2
-    Δ = Array{numeric_type}(undef, num_refine, N, N)
+function update_test_values!(::Type{Thiele}, numeric_type::Type, num_refine::Integer, max_iter::Integer)
+    Δ = Array{numeric_type}(undef, num_refine, max_iter + 2, max_iter + 2)
     return Δ
 end
 
