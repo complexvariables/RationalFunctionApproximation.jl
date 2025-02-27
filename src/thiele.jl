@@ -101,7 +101,7 @@ function update_test_values!(::Type{Thiele}, numeric_type::Type, num_refine::Int
     return Δ
 end
 
-function update_test_values!(r::Thiele, Δ, τ, fτ, idx_new_test)
+function update_test_values!(values, r::Thiele, Δ, τ, fτ, idx_test, idx_new_test)
     σ, φ = r.nodes, r.weights
     n = length(σ)
 
@@ -110,14 +110,18 @@ function update_test_values!(r::Thiele, Δ, τ, fτ, idx_new_test)
     end
 
     # Evaluate at test points, using stored deltas
-    D = view(Δ, CartesianIndices(τ), 1:n)
-    u = fill(φ[n], size(τ))
+    D = view(Δ, idx_test, 1:n)
+    V = view(values, idx_test)
+    V .= φ[n]
     for k in n-1:-1:1
-        u = φ[k] .+ D[:, :, k] ./ u
+        Dk = view(D, :, :, k)
+        @inbounds @fastmath @. V = φ[k] + Dk / V
+        # V .= φ[k] .+ view(D, :, :, k) ./ V
     end
-    return u
+    return V
 end
 
+# add multiple interpolation nodes, updating the matrix of node-test distances
 function add_nodes!(r::Thiele, Δ, τ, fτ, new_σ, new_f)
     for (σ, fσ) in zip(new_σ, new_f)
         add_node!(r, σ, fσ)
@@ -130,6 +134,7 @@ function add_nodes!(r::Thiele, Δ, τ, fτ, new_σ, new_f)
     return r
 end
 
+# update in-place the nodes and weights
 function add_node!(r::Thiele, new_σ, new_f)
     σ = r.nodes
     n = length(σ)
@@ -140,8 +145,10 @@ function add_node!(r::Thiele, new_σ, new_f)
     n += 1
     for k in 1:n-1
         d = φ[n] - φ[k]
-        @infiltrate iszero(d)
-        φ[n] = (σ[n] - σ[k]) / (φ[n] - φ[k])
+        if iszero(d)
+            @error "Infinite inverse difference. Try breaking symmetry of the function."
+        end
+        @inbounds @fastmath φ[n] = (σ[n] - σ[k]) / d
     end
     return r
 end

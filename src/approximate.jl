@@ -93,8 +93,9 @@ function approximate(f::Function, d::ComplexPath;
     n = 1    # iteration counter
     numref = 14
     test = Matrix{float_type}(undef, numref, max_iter)    # parameter values of test points
-    τ = similar(σ, numref, max_iter)             # test points
-    fτ = similar(fσ, numref, max_iter)           # f at test points
+    τ = similar(σ, numref, max_iter + 1)             # test points
+    fτ = similar(fσ, numref, max_iter + 1)           # f at test points
+    values = similar(fτ)
 
     # Update the matrices of test points and f values.
     # Each column belongs to one of the node parameter values and contains points
@@ -120,7 +121,7 @@ function approximate(f::Function, d::ComplexPath;
     lengths = Vector{Int}(undef, max_iter)
     all_weights = Matrix{number_type}(undef, max_iter + 2, max_iter + 2)
     while true
-        test_values = @views update_test_values!(r, data, τ[idx_test], fτ[idx_test], idx_new_test)
+        test_values = update_test_values!(values, r, data, τ, fτ, idx_test, idx_new_test)
         test_actual = view(fτ, idx_test)
         fmax = norm(view(fτ, idx_test), Inf)     # scale of f
         any(isnan.(test_actual)) && throw(ArgumentError("Function has NaN value at a test point"))
@@ -203,7 +204,7 @@ function approximate(f::Function, d::ComplexPath;
             end
         end
     end
-
+    show(tim)
     # Return the best stuff:
     s = first(s, idx)
     if !isclosed(d)

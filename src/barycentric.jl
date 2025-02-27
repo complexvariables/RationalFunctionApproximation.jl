@@ -194,11 +194,10 @@ function update_test_values!(::Type{Barycentric}, numeric_type::Type, num_refine
     return C, L
 end
 
-function update_test_values!(r::Barycentric, data, τ, fτ, idx_new_test)
+function update_test_values!(values, r::Barycentric, data, τ, fτ, idx_test, idx_new_test)
     C, L = data
     σ, fσ = r.nodes, r.values
     n = length(σ)
-    idx_test = CartesianIndices(τ)
 
     # update matrices at new test points for all nodes
     @inbounds @fastmath for i in idx_new_test, j in eachindex(σ)
@@ -215,9 +214,11 @@ function update_test_values!(r::Barycentric, data, τ, fτ, idx_new_test)
     @. r.w_times_f = w * fσ
 
     # evaluate at test points
-    # take matrix shape for the active part of C
-    Cm = reshape(view(C, idx_test, 1:n), :, n)
-    # now use matrix-vector products
-    test_values = (Cm*r.w_times_f) ./ (Cm*w)
-    return reshape(test_values, size(idx_test))
+    test_values = view(values, idx_test)
+    for i in idx_test
+        numer = sum(r.w_times_f[j] * C[i, j] for j in 1:n)
+        denom = sum(r.weights[j] * C[i, j] for j in 1:n)
+        test_values[i] = numer / denom
+    end
+    return test_values
 end
