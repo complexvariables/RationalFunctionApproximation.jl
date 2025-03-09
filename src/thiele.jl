@@ -74,7 +74,6 @@ function residues(r::Thiele, pol::AbstractVector=poles(r))
     return res
 end
 
-
 function Thiele(nodes::AbstractVector, values::AbstractVector, weights::AbstractVector)
     if isempty(nodes) && eltype(nodes) == Any
         nodes = values = weights = Float64[]

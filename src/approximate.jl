@@ -62,6 +62,18 @@ end
 approximate(f::Function, d::ComplexCurve; kw...) = approximate(f, Path(d); kw...)
 approximate(f::Function, d::ComplexClosedCurve; kw...) = approximate(f, ClosedPath(d); kw...)
 
+# Update the matrices of test points and f values.
+# Each column belongs to one of the node parameter values and contains points
+# that are equispaced up to the next one.
+function update_test_points!(path, fun, test, τ, fτ, s, Δs, δ, rows, cols)
+    @inbounds @fastmath for i in rows, j in cols
+        test[i, j] = s[j] + δ[i] * Δs[j]
+        τ[i, j] = point(path, test[i, j])
+        fτ[i, j] = fun(τ[i, j])
+    end
+    return nothing
+end
+
 # all methods end up here
 function approximate(f::Function, d::ComplexPath;
     method = Barycentric,
@@ -70,14 +82,10 @@ function approximate(f::Function, d::ComplexPath;
     tol = 1000*eps(float_type),
     isbad = z -> dist(z, d) < tol,
     refinement = 3,
-    lookahead = 16,
-    stats = false
+    lookahead = 16
     )
 
     err = float_type[]
-    all_poles = fill(complex(float_type[]), max_iter)
-    unacceptable = fill(false, max_iter)
-
     # Vector of prenodes (except the last, which has no associated test points):
     s = [convert(float_type, 321//654), zero(float_type)]
     σ = point(d, s)            # node points
@@ -97,22 +105,10 @@ function approximate(f::Function, d::ComplexPath;
     fτ = similar(fσ, numref, max_iter + 1)           # f at test points
     values = similar(fτ)
 
-    # Update the matrices of test points and f values.
-    # Each column belongs to one of the node parameter values and contains points
-    # that are equispaced up to the next one.
-    function update_test_points!(test, τ, fτ, s, Δs, δ, rows, cols)
-        @inbounds @fastmath for i in rows, j in cols
-            test[i, j] = s[j] + δ[i] * Δs[j]
-            τ[i, j] = point(d, test[i, j])
-            fτ[i, j] = f(τ[i, j])
-        end
-        return nothing
-    end
-
     # Initial refinement
     Δs = length(d) * [1 - s[1], s[1]]    # prenode spacings
     δ = float_type.((1:numref) / (numref+1))
-    update_test_points!(test, τ, fτ, s, Δs, δ, 1:numref, [1])
+    update_test_points!(d, f, test, τ, fτ, s, Δs, δ, 1:numref, [1])
     number_type = promote_type(eltype(τ), eltype(fτ))
     data = update_test_values!(method, number_type, numref, max_iter)
     r = method(number_type[], number_type[], number_type[])
@@ -130,23 +126,31 @@ function approximate(f::Function, d::ComplexPath;
         lengths[n] = L = length(nodes(r))
         all_weights[1:L, L] .= weights(r)
 
-        # Do we compute poles?
-        if stats || (last(err) < tol*fmax)
-            all_poles[n] = poles(r)
-            n, length(all_poles[n])
-            bad = isempty(all_poles[n]) ? BitVector() : isbad.(all_poles[n])
-            if count(bad) > 0
-                unacceptable[n] = true   # confirmed unacceptable
+        # Are we done?
+        if last(err) <= tol*fmax
+            zp = poles(r)
+            if count(isbad, zp) == 0    # success
+                break
             end
         end
 
-        # Are we done?
-        plateau2 = exp(mean(log.(last(err, lookahead))))
-        # plateau2 = 0.9*median(last(err, lookahead))
-        plateau = 0.9*mean(last(err, lookahead))
-        if (!unacceptable[n] && (last(err) <= tol*fmax)) ||     # goal met
-            (n == max_iter) ||          # max iterations reached
-            ((n > lookahead) && (plateau2 < last(err) < 1e-2*fmax))    # stagnation
+        # Do we quit?
+        plateau = exp(mean(log.(last(err, lookahead))))
+        stagnant = (n > lookahead) && (plateau < last(err) < 1e-2*fmax)
+        if (n == max_iter) || stagnant
+            @warn("May not have converged to desired tolerance")
+            # backtrack to last acceptable approximation
+            n += 1
+            accepted = false
+            while !accepted
+                n -= 1
+                if n == 0
+                    @error("No acceptable approximation found")
+                end
+                L = lengths[n]
+                r = method(σ[1:L], fσ[1:L], all_weights[1:L, L])
+                accepted = count(isbad, poles(r)) == 0
+            end
             break
         end
 
@@ -167,64 +171,25 @@ function approximate(f::Function, d::ComplexPath;
             numref -= 1
             δ = float_type.((1:numref) / (numref+1))
             # Wipe out the old test points and start over:
-            update_test_points!(test, τ, fτ, s, Δs, δ, 1:numref, 1:n)
+            update_test_points!(d, f, test, τ, fτ, s, Δs, δ, 1:numref, 1:n)
             idx_new_test = idx_test = CartesianIndices((1:numref, 1:n))
             r = method(number_type[], number_type[], number_type[])
             @views add_nodes!(r, data, τ[idx_test], fτ[idx_test], σ, fσ)
         else                   # steady-state refinement size
             # Replace one column and add a new column of test points:
             @views add_nodes!(r, data, τ[idx_test], fτ[idx_test], [σ[end]], [fσ[end]])
-            update_test_points!(test, τ, fτ, s, Δs, δ, 1:numref, [jnew, n])
+            update_test_points!(d, f, test, τ, fτ, s, Δs, δ, 1:numref, [jnew, n])
             idx_test = CartesianIndices((1:numref, 1:n))
             idx_new_test = idx_test[:, [jnew, n]]
         end
     end
 
-    # among the unchecked approximations, check in order of error
-    order = sortperm(err, rev=true)
-    idx = 0
-    while true
-        idx = pop!(order)
-        L = lengths[idx]
-        if unacceptable[idx]
-            # continue, unless out of options
-            if isempty(order)
-                r = method(σ[1:L], fσ[1:L], all_weights[1:L, L])
-                break
-            end
-        else
-            r = method(σ[1:L], fσ[1:L], all_weights[1:L, L])
-            if isempty(all_poles[idx])
-                all_poles[idx] = poles(r)
-            end
-            if any(isbad, all_poles[idx])
-                unacceptable[idx] = true
-            else
-                break     # we got it
-            end
-        end
-    end
-
     # Return the best stuff:
-    s = first(s, idx)
+    s = first(s, lengths[n])
     if !isclosed(d)
         push!(s, one(float_type))
     end
-    return if stats
-        all_poles = all_poles[1:n]
-        _weights = [all_weights[1:lengths[i], lengths[i]] for i in 1:n]
-        # for i in findall(isempty.(all_poles))
-        #     ri = method(_nodes[i], _values[i], _weights[i])
-        #     all_poles[i] = poles(ri)
-        # end
-        _isbad = map(x -> BitVector(map(isbad, x)), all_poles)
-        len = lengths[n]
-        st = ConvergenceStats(idx, err, σ[1:len], fσ[1:len], _weights, complex.(all_poles), _isbad)
-        Approximation(f, d, r, s, st)
-    else
-        Approximation(f, d, r, s, missing)
-    end
-
+    return Approximation(f, d, r, s, History{float_type}(σ, fσ, all_weights, lengths))
 end
 
 function clean(r::Approximation;

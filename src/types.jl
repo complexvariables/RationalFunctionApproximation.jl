@@ -8,6 +8,7 @@ isclosed(p::ComplexCurve) = isa(p, ComplexClosedCurve)
 isclosed(p::ComplexPath) = isa(p, ComplexClosedPath)
 const RealComplex{T} = Union{T, ComplexValues.AnyComplex{T}}
 const VectorRealComplex{T} = Union{Vector{T}, Vector{Complex{T}}}
+const MatrixRealComplex{T} = Union{Matrix{T}, Matrix{Complex{T}}}
 const VectorVectorRealComplex{T} = Union{Vector{Vector{T}},Vector{Vector{Complex{T}}}}
 
 #####
@@ -83,46 +84,26 @@ function Base.show(io::IO, r::AbstractRationalInterpolant)
 end
 
 #####
-##### convergence statistics
+##### convergence history
 #####
 
 """
-    ConvergenceStats{T}(bestidx, error, nbad, nodes, values, weights, poles)
-
-Convergence statistics for a sequence of rational approximations.
+Convergence history for a sequence of rational approximations.
 
 # Fields
-- `bestidx`: the index of the best approximation
-- `error`: the error of each approximation
-- `nodes`: the nodes of each approximation
-- `values`: the values of each approximation
-- `weights`: the weights of each approximation
-- `poles`: the poles of each approximation
-- `isbad`: vector indicating which poles are in the domain
+- `nodes`: vector of interpolation nodes
+- `values`: vector of interpolation values
+- `weights`: matrix of all weights (upper triangle)
+- `len`: the number of nodes for each approximation
 
-See also: [`approximate`](@ref), [`Barycentric`](@ref)
+See also: [`approximate`](@ref)
 """
-struct ConvergenceStats{T}
-    bestidx::Int
-    error::Vector{<:AbstractFloat}
+struct History{T}
     nodes::VectorRealComplex{T}
     values::VectorRealComplex{T}
-    weights::VectorVectorRealComplex{T}
-    poles::Vector{Vector{Complex{T}}}
-    isbad::Vector{BitVector}
+    weights::MatrixRealComplex{T}
+    len::Vector{Int}
 end
-
-function Base.show(io::IO, ::MIME"text/plain", s::ConvergenceStats)
-    print(io, f"Convergence stats on {length(s.error)} iterations, best error {s.error[s.bestidx]:.2e}")
-end
-
-function Base.show(io::IO, s::ConvergenceStats)
-    print(
-        IOContext(io,:compact=>true),
-        f"Convergence stats on {length(s.error)} iterations, best error {s.error[s.bestidx]:.2e}"
-        )
-end
-
 
 #####
 ##### Approximation on a domain
@@ -150,7 +131,7 @@ struct Approximation{T,S} <: Function
     domain::Domain
     fun::AbstractRationalInterpolant{T,S}
     prenodes::Vector{T}
-    stats::Union{Missing,ConvergenceStats{T}}
+    history::History{T}
 end
 
 (f::Approximation)(z) = f.fun(z)
@@ -162,13 +143,10 @@ end
 nodes(r::Approximation, args...) = nodes(r.fun, args...)
 Base.values(r::Approximation, args...) = values(r.fun, args...)
 weights(r::Approximation, args...) = weights(r.fun, args...)
-"stats(r) returns the convergence statistics of the rational interpolant `r`."
-stats(r::Approximation) = r.stats
 degree(r::Approximation) = degree(r.fun)
 poles(F::Approximation) = poles(F.fun)
 residues(f::Approximation, args...) = residues(f.fun, args...)
 roots(f::Approximation) = roots(f.fun)
-
 
 """
     rewind(r, degree)
@@ -196,17 +174,17 @@ Barycentric function with 11 nodes and values:
 
 function rewind(r::Approximation, idx::Integer)
     M = typeof(r.fun)
-    st = r.stats
-    len = length(st.weights[idx])
-    new_r = M(st.nodes[1:len], st.values[1:len], st.weights[idx])
-    return Approximation(r.original, r.domain, new_r, r.prenodes, r.stats)
+    hist = r.history
+    L = hist.len[idx]
+    new_r = M(hist.nodes[1:L], hist.values[1:L], hist.weights[1:L, L])
+    return Approximation(r.original, r.domain, new_r, r.prenodes, hist)
 end
-
 
 """
     check(r)
 
-Check the accuracy of a rational approximation `r` on its domain.
+Check the accuracy of a rational approximation `r` on its domain. Use `check(r, true)` to
+suppress @info output.
 
 # Arguments
 - `r::Approximation`: rational approximation
@@ -217,7 +195,7 @@ Check the accuracy of a rational approximation `r` on its domain.
 
 See also [`approximate`](@ref), [`aaa`](@ref).
 """
-function check(F::Approximation)
+function check(F::Approximation, quiet=false)
     p = F.domain
     if p isa ComplexSCRegion
         p = p.boundary
@@ -227,6 +205,6 @@ function check(F::Approximation)
         τ = real(τ)
     end
     err = F.original.(τ) - F.fun.(τ)
-    @info f"Max error is {norm(err,Inf):.2e}"
+    !quiet && @info f"Max error is {norm(err, Inf):.2e}"
     return τ, err
 end
