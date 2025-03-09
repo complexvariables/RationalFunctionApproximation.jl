@@ -4,7 +4,7 @@ using LinearAlgebra, Statistics, GenericLinearAlgebra, ComplexRegions, GenericSc
 using PyFormattedStrings
 using Infiltrator
 
-export Barycentric, Thiele, nodes, weights, degree, rewind,
+export Barycentric, Thiele, nodes, weights, degree, rewind, clean,
     unit_interval, unit_circle, unit_disk, isclosed
 include("types.jl")
 

@@ -226,3 +226,27 @@ function approximate(f::Function, d::ComplexPath;
     end
 
 end
+
+function clean(r::Approximation;
+    tol=1000*eps(real(eltype(nodes(r)))),
+    isbad = z -> dist(z, r.domain) < tol,
+    )
+    t = r.fun
+    s = r.prenodes
+    remove = [true]
+    while any(remove)
+        z, y = nodes(t), values(t)
+        remove = falses(length(z))
+        for p in filter(isbad, poles(t))
+            _, idx = findmin(abs, z .- p)
+            remove[idx] = true
+        end
+        remove[3] = false  # hack
+        # @show findall(remove)
+        @infiltrate
+        t = Thiele(z[.!remove], y[.!remove])
+        # @show length(s), length(t.nodes)
+        # deleteat!(s, findall(remove))
+    end
+    return Approximation(r.original, r.domain, t, s, missing)
+end
