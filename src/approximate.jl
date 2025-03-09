@@ -54,7 +54,7 @@ julia> check(r);   # accuracy over the domain
 ```
 """
 function approximate(f::Function, R::ComplexRegions.AbstractRegion; kw...)
-    r = approximate(f, R.boundary; isbad=z->in(z,R), kw...)
+    r = approximate(f, R.boundary; allowed=z->!in(z,R), kw...)
     return Approximation(f, R, r.fun, r.prenodes, r.stats)
 end
 
@@ -80,11 +80,14 @@ function approximate(f::Function, d::ComplexPath;
     max_iter = 100,
     float_type = promote_type(real_type(d), typeof(float(1))),
     tol = 1000*eps(float_type),
-    isbad = z -> dist(z, d) < tol,
+    allowed = z -> dist(z, d) > tol,
     refinement = 3,
     lookahead = 16
     )
 
+    if allowed==true || allowed==:all
+        allowed = z -> true
+    end
     err = float_type[]
     # Vector of prenodes (except the last, which has no associated test points):
     s = [convert(float_type, 321//654), zero(float_type)]
@@ -127,11 +130,8 @@ function approximate(f::Function, d::ComplexPath;
         all_weights[1:L, L] .= weights(r)
 
         # Are we done?
-        if last(err) <= tol*fmax
-            zp = poles(r)
-            if count(isbad, zp) == 0    # success
-                break
-            end
+        if (last(err) <= tol*fmax) && all(allowed, poles(r))    # success
+            break
         end
 
         # Do we quit?
@@ -149,7 +149,7 @@ function approximate(f::Function, d::ComplexPath;
                 end
                 L = lengths[n]
                 r = method(σ[1:L], fσ[1:L], all_weights[1:L, L])
-                accepted = count(isbad, poles(r)) == 0
+                accepted = all(allowed, poles(r))
             end
             break
         end
@@ -189,7 +189,7 @@ function approximate(f::Function, d::ComplexPath;
     if !isclosed(d)
         push!(s, one(float_type))
     end
-    return Approximation(f, d, r, s, History{float_type}(σ, fσ, all_weights, lengths))
+    return Approximation(f, d, r, allowed, s, History{float_type}(σ, fσ, all_weights, lengths))
 end
 
 function clean(r::Approximation;

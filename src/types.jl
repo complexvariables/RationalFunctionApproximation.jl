@@ -130,6 +130,7 @@ struct Approximation{T,S} <: Function
     original::Function
     domain::Domain
     fun::AbstractRationalInterpolant{T,S}
+    allowed::Function
     prenodes::Vector{T}
     history::History{T}
 end
@@ -176,8 +177,8 @@ function rewind(r::Approximation, idx::Integer)
     M = typeof(r.fun)
     hist = r.history
     L = hist.len[idx]
-    new_r = M(hist.nodes[1:L], hist.values[1:L], hist.weights[1:L, L])
-    return Approximation(r.original, r.domain, new_r, r.prenodes, hist)
+    new_rat = M(hist.nodes[1:L], hist.values[1:L], hist.weights[1:L, L])
+    return Approximation(r.original, r.domain, new_rat, r.allowed, r.prenodes, hist)
 end
 
 """
