@@ -4,16 +4,13 @@ using RationalFunctionApproximation, Plots
 RFA = RationalFunctionApproximation
 
 # Plot a convergence curve, showing which steps had bad poles
-RFA.convergenceplot(r::RFA.Approximation) = RFA.convergenceplot(r.fun)
-function RFA.convergenceplot(r::Barycentric)
-    ismissing(r.stats) && error("No convergence data")
-    fig = plot(xlabel="degree", ylabel="max error", yscale=:log10, legend=false)
-    stats = r.stats
-    deg = length.(stats.nodes) .- 1
-    seriescolor = [ n > 0 ? :red : :darkblue for n in stats.nbad]
-    scatter!([deg[stats.bestidx]], [stats.error[stats.bestidx]],
-    markercolor=RGBA(1,1,1,0), markerstrokecolor=:gold, msw=5, markersize=7 )
-    scatter!(deg, stats.error; seriescolor, msw=0, markersize=5)
+function RFA.convergenceplot(r::RFA.Approximation)
+    deg, err, _, allowed, best = get_history(r)
+    fig = plot(xlabel="degree", ylabel="max relative error", yscale=:log10, legend=false)
+    seriescolor = [ all(b) ? :darkblue : :red for b in allowed]
+    scatter!([deg[best]], [err[best]],
+        markercolor=RGBA(1,1,1,0), markerstrokecolor=:gold, msw=5, markersize=7 )
+    scatter!(deg, err; seriescolor, msw=0, markersize=5)
     return fig
 end
 

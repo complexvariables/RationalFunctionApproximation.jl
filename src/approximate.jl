@@ -101,7 +101,7 @@ function approximate(f::Function, d::ComplexPath;
         σ = real(σ)
     end
     fσ = f.(σ)           # f at nodes
-    n = 1    # iteration counter
+    n, n_max = 1, 1    # iteration counter, all-time max
     numref = 14
     test = Matrix{float_type}(undef, numref, max_iter)    # parameter values of test points
     τ = similar(σ, numref, max_iter + 1)             # test points
@@ -135,7 +135,7 @@ function approximate(f::Function, d::ComplexPath;
         end
 
         # Do we quit?
-        plateau = exp(mean(log.(last(err, lookahead))))
+        plateau = exp(median(log.(last(err, lookahead))))
         stagnant = (n > lookahead) && (plateau < last(err) < 1e-2*fmax)
         if (n == max_iter) || stagnant
             @warn("May not have converged to desired tolerance")
@@ -143,7 +143,7 @@ function approximate(f::Function, d::ComplexPath;
             n += 1
             accepted = false
             while !accepted
-                n -= 1
+                @show n -= 1
                 if n == 0
                     @error("No acceptable approximation found")
                 end
@@ -159,7 +159,7 @@ function approximate(f::Function, d::ComplexPath;
         push!(s, test[idx_max])
         push!(σ, τ[idx_max])
         push!(fσ, fτ[idx_max])
-        n += 1
+        n_max = n += 1
 
         # Update the node spacings:
         Δj = Δs[jnew]
@@ -189,7 +189,7 @@ function approximate(f::Function, d::ComplexPath;
     if !isclosed(d)
         push!(s, one(float_type))
     end
-    return Approximation(f, d, r, allowed, s, History{float_type}(σ, fσ, all_weights, lengths))
+    return Approximation(f, d, r, allowed, s, History{float_type}(σ, fσ, all_weights, lengths[1:n_max]))
 end
 
 function clean(r::Approximation;
@@ -214,4 +214,24 @@ function clean(r::Approximation;
         # deleteat!(s, findall(remove))
     end
     return Approximation(r.original, r.domain, t, s, missing)
+end
+
+function get_history(r::Approximation{T,S}) where {T,S}
+    hist = r.history
+    deg = Int[]
+    zp = Vector{complex(S)}[]
+    err = T[]
+    allowed = BitVector[]
+    τ, _ = check(r, true)
+    fτ = r.original.(τ)
+    scale = maximum(abs, fτ)
+    for (idx, n) in enumerate(hist.len)
+        rn = rewind(r, idx)
+        push!(deg, degree(rn))
+        push!(zp, poles(rn))
+        push!(allowed, r.allowed.(zp[end]))
+        push!(err, maximum(abs, rn.(τ) - fτ) / scale)
+    end
+    best = findfirst(length(nodes(r)) .== hist.len)
+    return deg, err, zp, allowed, best
 end

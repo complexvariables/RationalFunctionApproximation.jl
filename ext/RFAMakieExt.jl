@@ -11,16 +11,12 @@ Plot the convergence history of a rational approximation.
 Markers show the maximum error on (the boundary of) the domain as a function of the numerator/denominator degree. A red marker indicates that the approximation has disallowed poles in its domain. A gold halo highlights the best approximation.
 """
 function RFA.convergenceplot(r::RFA.Approximation)
-    ismissing(r.stats) && error("No convergence data")
+    deg, err, _, allowed, best = get_history(r)
     fig = Figure( )
-    ax = Axis(
-        fig[1,1], xlabel="degree", ylabel="max error", yscale=log10
-        )
-    stats = r.stats
-    deg = [degree(rewind(r, n)) for n in eachindex(stats.error)]
-    color = [any(b) ? :red : :darkblue for b in stats.isbad]
-    scatter!(ax, deg, stats.error; color, colorrange=(0, 1), markersize=10)
-    scatter!(ax, deg[stats.bestidx], stats.error[stats.bestidx],
+    ax = Axis(fig[1,1], xlabel="degree", ylabel="relative max error", yscale=log10)
+    color = [all(b) ? :darkblue : :red for b in allowed]
+    scatter!(ax, deg, err; color, colorrange=(0, 1), markersize=10)
+    scatter!(ax, deg[best], err[best],
         color=RGBAf(1,1,1,0), strokecolor=:gold, strokewidth=3, markersize=16 )
     return fig
 end
