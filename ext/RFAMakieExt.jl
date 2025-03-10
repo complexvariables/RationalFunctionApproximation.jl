@@ -61,12 +61,12 @@ end
 function RFA.poleplot(r::RFA.Approximation, idx::Integer=r.history.best)
     fig = Figure( )
     ax = Axis(fig[1,1], xlabel="Re(z)", ylabel="Im(z)", aspect=DataAspect())
-    x, _ = check(r, quiet=true)
+    t, x, _ = check(r, quiet=true, prenodes=true)
+    x = x[sortperm(t)]
     lines!(ax, real(x), imag(x))
     zp = RFA.poles(rewind(r, idx))
     color = [r.allowed(z) ? :black : :red for z in zp]
     scatter!(ax, Point2.(real(zp), imag(zp)); color, markersize=7)
-    RFA.poleplot!(ax, rewind(r, idx))
     xbox, ybox = axisbox(x)
     limits!(ax, xbox..., ybox...)
     return fig

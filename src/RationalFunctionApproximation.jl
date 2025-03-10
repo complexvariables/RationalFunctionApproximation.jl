@@ -24,7 +24,7 @@ include("lawson.jl")
 include("operations.jl")
 
 # These are overloaded by plotting extensions.
-export convergenceplot, errorplot, animate, poleplot, poleplot!
+export convergenceplot, errorplot, animate, poleplot
 
 function animate(::Any)
     error("Load the Makie or Plots package first.")
@@ -39,10 +39,6 @@ function errorplot(::Any; kwargs...)
 end
 
 function poleplot(::Any; kwargs...)
-    error("Load the Makie package first.")
-end
-
-function poleplot!(::Any; kwargs...)
     error("Load the Makie package first.")
 end
 
