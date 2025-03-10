@@ -49,52 +49,69 @@ function RFA.errorplot(r::RFA.Approximation; use_abs=false)
     return fig
 end
 
+function axisbox(z)
+    xbox, ybox = ComplexRegions.enclosing_box(z)
+    center = [(box[2] + box[1]) / 2 for box in (xbox, ybox)]
+    radius = 1.2 * maximum((box[2] - box[1]) / 2 for box in (xbox, ybox))
+    xbox = center[1] .+ [-radius, radius]
+    ybox = center[2] .+ [-radius, radius]
+    return xbox, ybox
+end
+
+function RFA.poleplot(r::RFA.Approximation, idx::Integer=r.history.best)
+    fig = Figure( )
+    ax = Axis(fig[1,1], xlabel="Re(z)", ylabel="Im(z)", aspect=DataAspect())
+    x, _ = check(r, quiet=true)
+    lines!(ax, real(x), imag(x))
+    zp = RFA.poles(rewind(r, idx))
+    color = [r.allowed(z) ? :black : :red for z in zp]
+    scatter!(ax, Point2.(real(zp), imag(zp)); color, markersize=7)
+    RFA.poleplot!(ax, rewind(r, idx))
+    xbox, ybox = axisbox(x)
+    limits!(ax, xbox..., ybox...)
+    return fig
+end
+
 function RFA.animate(r::RFA.Approximation, filename=tempname()*".mp4")
-    function dilate!(box, factor)
-        center = (box[2] + box[1]) / 2
-        radius = (box[2] - box[1]) / 2
-        box[1] = center - factor * radius
-        box[2] = center + factor * radius
-        return box
+    function get_error(n, x)
+        y = r.original.(x) - rewind(r, n).(x)
+        return abs.(y)
     end
-    function get_error(n)
-        x, y = with_logger(SimpleLogger(stderr, Logging.Warn)) do
-            check(rewind(r, n))
-        end
-        idx = sortperm(x)
-        return x[idx], y[idx]
-    end
-    function max_error_round(err)
-        M = maximum(abs, err)
-        return round(maximum(abs.(err)), digits=3)
-    end
+
+    t, x, _ = check(r, quiet=true, prenodes=true)
+    sort_idx = sortperm(t)
+    t = t[sort_idx]
+    x = x[sort_idx]
+    xbox, ybox = axisbox(x)
+
     fig = Figure(size=(850,400) )
     iter = Observable(1)
-    ax1 = Axis(fig[1,1], xlabel="Re(z)", ylabel="Im(z)", title=@lift("Degree $($iter-1)"))
-    lines!(ax1, discretize(r.domain))
-    poles = @lift Point2.(real(r.stats.poles[$iter]), imag(r.stats.poles[$iter]))
-    xbox, ybox = ComplexRegions.enclosing_box(discretize(r.domain))
-    if xbox[1] == xbox[2]
-        xbox = ybox
-    end
-    if ybox[1] == ybox[2]
-        ybox = xbox
-    end
-    dilate!(xbox, 1.2)
-    dilate!(ybox, 1.2)
-    nodecolor = @lift([bad ? :red : :black for bad in r.stats.isbad[$iter]])
-    scatter!(ax1, poles, color=nodecolor, markersize=7)
+
+    # left axis: boundary and poles
+    ax1 = Axis(fig[1,1],
+        xlabel="Re(z)", ylabel="Im(z)",
+        title=@lift("Degree $(degree(rewind(r, $iter)))"),
+        aspect=DataAspect()
+        )
+    lines!(ax1, real(x), imag(x))
     limits!(ax1, xbox..., ybox...)
-    err_data = @lift(Point2.(get_error($iter)...))
+    zp = @lift RFA.poles(rewind(r, $iter))
+    pole = @lift Point2.(real($zp), imag($zp))
+    color = @lift [r.allowed(z) ? :black : :red for z in $zp]
+    scatter!(ax1, pole; color, markersize=7)
+
+    # right axis: error
+    err_data = @lift(Point2.(t, get_error($iter, x)))
     max_err = @lift(maximum(abs(e) for e in getindex.($err_data, 2)))
     ax2 = Axis(fig[1,2],
         xlabel="parameterization", ylabel="error",
         title = @lift(@sprintf("max error = %.2e", $max_err))
     )
     max_err_hi = @lift(10 ^ min(0, 2 * ceil(log10($max_err)/2)))
-    max_err_lo = @lift(-$max_err_hi)
+    max_err_lo = @lift(-$max_err_hi / 20)
     lines!(ax2, err_data)
-    record(fig, filename, eachindex(r.stats.poles); framerate=2)  do n
+
+    record(fig, filename, eachindex(r.history.len); framerate=2)  do n
         iter[] = n
         ylims!(ax2, max_err_lo[], max_err_hi[])
         # autolimits!(ax2)

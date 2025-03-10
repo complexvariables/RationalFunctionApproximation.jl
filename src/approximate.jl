@@ -55,7 +55,7 @@ julia> check(r);   # accuracy over the domain
 """
 function approximate(f::Function, R::ComplexRegions.AbstractRegion; kw...)
     r = approximate(f, R.boundary; allowed=z->!in(z,R), kw...)
-    return Approximation(f, R, r.fun, r.prenodes, r.stats)
+    return Approximation(f, R, r.fun, r.allowed, r.prenodes, r.history)
 end
 
 # Convert curves to paths:
@@ -189,7 +189,8 @@ function approximate(f::Function, d::ComplexPath;
     if !isclosed(d)
         push!(s, one(float_type))
     end
-    return Approximation(f, d, r, allowed, s, History{float_type}(σ, fσ, all_weights, lengths[1:n_max]))
+    hist = History{float_type}(σ, fσ, all_weights, lengths[1:n_max], n)
+    return Approximation(f, d, r, allowed, s, hist)
 end
 
 function clean(r::Approximation;
@@ -222,7 +223,7 @@ function get_history(r::Approximation{T,S}) where {T,S}
     zp = Vector{complex(S)}[]
     err = T[]
     allowed = BitVector[]
-    τ, _ = check(r, true)
+    τ, _ = check(r, quiet=true)
     fτ = r.original.(τ)
     scale = maximum(abs, fτ)
     for (idx, n) in enumerate(hist.len)

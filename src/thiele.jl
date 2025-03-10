@@ -39,9 +39,9 @@ function evaluate(r::Thiele, z::Number)
     return u
 end
 
-function poles(r::Thiele{T}) where {T}
+function poles(r::Thiele{T,S}) where {T,S}
     n = length(r.nodes)
-    (n < 3) && return T[]
+    (n < 3) && return S[]
     C = diagm(1 => -ones(T, n-2))
     xi = view(r.nodes, 2:n-1)
     D = diagm(0 => view(r.weights, 2:n), -1 => -ones(T, n-2), 1 => -xi)

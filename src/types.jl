@@ -103,6 +103,7 @@ struct History{T}
     values::VectorRealComplex{T}
     weights::MatrixRealComplex{T}
     len::Vector{Int}
+    best::Int
 end
 
 #####
@@ -182,10 +183,9 @@ function rewind(r::Approximation, idx::Integer)
 end
 
 """
-    check(r)
+    check(r; quiet=false, prenodes=false)
 
-Check the accuracy of a rational approximation `r` on its domain. Use `check(r, true)` to
-suppress @info output.
+Check the accuracy of a rational approximation `r` on its domain. Returns the test points and the error at those points. Set `quiet=true` to suppress `@info` output. Set `prenodes=true` to also return the prenodes of the approximation.
 
 # Arguments
 - `r::Approximation`: rational approximation
@@ -194,9 +194,9 @@ suppress @info output.
 - `τ::Vector`: test points
 - `err::Vector`: error at test points
 
-See also [`approximate`](@ref), [`aaa`](@ref).
+See also [`approximate`](@ref).
 """
-function check(F::Approximation, quiet=false)
+function check(F::Approximation; quiet=false, prenodes=false)
     p = F.domain
     if p isa ComplexSCRegion
         p = p.boundary
@@ -207,5 +207,5 @@ function check(F::Approximation, quiet=false)
     end
     err = F.original.(τ) - F.fun.(τ)
     !quiet && @info f"Max error is {norm(err, Inf):.2e}"
-    return τ, err
+    return prenodes ? (t, τ, err) : (τ, err)
 end
