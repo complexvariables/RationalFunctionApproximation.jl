@@ -82,7 +82,7 @@ function approximate(f::Function, d::ComplexPath;
     max_iter = 100,
     float_type = promote_type(real_type(d), typeof(float(1))),
     tol = 1000*eps(float_type),
-    allowed = z -> dist(z, d) > tol,
+    allowed::Union{Function,Bool} = z -> dist(z, d) > tol,
     refinement = 3,
     lookahead = 16
     )
@@ -237,4 +237,33 @@ function get_history(r::Approximation{T,S}) where {T,S}
     end
     best = findfirst(length(nodes(r)) .== hist.len)
     return deg, err, zp, allowed, best
+end
+
+
+function approximate(f::Function, d::ComplexPath;
+    max_iter = 20,
+    float_type = promote_type(real_type(d), typeof(float(1))),
+    tol = 1000*eps(float_type),
+    allowed::AbstractVector,
+    )
+
+    function pole_to_nbr_ratio(z, zp, k)
+        to_pole = sqrt(minimum(abs2, z - p for p in zp))
+        to_nbr = min(abs(z[k] - z[k-1]), abs(z[k] - z[k+1]))
+        return to_pole / to_nbr
+    end
+
+    t, z = range(0, length(d), 100)
+    iter = 0
+    while any(k -> pole_to_nbr_ratio(z, allowed, k) < 0.5 for k in 2:length(z)-1)
+        t, z = refine(d, t, 2)
+        iter += 1
+        if iter > max_iter
+            @error("Unable to refine the path sufficiently")
+            break
+        end
+    end
+
+    A = [1 / (z - zp) for z in z, zp in allowed]
+    c = A \ f.(z)
 end
