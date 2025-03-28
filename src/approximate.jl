@@ -25,14 +25,15 @@ Adaptively compute a rational interpolant on a curve, path, or region.
 - `f::Function`: function to approximate
 - `domain`: curve, path, or region from ComplexRegions
 
-# Keyword arguments
+# Keywords
 - `max_degree::Integer=150`: maximum numerator/denominator degree to use
-- `float_type::Type=Float64`: floating point type to use for the computation
+- `float_type::Type`: floating point type to use for the computation¹
 - `tol::Real=1000*eps(float_type)`: relative tolerance for stopping
-- `isbad::Function`: function to determine if a pole is bad
+- `allowed::Function`: function to determine if a pole is allowed
 - `refinement::Integer=3`: number of test points between adjacent nodes
 - `lookahead::Integer=10`: number of iterations to determine stagnation
-- `stats::Bool=false`: whether to return convergence statistics with the approximation (slower)
+
+¹By default, `float_type` is the promotion of `float(1)` and the float type of the domain.
 
 # Returns
 - `r::Approximation`: the rational interpolant
@@ -54,11 +55,12 @@ julia> check(r);   # accuracy over the domain
 ```
 """
 function approximate(f::Function, R::ComplexRegions.AbstractRegion; kw...)
+    # Given a region as domain, we interpret poles as not being allowed in that region.
     r = approximate(f, R.boundary; allowed=z->!in(z,R), kw...)
     return Approximation(f, R, r.fun, r.allowed, r.prenodes, r.history)
 end
 
-# Convert curves to paths:
+# Convert curves to paths, to reduce the number of dispatch points.
 approximate(f::Function, d::ComplexCurve; kw...) = approximate(f, Path(d); kw...)
 approximate(f::Function, d::ComplexClosedCurve; kw...) = approximate(f, ClosedPath(d); kw...)
 

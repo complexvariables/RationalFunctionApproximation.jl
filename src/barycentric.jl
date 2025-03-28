@@ -45,7 +45,12 @@ Construct a `Barycentric` rational function.
 - `node::Vector`: interpolation nodes
 - `value::Vector`: values at the interpolation nodes
 - `weight::Vector`: barycentric weights
-- `wf::Vector`: weights times values (optional)
+
+# Keywords
+- `wf::Vector = value .* weight`: weights times values
+
+# Returns
+- `::Barycentric`: a barycentric rational interpolating function
 
 # Examples
 ```jldoctest
