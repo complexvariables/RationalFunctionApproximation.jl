@@ -54,15 +54,19 @@ julia> check(r);   # accuracy over the domain
 [ Info: Max error is 7.09e-14
 ```
 """
-function approximate(f::Function, R::ComplexRegions.AbstractRegion; kw...)
+function approximate(f::Function, R::ComplexRegions.AbstractRegion, poles; kw...)
     # Given a region as domain, we interpret poles as not being allowed in that region.
-    r = approximate(f, R.boundary; allowed=z->!in(z,R), kw...)
+    r = approximate(f, R.boundary, z->!in(z,R), kw...)
     return Approximation(f, R, r.fun, r.allowed, r.prenodes, r.history)
 end
 
 # Convert curves to paths, to reduce the number of dispatch points.
-approximate(f::Function, d::ComplexCurve; kw...) = approximate(f, Path(d); kw...)
-approximate(f::Function, d::ComplexClosedCurve; kw...) = approximate(f, ClosedPath(d); kw...)
+function approximate(f::Function, d::ComplexCurve, poles; kw...)
+     approximate(f, Path(d), poles; kw...)
+end
+function approximate(f::Function, d::ComplexClosedCurve, poles; kw...)
+    approximate(f, ClosedPath(d), poles; kw...)
+end
 
 # Update the matrices of test points and f values.
 # Each column belongs to one of the node parameter values and contains points
@@ -77,14 +81,14 @@ function update_test_points!(path, fun, test, τ, fτ, s, Δs, δ, rows, cols)
 end
 
 # all methods end up here
-function approximate(f::Function, d::ComplexPath;
+function approximate(f::Function, d::ComplexPath, allowed::Union{Function,Bool} = z -> dist(z, d) > tol;
     method = Barycentric,
     max_iter = 100,
     float_type = promote_type(real_type(d), typeof(float(1))),
     tol = 1000*eps(float_type),
-    allowed::Union{Function,Bool} = z -> dist(z, d) > tol,
     refinement = 3,
-    lookahead = 16
+    lookahead = 16,
+    degree = nothing
     )
 
     if allowed==true || allowed==:all
@@ -125,7 +129,9 @@ function approximate(f::Function, d::ComplexPath;
         test_values = update_test_values!(values, r, data, τ, fτ, idx_test, idx_new_test)
         test_actual = view(fτ, idx_test)
         fmax = norm(view(fτ, idx_test), Inf)     # scale of f
-        any(isnan.(test_actual)) && throw(ArgumentError("Function has NaN value at a test point"))
+        if any(isnan, test_actual)
+            throw(ArgumentError("Function has NaN value at a test point"))
+        end
         err_max, idx_max = findmax(abs, test_actual - test_values)
         push!(err, err_max)
         lengths[n] = L = length(nodes(r))
@@ -145,7 +151,6 @@ function approximate(f::Function, d::ComplexPath;
             n += 1
             accepted = false
             while !accepted
-                @show n -= 1
                 if n == 0
                     @error("No acceptable approximation found")
                 end
@@ -195,29 +200,29 @@ function approximate(f::Function, d::ComplexPath;
     return Approximation(f, d, r, allowed, s, hist)
 end
 
-function clean(r::Approximation;
-    tol=1000*eps(real(eltype(nodes(r)))),
-    isbad = z -> dist(z, r.domain) < tol,
-    )
-    t = r.fun
-    s = r.prenodes
-    remove = [true]
-    while any(remove)
-        z, y = nodes(t), values(t)
-        remove = falses(length(z))
-        for p in filter(isbad, poles(t))
-            _, idx = findmin(abs, z .- p)
-            remove[idx] = true
-        end
-        remove[3] = false  # hack
-        # @show findall(remove)
-        @infiltrate
-        t = Thiele(z[.!remove], y[.!remove])
-        # @show length(s), length(t.nodes)
-        # deleteat!(s, findall(remove))
-    end
-    return Approximation(r.original, r.domain, t, s, missing)
-end
+# function clean(r::Approximation;
+#     tol=1000*eps(real(eltype(nodes(r)))),
+#     isbad = z -> dist(z, r.domain) < tol,
+#     )
+#     t = r.fun
+#     s = r.prenodes
+#     remove = [true]
+#     while any(remove)
+#         z, y = nodes(t), values(t)
+#         remove = falses(length(z))
+#         for p in filter(isbad, poles(t))
+#             _, idx = findmin(abs, z .- p)
+#             remove[idx] = true
+#         end
+#         remove[3] = false  # hack
+#         # @show findall(remove)
+#         @infiltrate
+#         t = Thiele(z[.!remove], y[.!remove])
+#         # @show length(s), length(t.nodes)
+#         # deleteat!(s, findall(remove))
+#     end
+#     return Approximation(r.original, r.domain, t, s, missing)
+# end
 
 function get_history(r::Approximation{T,S}) where {T,S}
     hist = r.history
@@ -239,31 +244,34 @@ function get_history(r::Approximation{T,S}) where {T,S}
     return deg, err, zp, allowed, best
 end
 
-
-function approximate(f::Function, d::ComplexPath;
-    max_iter = 20,
-    float_type = promote_type(real_type(d), typeof(float(1))),
-    tol = 1000*eps(float_type),
-    allowed::AbstractVector,
-    )
-
+# Discretize a path so that the distance to neighbors is no more than half the distance to the nearest pole.
+function _discretize(d::ComplexPath, poles::AbstractVector)
     function pole_to_nbr_ratio(z, zp, k)
-        to_pole = sqrt(minimum(abs2, z - p for p in zp))
-        to_nbr = min(abs(z[k] - z[k-1]), abs(z[k] - z[k+1]))
+        to_pole = sqrt(minimum(abs2(z[k] - p) for p in zp; init=Inf))
+        to_nbr = max(abs(z[k] - z[k-1]), abs(z[k] - z[k+1]))
         return to_pole / to_nbr
     end
 
-    t, z = range(0, length(d), 100)
-    iter = 0
-    while any(k -> pole_to_nbr_ratio(z, allowed, k) < 0.5 for k in 2:length(z)-1)
+    t = range(0, length(d), 100)
+    z = point(d, t)
+    while any(pole_to_nbr_ratio(z, poles, k) < 2 for k in 2:length(z)-1)
         t, z = refine(d, t, 2)
-        iter += 1
-        if iter > max_iter
+        if length(t) > 70_000
             @error("Unable to refine the path sufficiently")
             break
         end
     end
+    return t, z
+end
 
-    A = [1 / (z - zp) for z in z, zp in allowed]
-    c = A \ f.(z)
+function approximate(f::Function, d::ComplexPath, allowed::AbstractVector;
+    degree = max(4, div(length(allowed), 2))
+    )
+
+    t, z = _discretize(d, allowed)
+    B = ArnoldiBasis(z, degree)
+    C = [1 / (z - zp) for z in z, zp in allowed]
+    c = isempty(C) ? B.Q \ f.(z) : [B.Q C] \ f.(z)
+    p = ArnoldiPolynomial(c[1:degree+1], B)
+    return PartialFractions(p, allowed, c[degree+2:end])
 end

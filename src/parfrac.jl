@@ -1,3 +1,4 @@
+# Stable basis for polynomials via the Arnoldi process on a given set of nodes.
 struct ArnoldiBasis{T}
     nodes::Vector{T}
     Q::Matrix{T}
@@ -38,6 +39,7 @@ function ArnoldiBasis(z::AbstractVector, m::Integer)
     return ArnoldiBasis{T}(z, Q, H)
 end
 
+# Polynomial represented in an Arnoldi basis.
 struct ArnoldiPolynomial{T} <: Function
     coeff::Vector{T}
     basis::ArnoldiBasis{T}
@@ -87,6 +89,7 @@ function evaluate(p::ArnoldiPolynomial, z::Number)
     return g
 end
 
+# Partial fraction expansion of a rational function.
 struct PartialFractions{S}
     polynomial::ArnoldiPolynomial{S}
     poles::Vector{S}
@@ -99,6 +102,9 @@ end
 
 function PartialFractions(p::ArnoldiPolynomial, poles::AbstractVector, residues::AbstractVector)
     @assert length(poles) == length(residues)
+    if isempty(poles)
+        poles = residues = Vector{eltype(p)}()
+    end
     T = promote_type(eltype(p), eltype(poles), eltype(residues))
     poles = convert.(T, poles)
     residues = convert.(T, residues)
@@ -124,18 +130,21 @@ end
 poles(r::PartialFractions) = r.poles
 residues(r::PartialFractions) = r.residues
 
-function Base.show(io::IO, mimetype::MIME"text/plain", r::PartialFractions)
+function Base.show(io::IO, mimetype::MIME"text/plain", r::PartialFractions{T}) where {T}
     ioc = IOContext(io,:compact=>get(io, :compact, true))
-    println(ioc, "$(typeof(r)) partial fraction expansion of type $(degrees(r)):")
-    # print out 3 nodes=>values
-    nv, rest = Iterators.peel( zip(poles(r), residues(r)) )
-    print(ioc, "    ", Pair(nv...))
-    rest = collect(rest)
-    next2 = Iterators.take(rest, 2)
-    foreach(s->print(ioc, ",  ", Pair(s...)), next2)
-    # if any left, just elide to the last one
-    if length(rest) > 2
-        print(ioc, ",  …  ")
-        print(ioc, Pair(last(rest)...))
+    print(ioc, "$T partial fraction expansion of type $(degrees(r))")
+    if length(r.poles) > 0
+        println(ioc, " with poles=>residues:")
+        # print out 3 nodes=>values
+        nv, rest = Iterators.peel( zip(poles(r), residues(r)) )
+        print(ioc, "    ", Pair(nv...))
+        rest = collect(rest)
+        next2 = Iterators.take(rest, 2)
+        foreach(s->print(ioc, ",  ", Pair(s...)), next2)
+        # if any left, just elide to the last one
+        if length(rest) > 2
+            print(ioc, ",  …  ")
+            print(ioc, Pair(last(rest)...))
+        end
     end
 end
