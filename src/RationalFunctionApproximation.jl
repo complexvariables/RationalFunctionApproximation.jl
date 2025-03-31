@@ -4,9 +4,12 @@ using LinearAlgebra, Statistics, GenericLinearAlgebra, ComplexRegions, GenericSc
 using PyFormattedStrings
 using Infiltrator
 
-export Barycentric, Thiele, nodes, weights, degree, rewind, clean, get_history,
+export Barycentric, Thiele, nodes, weights, degree, degrees, rewind, clean, get_history,
     unit_interval, unit_circle, unit_disk, isclosed
 include("types.jl")
+
+export PartialFractions, ArnoldiPolynomial, ArnoldiBasis
+include("parfrac.jl")
 
 export poles, residues, roots
 include("barycentric.jl")
