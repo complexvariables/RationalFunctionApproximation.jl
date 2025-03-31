@@ -19,6 +19,7 @@ struct ArnoldiBasis{T}
     end
 end
 Base.eltype(B::ArnoldiBasis) = eltype(B.nodes)
+nodes(b::ArnoldiBasis) = b.nodes
 
 function ArnoldiBasis(z::AbstractVector, m::Integer)
     n = length(z)
@@ -61,6 +62,7 @@ end
 Base.eltype(p::ArnoldiPolynomial) = eltype(p.coeff)
 Base.length(p::ArnoldiPolynomial) = length(p.coeff)
 degree(p::ArnoldiPolynomial) = length(p.coeff) - 1
+nodes(p::ArnoldiPolynomial) = nodes(p.basis)
 
 function Base.show(io::IO, mimetype::MIME"text/plain", p::ArnoldiPolynomial)
     ioc = IOContext(io,:compact=>get(io, :compact, true))
@@ -129,6 +131,7 @@ end
 
 poles(r::PartialFractions) = r.poles
 residues(r::PartialFractions) = r.residues
+nodes(r::PartialFractions) = nodes(r.polynomial)
 
 function Base.show(io::IO, mimetype::MIME"text/plain", r::PartialFractions{T}) where {T}
     ioc = IOContext(io,:compact=>get(io, :compact, true))
@@ -147,4 +150,69 @@ function Base.show(io::IO, mimetype::MIME"text/plain", r::PartialFractions{T}) w
             print(ioc, Pair(last(rest)...))
         end
     end
+end
+
+struct PartialFractionExpansion{T,S} <: Function
+    original::Function
+    domain::Domain
+    fun::PartialFractions{S}
+    prenodes::Vector{T}
+end
+
+nodes(r::PartialFractionExpansion) = nodes(r.fun)
+function Base.show(io::IO, ::MIME"text/plain", f::PartialFractionExpansion)
+    print(io, "PartialFractionExpansion on the domain: ", f.domain)
+end
+
+# Discretize a path so that the distance to neighbors is no more than half the distance to the nearest pole.
+function _discretize(d::ComplexPath, poles::AbstractVector)
+    function pole_to_nbr_ratio(z, zp, k)
+        to_pole = sqrt(minimum(abs2(z[k] - p) for p in zp; init=Inf))
+        to_nbr = max(abs(z[k] - z[k-1]), abs(z[k] - z[k+1]))
+        return to_pole / to_nbr
+    end
+
+    t = range(0, length(d), 100)
+    z = point(d, t)
+    while any(pole_to_nbr_ratio(z, poles, k) < 2 for k in 2:length(z)-1)
+        t, z = refine(d, t, 2)
+        if length(t) > 2^14
+            @warn("Unable to refine the path sufficiently")
+            break
+        end
+    end
+    return t, z
+end
+
+function pfe(f::Function, d::ComplexCurve, poles; kw...)
+    pfe(f, Path(d), poles; kw...)
+end
+function pfe(f::Function, d::ComplexClosedCurve, poles; kw...)
+   pfe(f, ClosedPath(d), poles; kw...)
+end
+
+function pfe(f::Function, d::ComplexPath, poles::AbstractVector;
+    degree = max(1, div(length(poles), 2))
+    )
+    t, z = _discretize(d, poles)
+    B = ArnoldiBasis(z, degree)
+    C = [1 / (z - zp) for z in z, zp in poles]
+    c = isempty(C) ? B.Q \ f.(z) : [B.Q C] \ f.(z)
+    p = ArnoldiPolynomial(c[1:degree+1], B)
+    r = PartialFractions(p, poles, c[degree+2:end])
+    return PartialFractionExpansion(f, d, r, collect(t))
+end
+
+function check(F::PartialFractionExpansion; quiet=false, prenodes=false)
+    p = F.domain
+    if p isa ComplexSCRegion
+        p = p.boundary
+    end
+    t, τ = refine(p, F.prenodes, 30)
+    if isreal(nodes(F.fun))
+        τ = real(τ)
+    end
+    err = F.original.(τ) - F.fun.(τ)
+    !quiet && @info f"Max error is {norm(err, Inf):.2e}"
+    return prenodes ? (t, τ, err) : (τ, err)
 end

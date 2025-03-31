@@ -8,7 +8,7 @@ export Barycentric, Thiele, nodes, weights, degree, degrees, rewind, clean, get_
     unit_interval, unit_circle, unit_disk, isclosed
 include("types.jl")
 
-export PartialFractions, ArnoldiPolynomial, ArnoldiBasis
+export PartialFractions, ArnoldiPolynomial, ArnoldiBasis, PartialFractionExpansion, pfe
 include("parfrac.jl")
 
 export poles, residues, roots

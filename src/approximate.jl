@@ -54,19 +54,15 @@ julia> check(r);   # accuracy over the domain
 [ Info: Max error is 7.09e-14
 ```
 """
-function approximate(f::Function, R::ComplexRegions.AbstractRegion, poles; kw...)
+function approximate(f::Function, R::ComplexRegions.AbstractRegion; kw...)
     # Given a region as domain, we interpret poles as not being allowed in that region.
-    r = approximate(f, R.boundary, z->!in(z,R), kw...)
+    r = approximate(f, R.boundary; allowed=z->!in(z,R), kw...)
     return Approximation(f, R, r.fun, r.allowed, r.prenodes, r.history)
 end
 
 # Convert curves to paths, to reduce the number of dispatch points.
-function approximate(f::Function, d::ComplexCurve, poles; kw...)
-     approximate(f, Path(d), poles; kw...)
-end
-function approximate(f::Function, d::ComplexClosedCurve, poles; kw...)
-    approximate(f, ClosedPath(d), poles; kw...)
-end
+approximate(f::Function, d::ComplexCurve; kw...) = approximate(f, Path(d); kw...)
+approximate(f::Function, d::ComplexClosedCurve; kw...) = approximate(f, ClosedPath(d); kw...)
 
 # Update the matrices of test points and f values.
 # Each column belongs to one of the node parameter values and contains points
@@ -81,14 +77,14 @@ function update_test_points!(path, fun, test, τ, fτ, s, Δs, δ, rows, cols)
 end
 
 # all methods end up here
-function approximate(f::Function, d::ComplexPath, allowed::Union{Function,Bool} = z -> dist(z, d) > tol;
+function approximate(f::Function, d::ComplexPath;
     method = Barycentric,
-    max_iter = 100,
     float_type = promote_type(real_type(d), typeof(float(1))),
     tol = 1000*eps(float_type),
+    allowed::Union{Function,Bool} = z -> dist(z, d) > tol,
+    max_iter = 100,
     refinement = 3,
-    lookahead = 16,
-    degree = nothing
+    lookahead = 16
     )
 
     if allowed==true || allowed==:all
@@ -242,36 +238,4 @@ function get_history(r::Approximation{T,S}) where {T,S}
     end
     best = findfirst(length(nodes(r)) .== hist.len)
     return deg, err, zp, allowed, best
-end
-
-# Discretize a path so that the distance to neighbors is no more than half the distance to the nearest pole.
-function _discretize(d::ComplexPath, poles::AbstractVector)
-    function pole_to_nbr_ratio(z, zp, k)
-        to_pole = sqrt(minimum(abs2(z[k] - p) for p in zp; init=Inf))
-        to_nbr = max(abs(z[k] - z[k-1]), abs(z[k] - z[k+1]))
-        return to_pole / to_nbr
-    end
-
-    t = range(0, length(d), 100)
-    z = point(d, t)
-    while any(pole_to_nbr_ratio(z, poles, k) < 2 for k in 2:length(z)-1)
-        t, z = refine(d, t, 2)
-        if length(t) > 70_000
-            @error("Unable to refine the path sufficiently")
-            break
-        end
-    end
-    return t, z
-end
-
-function approximate(f::Function, d::ComplexPath, allowed::AbstractVector;
-    degree = max(4, div(length(allowed), 2))
-    )
-
-    t, z = _discretize(d, allowed)
-    B = ArnoldiBasis(z, degree)
-    C = [1 / (z - zp) for z in z, zp in allowed]
-    c = isempty(C) ? B.Q \ f.(z) : [B.Q C] \ f.(z)
-    p = ArnoldiPolynomial(c[1:degree+1], B)
-    return PartialFractions(p, allowed, c[degree+2:end])
 end
