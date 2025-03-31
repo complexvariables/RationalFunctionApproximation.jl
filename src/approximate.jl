@@ -192,7 +192,7 @@ function approximate(f::Function, d::ComplexPath;
     if !isclosed(d)
         push!(s, one(float_type))
     end
-    hist = History{float_type}(σ, fσ, all_weights, lengths[1:n_max], n)
+    hist = RFIVector{typeof(r)}(σ, fσ, all_weights, lengths[1:n_max], n)
     return Approximation(f, d, r, allowed, s, hist)
 end
 
@@ -230,12 +230,11 @@ function get_history(r::Approximation{T,S}) where {T,S}
     fτ = r.original.(τ)
     scale = maximum(abs, fτ)
     for (idx, n) in enumerate(hist.len)
-        rn = rewind(r, idx)
+        rn = hist[idx]
         push!(deg, degree(rn))
         push!(zp, poles(rn))
         push!(allowed, r.allowed.(zp[end]))
         push!(err, maximum(abs, rn.(τ) - fτ) / scale)
     end
-    best = findfirst(length(nodes(r)) .== hist.len)
-    return deg, err, zp, allowed, best
+    return deg, err, zp, allowed, hist.best
 end

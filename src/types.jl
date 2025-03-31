@@ -80,30 +80,41 @@ function Base.show(io::IO, r::AbstractRationalInterpolant)
     print(
         IOContext(io,:compact=>true),
         "$(typeof(r)) rational interpolant of type $(degrees(r))"
-        )
+    )
 end
 
 #####
 ##### convergence history
 #####
 
+abstract type AbstractRFIVector{T,S} <: AbstractVector{AbstractRationalInterpolant{T,S}} end
 """
-Convergence history for a sequence of rational approximations.
+Sequence of rational interpolants produced by an iteration.
 
 # Fields
 - `nodes`: vector of interpolation nodes
 - `values`: vector of interpolation values
 - `weights`: matrix of all weights (upper triangle)
 - `len`: the number of nodes for each approximation
+- `best`: the index of the best approximation
 
 See also: [`approximate`](@ref)
 """
-struct History{T}
-    nodes::VectorRealComplex{T}
-    values::VectorRealComplex{T}
-    weights::MatrixRealComplex{T}
+struct RFIVector{R} <: AbstractVector{R}
+    nodes::AbstractVector
+    values::AbstractVector
+    weights::AbstractMatrix
     len::Vector{Int}
     best::Int
+end
+
+# must construct RFIVector with type explicitly, since otherwise it doesn't know what kind
+# of rational interpolant to use/make
+Base.size(v::RFIVector) = (length(v.len),)
+Base.IndexStyle(::Type{<:RFIVector}) = IndexLinear()
+function Base.getindex(v::RFIVector{R}, idx::Int) where {R <: AbstractRationalInterpolant}
+    L = v.len[idx]
+    return R(v.nodes[1:L], v.values[1:L], v.weights[1:L, L])
 end
 
 #####
@@ -114,7 +125,8 @@ const unit_interval = Segment(-1.,1.)
 const unit_circle = Circle(0., 1.)
 const unit_disk = disk(0., 1.)
 
-Domain = Union{ComplexCurve, ComplexPath, ComplexSCRegion}
+Domain = Union{ComplexCurve, ComplexPath, ComplexSCRegion, AbstractVector}
+
 """
     Approximation (type)
 
@@ -133,10 +145,20 @@ struct Approximation{T,S} <: Function
     fun::AbstractRationalInterpolant{T,S}
     allowed::Function
     prenodes::Vector{T}
-    history::History{T}
+    history::RFIVector
 end
 
 (f::Approximation)(z) = f.fun(z)
+function Approximation(
+    f::Function,
+    domain::Domain,
+    fun::AbstractRationalInterpolant,
+    allowed::Function,
+    prenodes::AbstractVector
+    )
+    hist = RFIVector{typeof(r)}([], [], zeros(0, 0), Int[], 0)
+    return Approximation(f, domain, fun, allowed, prenodes, hist)
+end
 
 function Base.show(io::IO, ::MIME"text/plain", f::Approximation)
     print(io, f.fun, " on the domain: ", f.domain)
@@ -173,13 +195,12 @@ Barycentric function with 11 nodes and values:
     -1.0=>0.408082,  1.0=>0.408082,  -0.466667=>-0.995822,  …  0.898413=>0.636147
 ```
 """
-
 function rewind(r::Approximation, idx::Integer)
-    M = typeof(r.fun)
-    hist = r.history
-    L = hist.len[idx]
-    new_rat = M(hist.nodes[1:L], hist.values[1:L], hist.weights[1:L, L])
-    return Approximation(r.original, r.domain, new_rat, r.allowed, r.prenodes, hist)
+    if isempty(r.history)
+        @error("No convergence history exists.")
+    end
+    new_rat = r.history[idx]
+    return Approximation(r.original, r.domain, new_rat, r.allowed, r.prenodes, r.history)
 end
 
 """
@@ -202,7 +223,7 @@ function check(F::Approximation; quiet=false, prenodes=false)
         p = p.boundary
     end
     t, τ = refine(p, F.prenodes, 30)
-    if isreal(F.fun.nodes)
+    if isreal(nodes(F.fun))
         τ = real(τ)
     end
     err = F.original.(τ) - F.fun.(τ)

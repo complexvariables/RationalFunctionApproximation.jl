@@ -92,13 +92,13 @@ function evaluate(p::ArnoldiPolynomial, z::Number)
 end
 
 # Partial fraction expansion of a rational function.
-struct PartialFractions{S}
+struct PartialFractions{T,S} <: AbstractRationalInterpolant{T,S}
     polynomial::ArnoldiPolynomial{S}
     poles::Vector{S}
     residues::Vector{S}
     function PartialFractions{S}(p::ArnoldiPolynomial{S}, poles::AbstractVector{S}, residues::AbstractVector{S}) where {S}
         @assert length(poles) == length(residues)
-        return new{S}(p, poles, residues)
+        return new{real_type(S),S}(p, poles, residues)
     end
 end
 
@@ -131,6 +131,7 @@ end
 
 poles(r::PartialFractions) = r.poles
 residues(r::PartialFractions) = r.residues
+Base.values(r::PartialFractions) = r.(nodes(r))
 nodes(r::PartialFractions) = nodes(r.polynomial)
 
 function Base.show(io::IO, mimetype::MIME"text/plain", r::PartialFractions{T}) where {T}
@@ -150,18 +151,6 @@ function Base.show(io::IO, mimetype::MIME"text/plain", r::PartialFractions{T}) w
             print(ioc, Pair(last(rest)...))
         end
     end
-end
-
-struct PartialFractionExpansion{T,S} <: Function
-    original::Function
-    domain::Domain
-    fun::PartialFractions{S}
-    prenodes::Vector{T}
-end
-
-nodes(r::PartialFractionExpansion) = nodes(r.fun)
-function Base.show(io::IO, ::MIME"text/plain", f::PartialFractionExpansion)
-    print(io, "PartialFractionExpansion on the domain: ", f.domain)
 end
 
 # Discretize a path so that the distance to neighbors is no more than half the distance to the nearest pole.
@@ -200,19 +189,5 @@ function pfe(f::Function, d::ComplexPath, poles::AbstractVector;
     c = isempty(C) ? B.Q \ f.(z) : [B.Q C] \ f.(z)
     p = ArnoldiPolynomial(c[1:degree+1], B)
     r = PartialFractions(p, poles, c[degree+2:end])
-    return PartialFractionExpansion(f, d, r, collect(t))
-end
-
-function check(F::PartialFractionExpansion; quiet=false, prenodes=false)
-    p = F.domain
-    if p isa ComplexSCRegion
-        p = p.boundary
-    end
-    t, τ = refine(p, F.prenodes, 30)
-    if isreal(nodes(F.fun))
-        τ = real(τ)
-    end
-    err = F.original.(τ) - F.fun.(τ)
-    !quiet && @info f"Max error is {norm(err, Inf):.2e}"
-    return prenodes ? (t, τ, err) : (τ, err)
+    return Approximation(f, d, r, z -> true, collect(t))
 end
