@@ -95,8 +95,14 @@ function Thiele(x::AbstractVector, y::AbstractVector)
     return Thiele(x, y, d)
 end
 
-function update_test_values!(::Type{Thiele}, numeric_type::Type, num_refine::Integer, max_iter::Integer)
-    Δ = Array{numeric_type}(undef, num_refine, max_iter + 2, max_iter + 2)
+function update_test_values!(
+    ::Type{Thiele},
+    numeric_type::Type,
+    num_refine::Integer,
+    max_iter::Integer,
+    max_test::Integer=max_iter+2
+    )
+    Δ = Array{numeric_type}(undef, num_refine, max_test, max_iter + 2)
     return Δ
 end
 
@@ -109,7 +115,9 @@ function update_test_values!(values, r::Thiele, Δ, τ, fτ, idx_test, idx_new_t
     end
 
     # Evaluate at test points, using stored deltas
-    D = view(Δ, idx_test, 1:n)
+    I = [CartesianIndex((idx, k)) for idx in idx_test, k in 1:n]
+    @infiltrate
+    D = view(Δ, I)
     V = view(values, idx_test)
     V .= φ[n]
     for k in n-1:-1:1
@@ -121,13 +129,13 @@ function update_test_values!(values, r::Thiele, Δ, τ, fτ, idx_test, idx_new_t
 end
 
 # add multiple interpolation nodes, updating the matrix of node-test distances
-function add_nodes!(r::Thiele, Δ, τ, fτ, new_σ, new_f)
+function add_nodes!(r::Thiele, Δ, τ, fτ, idx_test, new_σ, new_f)
     for (σ, fσ) in zip(new_σ, new_f)
         add_node!(r, σ, fσ)
     end
     σ = r.nodes
     n = length(σ)
-    @inbounds @fastmath for i in CartesianIndices(τ)
+    @inbounds @fastmath for i in idx_test
         Δ[i, n] = τ[i] - σ[n]
     end
     return r
@@ -151,3 +159,27 @@ function add_node!(r::Thiele, new_σ, new_f)
     end
     return r
 end
+
+# function clean(r::Approximation;
+#     tol=1000*eps(real(eltype(nodes(r)))),
+#     isbad = z -> dist(z, r.domain) < tol,
+#     )
+#     t = r.fun
+#     s = r.prenodes
+#     remove = [true]
+#     while any(remove)
+#         z, y = nodes(t), values(t)
+#         remove = falses(length(z))
+#         for p in filter(isbad, poles(t))
+#             _, idx = findmin(abs, z .- p)
+#             remove[idx] = true
+#         end
+#         remove[3] = false  # hack
+#         # @show findall(remove)
+#         @infiltrate
+#         t = Thiele(z[.!remove], y[.!remove])
+#         # @show length(s), length(t.nodes)
+#         # deleteat!(s, findall(remove))
+#     end
+#     return Approximation(r.original, r.domain, t, s, missing)
+# end

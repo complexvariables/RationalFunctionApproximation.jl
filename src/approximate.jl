@@ -118,7 +118,7 @@ function approximate(f::Function, d::ComplexPath;
     data = update_test_values!(method, number_type, numref, max_iter)
     r = method(number_type[], number_type[], number_type[])
     idx_new_test = idx_test = CartesianIndices((1:numref, 1:1))
-    @views add_nodes!(r, data, τ[idx_test], fτ[idx_test], σ, fσ)
+    @views add_nodes!(r, data, τ, fτ, idx_test, σ, fσ)
     lengths = Vector{Int}(undef, max_iter)
     all_weights = Matrix{number_type}(undef, max_iter + 2, max_iter + 2)
     while true
@@ -177,10 +177,10 @@ function approximate(f::Function, d::ComplexPath;
             update_test_points!(d, f, test, τ, fτ, s, Δs, δ, 1:numref, 1:n)
             idx_new_test = idx_test = CartesianIndices((1:numref, 1:n))
             r = method(number_type[], number_type[], number_type[])
-            @views add_nodes!(r, data, τ[idx_test], fτ[idx_test], σ, fσ)
+            @views add_nodes!(r, data, τ, fτ, idx_test, σ, fσ)
         else                   # steady-state refinement size
             # Replace one column and add a new column of test points:
-            @views add_nodes!(r, data, τ[idx_test], fτ[idx_test], [σ[end]], [fσ[end]])
+            @views add_nodes!(r, data, τ, fτ, idx_test, [σ[end]], [fσ[end]])
             update_test_points!(d, f, test, τ, fτ, s, Δs, δ, 1:numref, [jnew, n])
             idx_test = CartesianIndices((1:numref, 1:n))
             idx_new_test = idx_test[:, [jnew, n]]
@@ -196,45 +196,80 @@ function approximate(f::Function, d::ComplexPath;
     return Approximation(f, d, r, allowed, s, hist)
 end
 
-# function clean(r::Approximation;
-#     tol=1000*eps(real(eltype(nodes(r)))),
-#     isbad = z -> dist(z, r.domain) < tol,
-#     )
-#     t = r.fun
-#     s = r.prenodes
-#     remove = [true]
-#     while any(remove)
-#         z, y = nodes(t), values(t)
-#         remove = falses(length(z))
-#         for p in filter(isbad, poles(t))
-#             _, idx = findmin(abs, z .- p)
-#             remove[idx] = true
-#         end
-#         remove[3] = false  # hack
-#         # @show findall(remove)
-#         @infiltrate
-#         t = Thiele(z[.!remove], y[.!remove])
-#         # @show length(s), length(t.nodes)
-#         # deleteat!(s, findall(remove))
-#     end
-#     return Approximation(r.original, r.domain, t, s, missing)
-# end
+function approximate(f::Function, z::AbstractVector; kw...)
+    r, history = approximate(f.(z), z; history=true, kw...)
+    return Approximation(f, z, r, z->true, Float64[], history)
+end
 
-function get_history(r::Approximation{T,S}) where {T,S}
-    hist = r.history
-    deg = Int[]
-    zp = Vector{complex(S)}[]
-    err = T[]
-    allowed = BitVector[]
-    τ, _ = check(r, quiet=true)
-    fτ = r.original.(τ)
-    scale = maximum(abs, fτ)
-    for (idx, n) in enumerate(hist.len)
-        rn = hist[idx]
-        push!(deg, degree(rn))
-        push!(zp, poles(rn))
-        push!(allowed, r.allowed.(zp[end]))
-        push!(err, maximum(abs, rn.(τ) - fτ) / scale)
+function approximate(y::AbstractVector{T}, z::AbstractVector{S};
+    method = Barycentric,
+    float_type = promote_type(eltype(z), typeof(float(1))),
+    tol = 1000*eps(float_type),
+    max_iter = 100,
+    lookahead = 16,
+    history = false
+    ) where {T<:Number,S<:Number}
+
+    m = length(z)
+    n = 1    # iteration counter
+    fmax = norm(y, Inf)     # scale of f
+    number_type = promote_type(eltype(z), eltype(y))
+    err = float_type[]
+
+    ȳ = sum(y) / m
+    idx_max = argmax(abs(y - ȳ) for y in y)
+    σ = [z[idx_max]]
+    fσ = [y[idx_max]]
+    τ = reshape(z, 1, m)
+    fτ = reshape(y, 1, m)
+    values = similar(fτ)
+
+    data = update_test_values!(method, number_type, 1, max_iter, m)
+    r = method(number_type[], number_type[], number_type[])
+    idx_test = CartesianIndex.(1, 1:m)
+    deleteat!(idx_test, idx_max)
+    idx_new_test = idx_test
+    @views add_nodes!(r, data, τ, fτ, idx_test, σ, fσ)
+    lengths = Vector{Int}(undef, max_iter)
+    all_weights = Matrix{number_type}(undef, max_iter + 2, max_iter + 2)
+    while true
+        test_values = update_test_values!(values, r, data, τ, fτ, idx_test, idx_new_test)
+        test_actual = view(fτ, idx_test)
+        if any(isnan, test_actual)
+            throw(ArgumentError("Function has NaN value at a test point"))
+        end
+        err_max, idx_max = findmax(abs, test_actual - test_values)
+        push!(err, err_max)
+        lengths[n] = L = length(nodes(r))
+        all_weights[1:L, L] .= weights(r)
+        # Are we done?
+        if (last(err) <= tol*fmax)    # success
+            break
+        end
+
+        # Do we quit?
+        plateau = exp(median(log.(last(err, lookahead))))
+        stagnant = (n > lookahead) && (plateau < last(err) < 1e-2*fmax)
+        if (n == max_iter) || stagnant
+            @warn("May not have converged to desired tolerance")
+            break
+        end
+
+        # Add new node:
+        push!(σ, τ[idx_test[idx_max]])
+        push!(fσ, fτ[idx_test[idx_max]])
+        n += 1
+
+        # Update at the test points:
+        @infiltrate false
+        deleteat!(idx_test, idx_max)
+        @views add_nodes!(r, data, τ, fτ, idx_test, [σ[end]], [fσ[end]])
+        idx_new_test = CartesianIndices((1:1, 1:0))
     end
-    return deg, err, zp, allowed, hist.best
+    if history
+        hist = RFIVector{typeof(r)}(σ, fσ, all_weights, lengths[1:n], n)
+        return r, hist
+    else
+        return r
+    end
 end

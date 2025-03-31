@@ -230,3 +230,22 @@ function check(F::Approximation; quiet=false, prenodes=false)
     !quiet && @info f"Max error is {norm(err, Inf):.2e}"
     return prenodes ? (t, τ, err) : (τ, err)
 end
+
+function get_history(r::Approximation{T,S}) where {T,S}
+    hist = r.history
+    deg = Int[]
+    zp = Vector{complex(S)}[]
+    err = T[]
+    allowed = BitVector[]
+    τ, _ = check(r, quiet=true)
+    fτ = r.original.(τ)
+    scale = maximum(abs, fτ)
+    for (idx, n) in enumerate(hist.len)
+        rn = hist[idx]
+        push!(deg, degree(rn))
+        push!(zp, poles(rn))
+        push!(allowed, r.allowed.(zp[end]))
+        push!(err, maximum(abs, rn.(τ) - fτ) / scale)
+    end
+    return deg, err, zp, allowed, hist.best
+end

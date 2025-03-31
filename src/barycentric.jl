@@ -174,7 +174,8 @@ function cleanup_poles(f::Approximation, isbad=z->dist(z, f.domain)==0 )
     return pfd
 end
 
-function add_nodes!(r::Barycentric, data, τ, fτ, new_σ, new_f)
+# add new nodes to an existing Barycentric function
+function add_nodes!(r::Barycentric, data, τ, fτ, idx_test, new_σ, new_f)
     C, L = data
     σ, fσ = r.nodes, r.values
     n, n_new = length(σ), length(new_σ)
@@ -182,7 +183,8 @@ function add_nodes!(r::Barycentric, data, τ, fτ, new_σ, new_f)
     append!(fσ, new_f)
     append!(r.weights, similar(new_f))
     append!(r.w_times_f, similar(new_f))
-    idx_test = CartesianIndices(τ)
+
+    # compute data for all the test points for the new nodes
     @inbounds @fastmath for i in idx_test, j in n+1:n+n_new
         Δ = τ[i] - σ[j]
         C[i, j] = iszero(Δ) ? 1 / eps() : 1 / Δ
@@ -193,15 +195,23 @@ function add_nodes!(r::Barycentric, data, τ, fτ, new_σ, new_f)
     return r
 end
 
-function update_test_values!(::Type{Barycentric}, numeric_type::Type, num_refine::Integer, max_iter::Integer)
-    C = Array{numeric_type}(undef, num_refine, max_iter+1, max_iter+2)
-    L = Array{numeric_type}(undef, num_refine, max_iter+1, max_iter+2)
+# initial call to allocate space for work matrices
+function update_test_values!(
+    ::Type{Barycentric},
+    numeric_type::Type,
+    num_refine::Integer,
+    max_iter::Integer,
+    max_test::Integer=max_iter+1
+    )
+    C = Array{numeric_type}(undef, num_refine, max_test, max_iter+2)
+    L = Array{numeric_type}(undef, num_refine, max_test, max_iter+2)
     return C, L
 end
 
-function update_test_values!(values, r::Barycentric, data, τ, fτ, idx_test, idx_new_test)
+# Update data at all new test points for all nodes, then recompute weights and evaluate at all the test points.
+function update_test_values!(vals, r::Barycentric, data, τ, fτ, idx_test, idx_new_test)
     C, L = data
-    σ, fσ = r.nodes, r.values
+    σ, fσ = nodes(r), values(r)
     n = length(σ)
 
     # update matrices at new test points for all nodes
@@ -212,18 +222,19 @@ function update_test_values!(values, r::Barycentric, data, τ, fτ, idx_test, id
     end
 
     # update the weights
-    A = reshape(view(L, idx_test, 1:n), :, n)
+    I = [CartesianIndex((idx, k)) for idx in idx_test, k in 1:n]
+    A = reshape(view(L, I), :, n)
     _, _, V = svd(A)
     w = V[:, end]
     @. r.weights = w
     @. r.w_times_f = w * fσ
+    @infiltrate false
 
     # evaluate at test points
-    test_values = view(values, idx_test)
     for i in idx_test
         numer = sum(r.w_times_f[j] * C[i, j] for j in 1:n)
         denom = sum(r.weights[j] * C[i, j] for j in 1:n)
-        test_values[i] = numer / denom
+        vals[i] = numer / denom
     end
-    return test_values
+    return view(vals, idx_test)
 end
