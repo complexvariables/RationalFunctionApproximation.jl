@@ -92,7 +92,8 @@ function approximate(f::Function, d::ComplexPath;
     end
     err = float_type[]
     # Vector of prenodes (except the last, which has no associated test points):
-    s = [convert(float_type, 321//654), zero(float_type)]
+    # s = [convert(float_type, 321//654), zero(float_type)]
+    s = [zero(float_type)]
     σ = point(d, s)            # node points
     if !isclosed(d)
         # Include both endpoints as nodes for open paths:
@@ -111,7 +112,7 @@ function approximate(f::Function, d::ComplexPath;
     values = similar(fτ)
 
     # Initial refinement
-    Δs = length(d) * [1 - s[1], s[1]]    # prenode spacings
+    Δs = length(d) * [1 - s[1]]    # prenode spacings
     δ = float_type.((1:numref) / (numref+1))
     update_test_points!(d, f, test, τ, fτ, s, Δs, δ, 1:numref, [1])
     number_type = promote_type(eltype(τ), eltype(fτ))
@@ -147,6 +148,7 @@ function approximate(f::Function, d::ComplexPath;
             n += 1
             accepted = false
             while !accepted
+                n -= 1
                 if n == 0
                     @error("No acceptable approximation found")
                 end
