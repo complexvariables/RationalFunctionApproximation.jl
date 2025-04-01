@@ -228,13 +228,13 @@ function approximate(y::AbstractVector{T}, z::AbstractVector{S};
     r = method(number_type[], number_type[], number_type[])
     idx_test = CartesianIndex.(1, 1:m)
     deleteat!(idx_test, idx_max)
-    idx_new_test = idx_test
-    @views add_nodes!(r, data, τ, fτ, idx_test, σ, fσ)
+    idx_new_test = reshape(idx_test, 1, :)
+    @views add_nodes!(r, data, τ, fτ, reshape(idx_test, 1, :), σ, fσ)
     lengths = Vector{Int}(undef, max_iter)
     all_weights = Matrix{number_type}(undef, max_iter + 2, max_iter + 2)
     while true
-        test_values = update_test_values!(values, r, data, τ, fτ, idx_test, idx_new_test)
-        test_actual = view(fτ, idx_test)
+        test_values = update_test_values!(values, r, data, τ, fτ, reshape(idx_test, 1, :), idx_new_test)
+        test_actual = transpose(view(fτ, idx_test))
         if any(isnan, test_actual)
             throw(ArgumentError("Function has NaN value at a test point"))
         end
@@ -256,13 +256,12 @@ function approximate(y::AbstractVector{T}, z::AbstractVector{S};
         end
 
         # Add new node:
-        push!(σ, τ[idx_test[idx_max]])
-        push!(fσ, fτ[idx_test[idx_max]])
+        push!(σ, τ[idx_test[idx_max[2]]])
+        push!(fσ, fτ[idx_test[idx_max[2]]])
         n += 1
 
         # Update at the test points:
-        @infiltrate false
-        deleteat!(idx_test, idx_max)
+        deleteat!(idx_test, idx_max[2])
         @views add_nodes!(r, data, τ, fτ, idx_test, [σ[end]], [fσ[end]])
         idx_new_test = CartesianIndices((1:1, 1:0))
     end

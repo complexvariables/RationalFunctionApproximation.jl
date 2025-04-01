@@ -95,6 +95,7 @@ function Thiele(x::AbstractVector, y::AbstractVector)
     return Thiele(x, y, d)
 end
 
+# First call to allocate space for the pairwise difference matrix
 function update_test_values!(
     ::Type{Thiele},
     numeric_type::Type,
@@ -106,17 +107,18 @@ function update_test_values!(
     return Δ
 end
 
+# Update the difference matrix at new test points, then evaluate at all the test points.
 function update_test_values!(values, r::Thiele, Δ, τ, fτ, idx_test, idx_new_test)
     σ, φ = r.nodes, r.weights
     n = length(σ)
 
+    # Update the difference matrix at new test points for all nodes
     @inbounds @fastmath for i in idx_new_test, j in eachindex(σ)
         Δ[i, j] = τ[i] - σ[j]
     end
 
-    # Evaluate at test points, using stored deltas
+    # Evaluate at all test points
     I = [CartesianIndex((idx, k)) for idx in idx_test, k in 1:n]
-    @infiltrate
     D = view(Δ, I)
     V = view(values, idx_test)
     V .= φ[n]
