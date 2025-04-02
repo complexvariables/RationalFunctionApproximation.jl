@@ -218,7 +218,6 @@ function update_test_values!(vals, r::Barycentric, data, τ, fτ, idx_test, idx_
     w = V[:, end]
     @. r.weights = w
     @. r.w_times_f = w * fσ
-    @infiltrate false
 
     # evaluate at test points
     for i in idx_test

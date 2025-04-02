@@ -155,7 +155,8 @@ function add_node!(r::Thiele, new_σ, new_f)
     for k in 1:n-1
         d = φ[n] - φ[k]
         if iszero(d)
-            @error "Infinite inverse difference. Try breaking symmetry of the function."
+            @infiltrate false
+            error("Infinite inverse difference. Try breaking symmetry of the function.")
         end
         @inbounds @fastmath φ[n] = (σ[n] - σ[k]) / d
     end
