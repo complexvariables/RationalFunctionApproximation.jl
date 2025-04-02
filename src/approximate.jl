@@ -160,7 +160,7 @@ function approximate(f::Function, d::ComplexPath;
     τ = similar(σ, num_ref, max_iter + 1)             # test points
     fτ = similar(fσ, num_ref, max_iter + 1)           # f at test points
     number_type = promote_type(eltype(τ), eltype(fτ))
-    values = similar(fτ)
+    values = similar(complex(fτ))
 
     # Arrays to track iteration data and progress
     err = float_type[]    # approximation errors
@@ -206,7 +206,9 @@ function approximate(f::Function, d::ComplexPath;
             while !accepted
                 n -= 1
                 if n == 0
-                    @error("No acceptable approximation found")
+                    @warn "No acceptable approximation found"
+                    n = n_max
+                    break
                 end
                 L = lengths[n]
                 r = method(σ[1:L], fσ[1:L], all_weights[1:L, L])
