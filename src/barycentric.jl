@@ -164,16 +164,6 @@ function roots(r::Barycentric)
     end
 end
 
-# Remove any poles on the domain.
-function cleanup_poles(f::Approximation, isbad=z->dist(z, f.domain)==0 )
-    r = f.fun
-    p = filter(!isbad, poles(r))
-    res = residues(r, p)
-    k = sum(weights(r) .* values(r)) / sum(weights(r))
-    pfd(s) = k + sum(a/(s-z) for (a,z) in zip(res, p))
-    return pfd
-end
-
 # add new nodes to an existing Barycentric function
 function add_nodes!(r::Barycentric, data, τ, fτ, idx_test, new_σ, new_f)
     C, L = data

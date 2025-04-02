@@ -4,22 +4,25 @@ using LinearAlgebra, Statistics, GenericLinearAlgebra, ComplexRegions, GenericSc
 using PyFormattedStrings
 using Infiltrator
 
-export Barycentric, Thiele, nodes, weights, degree, degrees, rewind, clean, get_history,
-    unit_interval, unit_circle, unit_disk, isclosed
-include("types.jl")
+export unit_interval, unit_circle, unit_disk
+include("utils.jl")
 
-export PartialFractions, ArnoldiPolynomial, ArnoldiBasis, PartialFractionExpansion, pfe
+export nodes, weights, degree, degrees, poles, residues, roots
+include("abstract.jl")
+
+export PartialFractions, PartialFractionExpansion, pfe
 include("parfrac.jl")
 
-export poles, residues, roots
+export Barycentric, Thiele
 include("barycentric.jl")
 include("thiele.jl")
 
+export approximate, check, rewind, get_history
+include("approximate.jl")
+
+# legacy implementation of AAA
 export aaa
 include("aaa.jl")
-
-export approximate, check
-include("approximate.jl")
 
 export minimax
 include("lawson.jl")

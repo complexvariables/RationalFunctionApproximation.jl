@@ -1,73 +1,122 @@
 #####
-##### Approximation on a domain
+##### TYPES
 #####
 
-ComplexRegions.dist(z::Number, p::ComplexRegions.AbstractCurve) = minimum(abs(z - point(p, t)) for t in range(0, 1, length=300))
+##### Approximation
 
-# refinement on a curve
-refine(p::ComplexCurve, args...) = refine(Path(p), args...)
-function refine(p::ComplexPath, t::AbstractVector, N::Integer=3)
-    tt = refine(t, N)
-    ττ = point(p, tt)
-    if isreal(p)
-        ττ = real(ττ)
-    end
-    # TODO: filter out Inf/Nan?
-    return tt, ττ
+"""
+    Approximation (type)
+
+Approximation of a function on a domain.
+
+# Fields
+- `original`: the original function
+- `domain`: the domain of the approximation
+- `fun`: the barycentric representation of the approximation
+- `prenodes`: the prenodes of the approximation
+- `stats`: convergence statistics
+"""
+struct Approximation{T,S} <: Function
+    original::Function
+    domain::Domain
+    fun::AbstractRationalInterpolant{T,S}
+    allowed::Function
+    prenodes::Vector{T}
+    history::RFIVector
 end
+
+(f::Approximation)(z) = f.fun(z)
+function Approximation(
+    f::Function,
+    domain::Domain,
+    fun::AbstractRationalInterpolant,
+    allowed::Function,
+    prenodes::AbstractVector
+    )
+    hist = RFIVector{typeof(r)}([], [], zeros(0, 0), Int[], 0)
+    return Approximation(f, domain, fun, allowed, prenodes, hist)
+end
+
+function Base.show(io::IO, ::MIME"text/plain", f::Approximation)
+    print(io, f.fun, " on the domain: ", f.domain)
+end
+
+nodes(r::Approximation, args...) = nodes(r.fun, args...)
+Base.values(r::Approximation, args...) = values(r.fun, args...)
+weights(r::Approximation, args...) = weights(r.fun, args...)
+degree(r::Approximation) = degree(r.fun)
+poles(F::Approximation) = poles(F.fun)
+residues(f::Approximation, args...) = residues(f.fun, args...)
+roots(f::Approximation) = roots(f.fun)
+
+#####
+##### IMPLEMENTATION
+#####
+
+##### Create an approximation on a continuous domain
 
 """
     approximate(f, domain)
 
-Adaptively compute a rational interpolant on a curve, path, or region.
+Adaptively compute a rational interpolant on a continuous or discrete domain.
+
 
 # Arguments
+## Continuous domain
 - `f::Function`: function to approximate
 - `domain`: curve, path, or region from ComplexRegions
 
+## Discrete domain
+- `f::Function`: function to approximate
+- `z::AbstractVector`: point set on which to approximate
+
 # Keywords
-- `max_degree::Integer=150`: maximum numerator/denominator degree to use
+- `max_iter::Integer=150`: maximum number of iterations on node addition
 - `float_type::Type`: floating point type to use for the computation¹
 - `tol::Real=1000*eps(float_type)`: relative tolerance for stopping
-- `allowed::Function`: function to determine if a pole is allowed
-- `refinement::Integer=3`: number of test points between adjacent nodes
-- `lookahead::Integer=10`: number of iterations to determine stagnation
+- `allowed::Function`: function to determine if a pole is allowed²
+- `refinement::Integer=3`: number of test points between adjacent nodes (continuum only)
+- `lookahead::Integer=20`: number of iterations to determine stagnation
 
-¹By default, `float_type` is the promotion of `float(1)` and the float type of the domain.
+¹Default of `float_type` is the promotion of `float(1)` and the float type of the domain.
+²Default is to disallow poles on the curve or in the interior of a continuous domain, or to accept all poles on a discrete domain. Use `allowed=true` to allow all poles.
 
 # Returns
 - `r::Approximation`: the rational interpolant
 
-See also [`Approximation`](@ref), [`check`](@ref), [`aaa`](@ref).
+See also [`Approximation`](@ref), [`check`](@ref), [`rewind`](@ref).
 
 # Examples
 ```julia-repl
-julia> f(x) = tanh( 40*(x - 0.15) );
+julia> f = x -> tanh( 40*(x - 0.15) );
 
 julia> r = approximate(f, unit_interval)
-Barycentric rational function of type (22,22) on the domain: Path with 1 curve
+Barycentric{Float64, Float64} rational function of type (22, 22) on the domain: Path{Float64} with 1 curve
 
 julia> ( r(0.3), f(0.3) )
-(0.9999877116507944, 0.9999877116507956)
+(0.9999877116508015, 0.9999877116507956)
 
 julia> check(r);   # accuracy over the domain
-[ Info: Max error is 7.09e-14
+[ Info: Max error is 1.58e-13
 ```
 """
+# ::Function, ::AbstractRegion
 function approximate(f::Function, R::ComplexRegions.AbstractRegion; kw...)
     # Given a region as domain, we interpret poles as not being allowed in that region.
     r = approximate(f, R.boundary; allowed=z->!in(z,R), kw...)
     return Approximation(f, R, r.fun, r.allowed, r.prenodes, r.history)
 end
 
-# Convert curves to paths, to reduce the number of dispatch points.
+# ::Function, ::ComplexCurve
 approximate(f::Function, d::ComplexCurve; kw...) = approximate(f, Path(d); kw...)
+
+# ::Function, ::ComplexPath
 approximate(f::Function, d::ComplexClosedCurve; kw...) = approximate(f, ClosedPath(d); kw...)
 
 # Update the matrices of test points and f values.
-# Each column belongs to one of the node parameter values and contains points
-# that are equispaced up to the next one.
 function update_test_points!(path, fun, test, τ, fτ, s, Δs, δ, rows, cols)
+    # Each column belongs to one of the node parameter values and contains points
+    # that are equispaced up to the next one.
     @inbounds @fastmath for i in rows, j in cols
         test[i, j] = s[j] + δ[i] * Δs[j]
         τ[i, j] = point(path, test[i, j])
@@ -76,52 +125,59 @@ function update_test_points!(path, fun, test, τ, fτ, s, Δs, δ, rows, cols)
     return nothing
 end
 
-# all methods end up here
+# All continuum methods end up here:
+# ::Function, ::ComplexPath
 function approximate(f::Function, d::ComplexPath;
     method = Barycentric,
     float_type = promote_type(real_type(d), typeof(float(1))),
     tol = 1000*eps(float_type),
     allowed::Union{Function,Bool} = z -> dist(z, d) > tol,
-    max_iter = 100,
+    max_iter = 150,
     refinement = 3,
-    lookahead = 16
+    lookahead = 20
     )
 
-    if allowed==true || allowed==:all
+    num_ref = 14    # initial number of test points between nodes; decreases to `refinement`
+    δ = float_type.((1:num_ref) / (num_ref+1))    # refinement fractions
+    if allowed==true
         allowed = z -> true
     end
-    err = float_type[]
-    # Vector of prenodes (except the last, which has no associated test points):
-    # s = [convert(float_type, 321//654), zero(float_type)]
-    s = [zero(float_type)]
-    σ = point(d, s)            # node points
+    s = [zero(float_type)]         # pre-node parameters (except the last)
+    Δs = length(d) * [1 - s[1]]    # pre-node spacings
+    σ = point(d, s)            # vector of nodes points
     if !isclosed(d)
         # Include both endpoints as nodes for open paths:
         push!(σ, point(d, length(d)*one(float_type)))
     end
     if isreal(d)
-        # Enforce reality:
+        # Enforce reality for a real domain:
         σ = real(σ)
     end
-    fσ = f.(σ)           # f at nodes
-    n, n_max = 1, 1    # iteration counter, all-time max
-    numref = 14
-    test = Matrix{float_type}(undef, numref, max_iter)    # parameter values of test points
-    τ = similar(σ, numref, max_iter + 1)             # test points
-    fτ = similar(fσ, numref, max_iter + 1)           # f at test points
+    fσ = f.(σ)         # f at nodes
+
+    # Arrays of test points have one column per node (except the last), num_ref rows
+    test = Matrix{float_type}(undef, num_ref, max_iter)    # parameter values of test points
+    τ = similar(σ, num_ref, max_iter + 1)             # test points
+    fτ = similar(fσ, num_ref, max_iter + 1)           # f at test points
+    number_type = promote_type(eltype(τ), eltype(fτ))
     values = similar(fτ)
 
-    # Initial refinement
-    Δs = length(d) * [1 - s[1]]    # prenode spacings
-    δ = float_type.((1:numref) / (numref+1))
-    update_test_points!(d, f, test, τ, fτ, s, Δs, δ, 1:numref, [1])
-    number_type = promote_type(eltype(τ), eltype(fτ))
-    data = update_test_values!(method, number_type, numref, max_iter)
-    r = method(number_type[], number_type[], number_type[])
-    idx_new_test = idx_test = CartesianIndices((1:numref, 1:1))
-    @views add_nodes!(r, data, τ, fτ, idx_test, σ, fσ)
+    # Arrays to track iteration data and progress
+    err = float_type[]    # approximation errors
+    all_weights = Matrix{number_type}(undef, max_iter+2, max_iter+2)
     lengths = Vector{Int}(undef, max_iter)
-    all_weights = Matrix{number_type}(undef, max_iter + 2, max_iter + 2)
+
+    # Initialize test points, data matrices, rational approximation
+    update_test_points!(d, f, test, τ, fτ, s, Δs, δ, 1:num_ref, [1])
+    data = update_test_values!(method, number_type, num_ref, max_iter)
+    r = method(number_type[], number_type[], number_type[])
+    idx_new_test = idx_test = CartesianIndices((1:num_ref, 1:1))
+
+    # Add first node
+    @views add_nodes!(r, data, τ, fτ, idx_test, σ, fσ)
+
+    # Main iteration
+    n, n_max = 1, 1       # iteration counter, all-time max
     while true
         test_values = update_test_values!(values, r, data, τ, fτ, idx_test, idx_new_test)
         test_actual = view(fτ, idx_test)
@@ -134,8 +190,8 @@ function approximate(f::Function, d::ComplexPath;
         lengths[n] = L = length(nodes(r))
         all_weights[1:L, L] .= weights(r)
 
-        # Are we done?
-        if (last(err) <= tol*fmax) && all(allowed, poles(r))    # success
+        # Have we succeeded?
+        if (last(err) <= tol*fmax) && all(allowed, poles(r))
             break
         end
 
@@ -144,7 +200,7 @@ function approximate(f::Function, d::ComplexPath;
         stagnant = (n > lookahead) && (plateau < last(err) < 1e-2*fmax)
         if (n == max_iter) || stagnant
             @warn("May not have converged to desired tolerance")
-            # backtrack to last acceptable approximation
+            # Backtrack to last acceptable approximation:
             n += 1
             accepted = false
             while !accepted
@@ -172,37 +228,41 @@ function approximate(f::Function, d::ComplexPath;
         push!(Δs, s[jnew] + Δj - test[idx_max])
 
         # Update test points and matrices:
-        if numref > refinement   # initial phase
-            numref -= 1
-            δ = float_type.((1:numref) / (numref+1))
+        if num_ref > refinement    # initial phase
+            num_ref -= 1    # gradually decrease initial refinement level
+            δ = float_type.((1:num_ref) / (num_ref+1))
             # Wipe out the old test points and start over:
-            update_test_points!(d, f, test, τ, fτ, s, Δs, δ, 1:numref, 1:n)
-            idx_new_test = idx_test = CartesianIndices((1:numref, 1:n))
+            update_test_points!(d, f, test, τ, fτ, s, Δs, δ, 1:num_ref, 1:n)
+            idx_new_test = idx_test = CartesianIndices((1:num_ref, 1:n))
             r = method(number_type[], number_type[], number_type[])
             @views add_nodes!(r, data, τ, fτ, idx_test, σ, fσ)
-        else                   # steady-state refinement size
+        else    # steady-state refinement level
             # Replace one column and add a new column of test points:
             @views add_nodes!(r, data, τ, fτ, idx_test, [σ[end]], [fσ[end]])
-            update_test_points!(d, f, test, τ, fτ, s, Δs, δ, 1:numref, [jnew, n])
-            idx_test = CartesianIndices((1:numref, 1:n))
+            update_test_points!(d, f, test, τ, fτ, s, Δs, δ, 1:num_ref, [jnew, n])
+            idx_test = CartesianIndices((1:num_ref, 1:n))
             idx_new_test = idx_test[:, [jnew, n]]
         end
     end
 
-    # Return the best stuff:
     s = first(s, lengths[n])
     if !isclosed(d)
+        # Put the last node back in:
         push!(s, one(float_type))
     end
     hist = RFIVector{typeof(r)}(σ, fσ, all_weights, lengths[1:n_max], n)
     return Approximation(f, d, r, allowed, s, hist)
 end
 
-function approximate(f::Function, z::AbstractVector; kw...)
-    r, history = approximate(f.(z), z; history=true, kw...)
-    return Approximation(f, z, r, z->true, Float64[], history)
+##### Create an approximation on a discrete domain
+
+# ::Function, ::AbstractVector
+function approximate(f::Function, z::AbstractVector; allowed=z->true, kw...)
+    r, history = approximate(f.(z), z; history=true, allowed, kw...)
+    return Approximation(f, z, r, allowed, Float64[], history)
 end
 
+# ::AbstractVector, ::AbstractVector
 function approximate(y::AbstractVector{T}, z::AbstractVector{S};
     method = Barycentric,
     float_type = promote_type(eltype(z), typeof(float(1))),
@@ -273,4 +333,116 @@ function approximate(y::AbstractVector{T}, z::AbstractVector{S};
     else
         return r
     end
+end
+
+##### Helper functions
+
+"""
+    rewind(r, index)
+
+Rewind a rational approximation to a state encountered during an iteration.
+
+# Arguments
+- `r::Approximation}`: the approximation to rewind
+- `index::Integer`: the iteration number to rewind to
+
+# Returns
+- the rational function of the specified index (same type as input)
+
+# Examples
+```jldoctest
+julia> r = approximate(x -> cos(20x), unit_interval)
+Barycentric{Float64, Float64} rational interpolant of type (24, 24) on the domain: Path{Float64} with 1 curve
+
+julia> rewind(r, 10)
+Barycentric{Float64, Float64} rational interpolant of type (10, 10) on the domain: Path{Float64} with 1 curve
+```
+"""
+function rewind(r::Approximation, idx::Integer)
+    if isempty(r.history)
+        @error("No convergence history exists.")
+    end
+    new_rat = r.history[idx]
+    return Approximation(r.original, r.domain, new_rat, r.allowed, r.prenodes, r.history)
+end
+
+"""
+    check(r; quiet=false, prenodes=false)
+
+Check the accuracy of a rational approximation `r` on its domain. Returns the test points and the error at those points.
+
+# Arguments
+- `r::Approximation`: rational approximation
+
+# Keywords
+- `quiet::Bool=false`: suppress @info output
+- `prenodes::Bool=false`: return prenodes of the approximation as well
+
+# Returns
+- `τ::Vector`: test points
+- `err::Vector`: error at test points
+
+See also [`approximate`](@ref).
+"""
+function check(F::Approximation; quiet=false, prenodes=false)
+    p = F.domain
+    if p isa AbstractVector    # discrete domain
+        τ = p
+        t = real(eltype(p))[]
+    else
+        if p isa ComplexSCRegion
+            p = p.boundary
+        end
+        t, τ = refine(p, F.prenodes, 30)
+    end
+    if isreal(nodes(F.fun))
+        τ = real(τ)
+    end
+    err = F.original.(τ) - F.fun.(τ)
+    !quiet && @info f"Max error is {norm(err, Inf):.2e}"
+    return prenodes ? (t, τ, err) : (τ, err)
+end
+
+"""
+    get_history(r::Approximation)
+
+Parse the convergence history of a rational approximation.
+# Arguments
+- `r::Approximation`: the approximation to get the history from
+# Returns
+- `::Vector`: degrees of the approximations
+- `::Vector`: estimated maximum errors of the approximations
+- `::Vector{Vector}`: poles of the approximations
+- `::Vector{Vector}`: allowed poles of the approximations
+- `::Integer`: index of the best approximation
+
+See also [`convergenceplot`](@ref).
+"""
+function get_history(r::Approximation{T,S}) where {T,S}
+    hist = r.history
+    deg = Int[]
+    zp = Vector{complex(S)}[]
+    err = T[]
+    allowed = BitVector[]
+    τ, _ = check(r, quiet=true)
+    fτ = r.original.(τ)
+    scale = maximum(abs, fτ)
+    for (idx, n) in enumerate(hist.len)
+        rn = hist[idx]
+        push!(deg, degree(rn))
+        push!(zp, poles(rn))
+        push!(allowed, r.allowed.(zp[end]))
+        push!(err, maximum(abs, rn.(τ) - fτ) / scale)
+    end
+    return deg, err, zp, allowed, hist.best
+end
+
+# Remove any poles on the domain.  (TODO: Remove?)
+function cleanup_poles(f::Approximation, isbad=z->dist(z, f.domain)==0 )
+    r = f.fun
+    p = filter(!isbad, poles(r))
+    res = residues(r, p)
+    k = sum(weights(r) .* values(r)) / sum(weights(r))
+    pfd(s) = k + sum(a/(s-z) for (a,z) in zip(res, p))
+    return pfd
 end

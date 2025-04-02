@@ -1,9 +1,12 @@
+# These functions are mainly superseded by the `approximate` function. They are kept here as
+# reference implementations.
+
 #####
 ##### Discrete AAA
 #####
 
 """
-    aaa(z, y)
+    aaa(y, z)
     aaa(f)
 
 Adaptively compute a rational interpolant.
@@ -11,8 +14,8 @@ Adaptively compute a rational interpolant.
 # Arguments
 
 ## discrete mode
-- `z::AbstractVector{<:Number}`: interpolation nodes
 - `y::AbstractVector{<:Number}`: values at nodes
+- `z::AbstractVector{<:Number}`: interpolation nodes
 
 ## continuous mode
 - `f::Function`: function to approximate on the interval [-1,1]
@@ -52,7 +55,7 @@ julia> r(1im * π / 2)
 
 See also [`approximate`](@ref) for approximating a function on a curve or region.
 """
-function aaa(z::AbstractVector{<:Number}, y::AbstractVector{<:Number};
+function aaa(y::AbstractVector{<:Number}, z::AbstractVector{<:Number};
     max_degree = 150,
     float_type = promote_type(typeof(float(1)), real_type(eltype(z)), real_type(eltype(y))),
     tol = 1000*eps(float_type),
@@ -131,16 +134,8 @@ function aaa(z::AbstractVector{<:Number}, y::AbstractVector{<:Number};
 end
 
 #####
-##### Adaptive AAA on [-1, 1] only
+##### Continuum AAA on [-1, 1] only
 #####
-
-# Refinement in parameter space
-function refine(t, N)
-    x = sort(t)
-    Δx = diff(x)
-    d = eltype(x).((1:N) / (N+1))
-    return vec( x[1:end-1] .+ (d' .* Δx) )
-end
 
 function aaa(
     f::Function;
