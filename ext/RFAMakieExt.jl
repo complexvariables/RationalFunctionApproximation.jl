@@ -29,8 +29,8 @@ Plot the pointwise error of an `Approximation` on (the boundary of) its domain. 
 function RFA.errorplot(r::RFA.Approximation; use_abs=false)
     fig = Figure( )
     ax = Axis(fig[1, 1], xlabel="boundary parameter", ylabel="error")
-    t, τ = check(r, quiet=true, prenodes=true)
-    err = @. r.original(τ) - r.fun.(τ)
+    t, τ, err = check(r, quiet=true, prenodes=true)
+    @show minimum(diff(t))
     if use_abs
         lines!(ax, t, abs.(err))
         ax.ylabel = "| error |"
