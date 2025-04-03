@@ -1,16 +1,19 @@
-using RationalFunctionApproximation, Test, LinearAlgebra, ComplexRegions, DoubleFloats
+using RationalFunctionApproximation, Test, ComplexRegions, DoubleFloats, Logging
 
-# ii = 1im * range(-300,400,500)
-# zz = cispi.(2 * (0:500) / 500)
-
-pass(f, r, z; kw...) = isapprox(f.(z), r.(z), norm=u->norm(u,Inf); kw...)
+pass(f, r, z; kw...) = isapprox(f.(z), r.(z), norm=u->maximum(abs, u); kw...)
+logger = Logging.SimpleLogger(stderr, Logging.Error)
+global_logger(logger)
 
 @testset "AAA" verbose=true begin
     include("aaa.jl")
 end
 
-@testset "Interval" verbose=true begin
+@testset "Real interval" verbose=true begin
     include("interval.jl")
+end
+
+@testset "Imaginary axis" verbose=true begin
+    include("imagaxis.jl")
 end
 
 @testset "Circle and disk" verbose=true begin

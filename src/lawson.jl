@@ -54,6 +54,9 @@ function minimax(r::Barycentric, f::Function, nsteps::Integer=20)
 end
 
 function minimax(r::Approximation, nsteps::Integer=20)
+    if !isa(r.fun, Barycentric)
+        error("`minimax`` only works with barycentric approximations")
+    end
     s = r.prenodes
     p = isa(r.domain, ComplexSCRegion) ? boundary(r.domain) : r.domain
     _, test = refine(p, s, 20)
