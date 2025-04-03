@@ -1,6 +1,6 @@
 module RFAMakieExt
 
-using RationalFunctionApproximation, Makie, ComplexRegions, Logging, Printf, Infiltrator
+using RationalFunctionApproximation, Makie, ComplexRegions, Logging, Printf
 RFA = RationalFunctionApproximation
 
 """
@@ -110,7 +110,6 @@ function RFA.animate(r::RFA.Approximation, filename=tempname()*".mp4")
     max_err_hi = @lift(10 ^ min(0, 2 * ceil(log10($max_err)/2)))
     max_err_lo = @lift(-$max_err_hi / 20)
     lines!(ax2, err_data)
-    @infiltrate
 
     record(fig, filename, eachindex(r.history.len); framerate=2) do n
         iter[] = n
