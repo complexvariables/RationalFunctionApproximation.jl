@@ -28,13 +28,8 @@ Plot the pointwise error of an `Approximation` on (the boundary of) its domain. 
 """
 function RFA.errorplot(r::RFA.Approximation; use_abs=false)
     fig = Figure( )
-    ax = Axis(
-        fig[1,1], xlabel="boundary parameter", ylabel="error"
-        )
-    p = r.domain isa RFA.ComplexSCRegion ? r.domain.boundary : r.domain
-    t, τ = RFA.refine(p, r.prenodes, max(30, ceil(Int,600/max(degree(r)...))))
-    idx = sortperm(t)
-    t = t[idx]; τ = τ[idx];
+    ax = Axis(fig[1, 1], xlabel="boundary parameter", ylabel="error")
+    t, τ = check(r, quiet=true, prenodes=true)
     err = @. r.original(τ) - r.fun.(τ)
     if use_abs
         lines!(ax, t, abs.(err))
@@ -61,13 +56,12 @@ end
 function RFA.poleplot(r::RFA.Approximation, idx::Integer=r.history.best)
     fig = Figure( )
     ax = Axis(fig[1,1], xlabel="Re(z)", ylabel="Im(z)", aspect=DataAspect())
-    t, x, _ = check(r, quiet=true, prenodes=true)
-    x = x[sortperm(t)]
-    lines!(ax, real(x), imag(x))
+    z, _ = check(r, quiet=true)
+    lines!(ax, real(z), imag(z))
     zp = RFA.poles(rewind(r, idx))
     color = [r.allowed(z) ? :black : :red for z in zp]
     scatter!(ax, Point2.(real(zp), imag(zp)); color, markersize=7)
-    xbox, ybox = axisbox(x)
+    xbox, ybox = axisbox(z)
     limits!(ax, xbox..., ybox...)
     return fig
 end
@@ -79,9 +73,6 @@ function RFA.animate(r::RFA.Approximation, filename=tempname()*".mp4")
     end
 
     t, x, _ = check(r, quiet=true, prenodes=true)
-    sort_idx = sortperm(t)
-    t = t[sort_idx]
-    x = x[sort_idx]
     xbox, ybox = axisbox(x)
 
     fig = Figure(size=(850,400) )

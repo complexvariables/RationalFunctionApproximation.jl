@@ -390,12 +390,12 @@ function check(F::Approximation; quiet=false, prenodes=false)
     p = F.domain
     if p isa AbstractVector    # discrete domain
         τ = p
-        t = real(eltype(p))[]
+        t = collect(eachindex(τ))
     else
         if p isa ComplexSCRegion
             p = p.boundary
         end
-        t, τ = refine(p, F.prenodes, 30)
+        t, τ = refine(p, sort(F.prenodes), 30)
     end
     if isreal(nodes(F.fun))
         τ = real(τ)
