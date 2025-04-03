@@ -259,9 +259,9 @@ end
 ##### Create an approximation on a discrete domain
 
 # ::Function, ::AbstractVector
-function approximate(f::Function, z::AbstractVector; allowed=z->true, kw...)
-    r, history = approximate(f.(z), z; history=true, allowed, kw...)
-    return Approximation(f, z, r, allowed, Float64[], history)
+function approximate(f::Function, z::AbstractVector; kw...)
+    r, history = approximate(f.(z), z; history=true, kw...)
+    return Approximation(f, z, r, z->true, Float64[], history)
 end
 
 # ::AbstractVector, ::AbstractVector
