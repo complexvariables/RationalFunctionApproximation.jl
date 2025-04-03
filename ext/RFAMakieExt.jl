@@ -44,20 +44,20 @@ function RFA.errorplot(r::RFA.Approximation; use_abs=false)
 end
 
 function axisbox(z)
-    xbox, ybox = ComplexRegions.enclosing_box(z)
+    xbox, ybox = ComplexRegions.enclosing_box(z, 1.42)
     center = [(box[2] + box[1]) / 2 for box in (xbox, ybox)]
-    radius = 1.2 * maximum((box[2] - box[1]) / 2 for box in (xbox, ybox))
+    radius = maximum((box[2] - box[1]) / 2 for box in (xbox, ybox))
     xbox = center[1] .+ [-radius, radius]
     ybox = center[2] .+ [-radius, radius]
     return xbox, ybox
 end
 
-function RFA.poleplot(r::RFA.Approximation, idx::Integer=r.history.best)
+function RFA.poleplot(r::RFA.Approximation, idx::Integer=0)
     fig = Figure( )
     ax = Axis(fig[1,1], xlabel="Re(z)", ylabel="Im(z)", aspect=DataAspect())
     z, _ = check(r, quiet=true)
     lines!(ax, real(z), imag(z))
-    zp = RFA.poles(rewind(r, idx))
+    zp = iszero(idx) ? RFA.poles(r) : RFA.poles(rewind(r, idx))
     color = [r.allowed(z) ? :black : :red for z in zp]
     scatter!(ax, Point2.(real(zp), imag(zp)); color, markersize=7)
     xbox, ybox = axisbox(z)
