@@ -1,6 +1,6 @@
 module RFAMakieExt
 
-using RationalFunctionApproximation, Makie, ComplexRegions, Logging, Printf
+using RationalFunctionApproximation, Makie, ComplexRegions, Logging, Printf, Infiltrator
 RFA = RationalFunctionApproximation
 
 """
@@ -95,7 +95,7 @@ function RFA.animate(r::RFA.Approximation, filename=tempname()*".mp4")
         )
     lines!(ax1, real(x), imag(x))
     limits!(ax1, xbox..., ybox...)
-    zp = @lift RFA.poles(rewind(r, $iter))
+    zp = @lift complex(RFA.poles(rewind(r, $iter)))
     pole = @lift Point2.(real($zp), imag($zp))
     color = @lift [r.allowed(z) ? :black : :red for z in $zp]
     scatter!(ax1, pole; color, markersize=7)
@@ -110,8 +110,9 @@ function RFA.animate(r::RFA.Approximation, filename=tempname()*".mp4")
     max_err_hi = @lift(10 ^ min(0, 2 * ceil(log10($max_err)/2)))
     max_err_lo = @lift(-$max_err_hi / 20)
     lines!(ax2, err_data)
+    @infiltrate
 
-    record(fig, filename, eachindex(r.history.len); framerate=2)  do n
+    record(fig, filename, eachindex(r.history.len); framerate=2) do n
         iter[] = n
         ylims!(ax2, max_err_lo[], max_err_hi[])
         # autolimits!(ax2)
