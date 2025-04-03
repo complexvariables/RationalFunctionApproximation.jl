@@ -22,17 +22,21 @@ function ComplexRegions.dist(z::Number, p::ComplexRegions.AbstractCurve)
 end
 
 # Refinement in parameter space
-function refine(t, N)
+function refine(t, N, include_ends=false)
     x = sort(t)
     Δx = diff(x)
-    d = eltype(x).((1:N) / (N+1))
+    if include_ends
+        d = eltype(x).((0:N) / (N+1))
+    else
+        d = eltype(x).((1:N) / (N+1))
+    end
     return vec( x[1:end-1] .+ (d' .* Δx) )
 end
 
 # Refinement on a curve
 refine(p::ComplexCurve, args...) = refine(Path(p), args...)
-function refine(p::ComplexPath, t::AbstractVector, N::Integer=3)
-    tt = refine(t, N)
+function refine(p::ComplexPath, t::AbstractVector, N::Integer=3, args...)
+    tt = refine(t, N, args...)
     ττ = point(p, tt)
     if isreal(p)
         ττ = real(ττ)

@@ -395,7 +395,11 @@ function check(F::Approximation; quiet=false, prenodes=false)
         if p isa ComplexSCRegion
             p = p.boundary
         end
-        t, τ = refine(p, F.prenodes, 30)
+        s = sort(F.prenodes)
+        if isclosed(p)
+            s = [s; 1]
+        end
+        t, τ = refine(p, s, 30, true)
         idx = sortperm(t)
         t = t[idx]
         τ = τ[idx]
