@@ -33,7 +33,7 @@ function Approximation(
     allowed::Function,
     prenodes::AbstractVector
     )
-    hist = RFIVector{typeof(r)}([], [], zeros(0, 0), Int[], 0)
+    hist = RFIVector{typeof(fun)}([], [], zeros(0, 0), Int[], 0)
     return Approximation(f, domain, fun, allowed, prenodes, hist)
 end
 
