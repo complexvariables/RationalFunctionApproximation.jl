@@ -12,10 +12,14 @@ function lawson(test, ftest, node, fnode, weight, nsteps)
     AB = [A B]
     ⍺, β = [], []    # put into scope
     for _ in 1:nsteps
-        _, _, V = svd( sqrt.(wt) .* AB )
+        _, _, V =  svd( sqrt.(wt) .* AB )
         ⍺ = V[1:m, 2m] * fmax             # numerator weights
         β = -V[m+1:2m, 2m]                # denominator weights
-        R = (A*⍺) ./ (A*β)
+        denom = A*β
+        if any(iszero, denom)
+            break    # TODO: why does this happen?
+        end
+        R = (A*⍺) ./ denom
         wt = normalize(wt .* abs.(F - R), Inf)  # iterative reweighting
     end
     return ⍺, β
@@ -63,5 +67,5 @@ function minimax(r::Approximation, nsteps::Integer=20)
     ftest = r.original.(test)
     ⍺, β = lawson(test, ftest, nodes(r.fun), values(r.fun), weights(r.fun), nsteps)
     r̂ = Barycentric(nodes(r.fun), ⍺ ./ β, β, ⍺)
-    return Approximation(r.original, r.domain, r̂, r.prenodes)
+    return Approximation(r.original, r.domain, r̂, r.allowed, r.prenodes)
 end
