@@ -397,7 +397,7 @@ function check(F::Approximation; quiet=false, prenodes=false)
         end
         s = sort(F.prenodes)
         if isclosed(p)
-            s = [s; 1]
+            s = [s; length(p)]
         end
         t, τ = refine(p, s, 30, true)
         idx = sortperm(t)
