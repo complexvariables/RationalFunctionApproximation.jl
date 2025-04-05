@@ -212,8 +212,13 @@ function update_test_values!(vals, r::Barycentric, data, τ, fτ, idx_test, idx_
     end
 
     # update the weights
-    I = [CartesianIndex((idx, k)) for idx in idx_test, k in 1:n]
-    A = reshape(view(L, I), :, n)
+    if isa(idx_test, CartesianIndices)
+        A = reshape(view(L, idx_test, 1:n), :, n)
+    else
+        # slower route when test point indices are not contiguous
+        I = [CartesianIndex((idx, k)) for idx in idx_test, k in 1:n]
+        A = reshape(view(L, I), :, n)
+    end
     _, _, V = svd(A)
     w = V[:, end]
     @. r.weights = w
