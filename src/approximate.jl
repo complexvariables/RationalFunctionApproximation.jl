@@ -267,7 +267,7 @@ end
 # ::AbstractVector, ::AbstractVector
 function approximate(y::AbstractVector{T}, z::AbstractVector{S};
     method = Barycentric,
-    float_type = promote_type(eltype(z), typeof(float(1))),
+    float_type = promote_type(real_type(eltype(z)), typeof(float(1))),
     tol = 1000*eps(float_type),
     max_iter = 100,
     lookahead = 16,
