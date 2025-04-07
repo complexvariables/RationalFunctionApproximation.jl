@@ -99,5 +99,5 @@ Base.size(v::RFIVector) = (length(v.len),)
 Base.IndexStyle(::Type{<:RFIVector}) = IndexLinear()
 function Base.getindex(v::RFIVector{R}, idx::Int) where {R <: AbstractRationalInterpolant}
     L = v.len[idx]
-    return R(v.nodes[1:L], v.values[1:L], v.weights[1:L, L])
+    return R(promote(v.nodes[1:L], v.values[1:L], v.weights[1:L, L])...)
 end
