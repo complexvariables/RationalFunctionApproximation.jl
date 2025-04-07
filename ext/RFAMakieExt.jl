@@ -56,6 +56,7 @@ function RFA.poleplot(r::RFA.Approximation, idx::Integer=0)
     fig = Figure( )
     ax = Axis(fig[1,1], xlabel="Re(z)", ylabel="Im(z)", aspect=DataAspect())
     z, _ = check(r, quiet=true)
+    z = [z; z[1]]
     lines!(ax, real(z), imag(z))
     zp = iszero(idx) ? RFA.poles(r) : RFA.poles(rewind(r, idx))
     color = [r.allowed(z) ? :black : :red for z in zp]
