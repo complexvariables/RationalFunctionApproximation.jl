@@ -100,8 +100,8 @@ julia> check(r);   # accuracy over the domain
 [ Info: Max error is 1.58e-13
 ```
 """
-# ::Function, ::AbstractRegion
 function approximate(f::Function, R::ComplexRegions.AbstractRegion; kw...)
+    # ::Function, ::AbstractRegion
     # Given a region as domain, we interpret poles as not being allowed in that region.
     r = approximate(f, R.boundary; allowed=z->!in(z,R), kw...)
     return Approximation(f, R, r.fun, r.allowed, r.prenodes, r.history)
