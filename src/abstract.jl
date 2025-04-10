@@ -1,7 +1,7 @@
 
 ##### AbstractRationalInterpolant interface
 
-# subtypes are T = float type, S = T or Complex{T}
+# subtypes are T = float type, S = value type (T or Complex{T})
 abstract type AbstractRationalInterpolant{T,S} <: Function end
 
 # Interface stubs
@@ -92,6 +92,8 @@ struct RFIVector{R} <: AbstractVector{R}
     len::Vector{Int}
     best::Int
 end
+
+RFIVector{R}() where R<:AbstractRationalInterpolant = RFIVector{R}([], [], zeros(0, 0), Int[], 0)
 
 # must construct RFIVector with type explicitly, since otherwise it doesn't know what kind
 # of rational interpolant to use/make

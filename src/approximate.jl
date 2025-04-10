@@ -22,20 +22,24 @@ struct Approximation{T,S} <: Function
     fun::AbstractRationalInterpolant{T,S}
     allowed::Function
     prenodes::Vector{T}
+    test_points::Vector{S}
     history::RFIVector
 end
 
-(f::Approximation)(z) = f.fun(z)
 function Approximation(
     f::Function,
     domain::Domain,
-    fun::AbstractRationalInterpolant,
+    fun::AbstractRationalInterpolant{T,S},
     allowed::Function,
-    prenodes::AbstractVector
-    )
-    hist = RFIVector{typeof(fun)}([], [], zeros(0, 0), Int[], 0)
-    return Approximation(f, domain, fun, allowed, prenodes, hist)
+    prenodes::AbstractVector,
+    test_points::AbstractVector,
+    hist::RFIVector = RFIVector{typeof(fun)}()
+    ) where {T,S}
+    test = convert(Vector{S}, test_points)
+    return Approximation(f, domain, fun, allowed, prenodes, test, hist)
 end
+
+(f::Approximation)(z) = f.fun(z)
 
 function Base.show(io::IO, ::MIME"text/plain", f::Approximation)
     print(io, f.fun, " on the domain: ", f.domain)
@@ -59,7 +63,6 @@ roots(f::Approximation) = roots(f.fun)
     approximate(f, domain)
 
 Adaptively compute a rational interpolant on a continuous or discrete domain.
-
 
 # Arguments
 ## Continuous domain
@@ -104,7 +107,7 @@ function approximate(f::Function, R::ComplexRegions.AbstractRegion; kw...)
     # ::Function, ::AbstractRegion
     # Given a region as domain, we interpret poles as not being allowed in that region.
     r = approximate(f, R.boundary; allowed=z->!in(z,R), kw...)
-    return Approximation(f, R, r.fun, r.allowed, r.prenodes, r.history)
+    return Approximation(f, R, r.fun, r.allowed, r.prenodes, r.test_nodes, r.history)
 end
 
 # ::Function, ::ComplexCurve
@@ -248,12 +251,13 @@ function approximate(f::Function, d::ComplexPath;
     end
 
     s = first(s, lengths[n])
+    test_points = vec(τ[1:num_ref, 1:n])
     if !isclosed(d)
         # Put the last node back in:
         push!(s, one(float_type))
     end
     hist = RFIVector{typeof(r)}(σ, fσ, all_weights, lengths[1:n_max], n)
-    return Approximation(f, d, r, allowed, s, hist)
+    return Approximation(f, d, r, allowed, s, test_points, hist)
 end
 
 ##### Create an approximation on a discrete domain
@@ -264,8 +268,8 @@ function approximate(
     allowed = z -> true,
     kw...
     )
-    r, history = approximate(f.(z), z; history=true, kw...)
-    return Approximation(f, z, r, allowed, Float64[], history)
+    r, history, test = approximate(f.(z), z; history=true, kw...)
+    return Approximation(f, z, r, allowed, Float64[], test, history)
 end
 
 # ::AbstractVector, ::AbstractVector
@@ -310,6 +314,7 @@ function approximate(y::AbstractVector{T}, z::AbstractVector{S};
         push!(err, err_max)
         lengths[n] = L = length(nodes(r))
         all_weights[1:L, L] .= weights(r)
+
         # Are we done?
         if (last(err) <= tol*fmax)    # success
             break
@@ -335,7 +340,7 @@ function approximate(y::AbstractVector{T}, z::AbstractVector{S};
     end
     if history
         hist = RFIVector{typeof(r)}(σ, fσ, all_weights, lengths[1:n], n)
-        return r, hist
+        return r, hist, vec(τ[idx_test])
     else
         return r
     end
