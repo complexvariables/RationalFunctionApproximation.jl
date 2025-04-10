@@ -43,9 +43,9 @@ r = approximate(f, unit_interval, stats=true)
 convergenceplot(r)
 ```
 
-In such a case, we might get improvement by increasing the number of allowed consecutive failures via the `lookahead` keyword argument:
+In such a case, we might get improvement by increasing the number of allowed consecutive failures via the `stagnation` keyword argument:
 
 ```@example convergence
-r = approximate(f, unit_interval, stats=true, lookahead=20)
+r = approximate(f, unit_interval, stats=true, stagnation=20)
 convergenceplot(r)
 ```

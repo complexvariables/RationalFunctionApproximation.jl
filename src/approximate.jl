@@ -79,7 +79,7 @@ Adaptively compute a rational interpolant on a continuous or discrete domain.
 - `tol::Real=1000*eps(float_type)`: relative tolerance for stopping
 - `allowed::Function`: function to determine if a pole is allowed²
 - `refinement::Integer=3`: number of test points between adjacent nodes (continuum only)
-- `lookahead::Integer=20`: number of iterations to determine stagnation
+- `stagnation::Integer=20`: number of iterations to determine stagnation
 
 ¹Default of `float_type` is the promotion of `float(1)` and the float type of the domain.
 ²Default is to disallow poles on the curve or in the interior of a continuous domain, or to accept all poles on a discrete domain. Use `allowed=true` to allow all poles.
@@ -137,7 +137,7 @@ function approximate(f::Function, d::ComplexPath;
     allowed::Union{Function,Bool} = z -> dist(z, d) > tol,
     max_iter = 150,
     refinement = 3,
-    lookahead = 20
+    stagnation = 20
     )
 
     num_ref = 14    # initial number of test points between nodes; decreases to `refinement`
@@ -199,8 +199,8 @@ function approximate(f::Function, d::ComplexPath;
         end
 
         # Do we quit?
-        plateau = exp(median(log.(last(err, lookahead))))
-        stagnant = (n > lookahead) && (plateau < last(err) < 1e-2*fmax)
+        plateau = exp(median(log.(last(err, stagnation))))
+        stagnant = (n > stagnation) && (plateau < last(err) < 1e-2*fmax)
         if (n == max_iter) || stagnant
             @warn("May not have converged to desired tolerance")
             # Backtrack to last acceptable approximation:
@@ -278,7 +278,7 @@ function approximate(y::AbstractVector{T}, z::AbstractVector{S};
     float_type = promote_type(real_type(eltype(z)), typeof(float(1))),
     tol = 1000*eps(float_type),
     max_iter = 100,
-    lookahead = 16,
+    stagnation = 16,
     history = false
     ) where {T<:Number,S<:Number}
 
@@ -321,8 +321,8 @@ function approximate(y::AbstractVector{T}, z::AbstractVector{S};
         end
 
         # Do we quit?
-        plateau = exp(median(log.(last(err, lookahead))))
-        stagnant = (n > lookahead) && (plateau < last(err) < 1e-2*fmax)
+        plateau = exp(median(log.(last(err, stagnation))))
+        stagnant = (n > stagnation) && (plateau < last(err) < 1e-2*fmax)
         if (n == max_iter) || stagnant
             @warn("May not have converged to desired tolerance")
             break

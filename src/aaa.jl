@@ -24,7 +24,7 @@ Adaptively compute a rational interpolant.
 - `max_degree::Integer=150`: maximum numerator/denominator degree to use
 - `float_type::Type=Float64`: floating point type to use for the computation
 - `tol::Real=1000*eps(float_type)`: tolerance for stopping
-- `lookahead::Integer=10`: number of iterations to determines stagnation
+- `stagnation::Integer=10`: number of iterations to determines stagnation
 - `stats::Bool=false`: return convergence statistics
 
 # Returns
@@ -59,7 +59,7 @@ function aaa(y::AbstractVector{<:Number}, z::AbstractVector{<:Number};
     max_degree = 150,
     float_type = promote_type(typeof(float(1)), real_type(eltype(z)), real_type(eltype(y))),
     tol = 1000*eps(float_type),
-    lookahead = 10,
+    stagnation = 10,
     stats = false
     )
 
@@ -114,7 +114,7 @@ function aaa(y::AbstractVector{<:Number}, z::AbstractVector{<:Number};
         # Are we done?
         if (besterr <= tol*fmax) ||
             (n == max_degree + 1) ||
-            ((length(iteration) - bestidx >= lookahead) && (besterr < 1e-2*fmax))
+            ((length(iteration) - bestidx >= stagnation) && (besterr < 1e-2*fmax))
             break
         end
 
@@ -143,7 +143,7 @@ function aaa(
     float_type = promote_type(typeof(float(1)), real_type(f(11//23))),
     tol=1000*eps(float_type),
     refinement=3,
-    lookahead=10,
+    stagnation=10,
     stats=false
     )
 
@@ -182,7 +182,7 @@ function aaa(
         # Check stopping:
         if (besterr <= tol*fmax) ||                                # goal met
             (m == max_degree + 1) ||                                   # max degree reached
-            ((m - bestm >= lookahead) && (besterr < 1e-2*fmax))    # stagnation
+            ((m - bestm >= stagnation) && (besterr < 1e-2*fmax))    # stagnation
             break
         end
 
