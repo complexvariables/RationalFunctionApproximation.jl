@@ -395,7 +395,12 @@ Check the accuracy of a rational approximation `r` on its domain. Returns the te
 
 See also [`approximate`](@ref).
 """
-function check(F::Approximation; quiet=false, prenodes=false)
+function check(
+    F::Approximation;
+    quiet=false,
+    prenodes=false,
+    refinement=30
+    )
     p = F.domain
     if p isa AbstractVector    # discrete domain
         τ = p
@@ -408,7 +413,7 @@ function check(F::Approximation; quiet=false, prenodes=false)
         if isclosed(p)
             s = [s; length(p)]
         end
-        t, τ = refine(p, s, 30, true)
+        t, τ = refine(p, s, refinement, true)
         idx = sortperm(t)
         t = t[idx]
         τ = τ[idx]
