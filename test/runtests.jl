@@ -1,4 +1,5 @@
 using RationalFunctionApproximation, Test, ComplexRegions, DoubleFloats, Logging
+const RFA = RationalFunctionApproximation
 
 pass(f, r, z; kw...) = isapprox(f.(z), r.(z), norm=u->maximum(abs, u); kw...)
 logger = Logging.SimpleLogger(stderr, Logging.Error)
@@ -18,4 +19,8 @@ end
 
 @testset "Circle and disk" verbose=true begin
     include("circle.jl")
+end
+
+@testset "Custom curve" verbose=true begin
+    include("custom.jl")
 end
