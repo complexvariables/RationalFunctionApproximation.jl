@@ -107,7 +107,7 @@ function approximate(f::Function, R::ComplexRegions.AbstractRegion; kw...)
     # ::Function, ::AbstractRegion
     # Given a region as domain, we interpret poles as not being allowed in that region.
     r = approximate(f, R.boundary; allowed=z->!in(z,R), kw...)
-    return Approximation(f, R, r.fun, r.allowed, r.prenodes, r.test_nodes, r.history)
+    return Approximation(f, R, r.fun, r.allowed, r.prenodes, r.test_points, r.history)
 end
 
 # ::Function, ::ComplexCurve
