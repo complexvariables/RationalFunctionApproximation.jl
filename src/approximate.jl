@@ -13,8 +13,10 @@ Approximation of a function on a domain.
 - `original`: the original function
 - `domain`: the domain of the approximation
 - `fun`: the barycentric representation of the approximation
+- `allowed`: function to determine if a pole is allowed
 - `prenodes`: the prenodes of the approximation
-- `stats`: convergence statistics
+- `test_points`: test points where residual was computed
+- `history`: all approximations in the iteration
 """
 struct Approximation{T,S} <: Function
     original::Function
