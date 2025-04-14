@@ -21,7 +21,7 @@ end
 Base.eltype(B::ArnoldiBasis) = eltype(B.nodes)
 nodes(b::ArnoldiBasis) = b.nodes
 
-function ArnoldiBasis(z::AbstractVector, m::Integer)
+function ArnoldiBasis(z::AbstractVector=ComplexF64[], m::Integer=0)
     n = length(z)
     T = eltype(float(z))
     v = Vector{T}(undef, n)
@@ -53,7 +53,10 @@ struct ArnoldiPolynomial{T} <: Function
     end
 end
 
-function ArnoldiPolynomial(coeff::AbstractVector, basis::ArnoldiBasis{S}) where {S}
+function ArnoldiPolynomial(
+    coeff::AbstractVector=[0im],
+    basis::ArnoldiBasis{S}=ArnoldiBasis()
+    ) where {S}
     T = promote_type(eltype(coeff), S)
     coeff = convert.(T, coeff)
     return ArnoldiPolynomial{T}(coeff, ArnoldiBasis{T}(basis))
@@ -102,7 +105,11 @@ struct PartialFractions{T,S} <: AbstractRationalInterpolant{T,S}
     end
 end
 
-function PartialFractions(p::ArnoldiPolynomial, poles::AbstractVector, residues::AbstractVector)
+function PartialFractions(
+    p::ArnoldiPolynomial = ArnoldiPolynomial(),
+    poles::AbstractVector = ComplexF64[],
+    residues::AbstractVector = ComplexF64[]
+    )
     @assert length(poles) == length(residues)
     if isempty(poles)
         poles = residues = Vector{eltype(p)}()
@@ -180,7 +187,8 @@ function pfe(f::Function, d::ComplexClosedCurve, poles; kw...)
    pfe(f, ClosedPath(d), poles; kw...)
 end
 
-function pfe(f::Function, d::ComplexPath, poles::AbstractVector;
+function pfe(
+    f::Function, d::ComplexPath, poles::AbstractVector;
     degree = max(1, div(length(poles), 2))
     )
     t, z = _discretize(d, poles)
