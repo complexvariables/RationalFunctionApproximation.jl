@@ -183,14 +183,15 @@ function approximate(f::Function, d::ComplexPath;
 
     # Main iteration
     n, n_max = 1, 1       # iteration counter, all-time max
+    stagnant = false      # hold until n >= stagnation
     while true
         test_values = update_test_values!(values, r, data, τ, fτ, idx_test, idx_new_test)
         test_actual = view(fτ, idx_test)
-        fmax = norm(view(fτ, idx_test), Inf)     # scale of f
+        fmax = norm(test_actual, Inf)     # scale of f
         if any(isnan, test_actual)
             throw(ArgumentError("Function has NaN value at a test point"))
         end
-        err_max, idx_max = findmax(abs, test_actual - test_values)
+        err_max, idx_max = findmax(abs(test_actual[i] - test_values[i]) for i in eachindex(test_actual))
         push!(err, err_max)
         lengths[n] = L = length(nodes(r))
         all_weights[1:L, L] .= weights(r)
@@ -201,8 +202,10 @@ function approximate(f::Function, d::ComplexPath;
         end
 
         # Do we quit?
-        plateau = exp(median(log.(last(err, stagnation))))
-        stagnant = (n > stagnation) && (plateau < last(err) < 1e-2*fmax)
+        if n >= stagnation
+            plateau = exp(median(log(x) for x in view(err, n-stagnation+1:n)))
+            stagnant = (plateau < last(err) < 1e-2*fmax)
+        end
         if (n == max_iter) || stagnant
             @warn("May not have converged to desired tolerance")
             # Backtrack to last acceptable approximation:
@@ -219,6 +222,7 @@ function approximate(f::Function, d::ComplexPath;
                 r = method(σ[1:L], fσ[1:L], all_weights[1:L, L])
                 accepted = all(allowed, poles(r))
             end
+            println("breaking")
             break
         end
 
@@ -323,8 +327,12 @@ function approximate(y::AbstractVector{T}, z::AbstractVector{S};
         end
 
         # Do we quit?
-        plateau = exp(median(log.(last(err, stagnation))))
-        stagnant = (n > stagnation) && (plateau < last(err) < 1e-2*fmax)
+        stagnant = if n >= stagnation
+            plateau = exp(median(log(x) for x in view(err, n-stagnation+1:n)))
+            (plateau < last(err) < 1e-2*fmax)
+        else
+            false
+        end
         if (n == max_iter) || stagnant
             @warn("May not have converged to desired tolerance")
             break
@@ -347,6 +355,116 @@ function approximate(y::AbstractVector{T}, z::AbstractVector{S};
         return r
     end
 end
+
+function pfe(z, y, ζ, degree)
+    B = ArnoldiBasis(z, degree)
+    C = [1 / (z - zp) for z in z, zp in ζ]
+    c = isempty(C) ? B.Q \ y : [B.Q C] \ y
+    p = ArnoldiPolynomial(c[1:degree+1], B)
+    return PartialFractions(p, ζ, c[degree+2:end])
+end
+
+function approximate(
+    f::Function, d::ComplexPath, ζ::AbstractVector=[];
+    method = PartialFractions,
+    float_type = promote_type(real_type(d), typeof(float(1))),
+    tol = 1000*eps(float_type),
+    degree = max(1, div(length(ζ), 2)),
+    allowed = z -> true,
+    max_iter = 150,
+    refinement = 3,
+    stagnation = 20
+    )
+
+    num_ref = 14    # initial number of test points between nodes; decreases to `refinement`
+    δ = float_type.((1:num_ref) / (num_ref+1))    # refinement fractions
+    if allowed==true
+        allowed = z -> true
+    end
+    s = [zero(float_type)]         # pre-node parameters (except the last)
+    Δs = length(d) * [1 - s[1]]    # pre-node spacings
+
+    # Arrays of test points have one column per node (except the last), num_ref rows
+    test = Matrix{float_type}(undef, num_ref, max_iter)    # parameter values of test points
+    z₀ = point(d, 0.302528)
+    τ = Matrix{typeof(z₀)}(undef, num_ref, max_iter + 1)             # test points
+    fτ = Matrix{typeof(f(z₀))}(undef, num_ref, max_iter + 1)           # f at test points
+    number_type = promote_type(eltype(τ), eltype(fτ))
+    values = similar(complex(fτ))
+
+    # Arrays to track iteration data and progress
+    err = float_type[]    # approximation errors
+
+    # Initialize test points and rational approximation
+    update_test_points!(d, f, test, τ, fτ, s, Δs, δ, 1:num_ref, [1])
+    idx_new_test = idx_test = CartesianIndices((1:num_ref, 1:1))
+    test_actual = view(fτ, idx_test)
+    test_points = view(τ, idx_test)
+    r = pfe(vec(test_points), vec(test_actual), ζ, degree)
+
+    # Main iteration
+    n, n_max = 1, 1       # iteration counter, all-time max
+    while true
+        test_values = view(values, idx_test)
+        test_points = view(τ, idx_test)
+        @. test_values = r(test_points)
+        test_actual = view(fτ, idx_test)
+        if any(isnan, test_actual)
+            throw(ArgumentError("Function has NaN value at a test point"))
+        end
+        fmax = norm(test_actual, Inf)     # scale of f
+        err_max, idx_max = findmax(abs, test_actual - test_values)
+        push!(err, err_max)
+
+        # Have we succeeded?
+        if (last(err) <= tol*fmax)
+            break
+        end
+
+        # Do we quit?
+        plateau = exp(median(log.(last(err, stagnation))))
+        stagnant = (n > stagnation) && (plateau < last(err) < 1e-2*fmax)
+        if (n == max_iter) || stagnant
+            @warn("May not have converged to desired tolerance")
+            # Backtrack to last acceptable approximation:
+            break
+        end
+
+        jnew = idx_max[2]           # which node owns the worst test point?
+        push!(s, test[idx_max])
+        n_max = n += 1
+
+        # Update the node spacings:
+        Δj = Δs[jnew]
+        Δs[jnew] = test[idx_max] - s[jnew]
+        push!(Δs, s[jnew] + Δj - test[idx_max])
+
+        # Update test points:
+        if num_ref > refinement    # initial phase
+            num_ref -= 1    # gradually decrease initial refinement level
+            δ = float_type.((1:num_ref) / (num_ref+1))
+            # Wipe out the old test points and start over:
+            update_test_points!(d, f, test, τ, fτ, s, Δs, δ, 1:num_ref, 1:n)
+            idx_test = CartesianIndices((1:num_ref, 1:n))
+        else    # steady-state refinement level
+            # Replace one column and add a new column of test points:
+            update_test_points!(d, f, test, τ, fτ, s, Δs, δ, 1:num_ref, [jnew, n])
+            idx_test = CartesianIndices((1:num_ref, 1:n))
+        end
+        test_actual = view(fτ, idx_test)
+        test_points = view(τ, idx_test)
+        r = pfe(vec(test_points), vec(test_actual), ζ, degree)
+    end
+    s = first(s, n)
+    if !isclosed(d)
+        # Put the last node back in:
+        push!(s, one(float_type))
+    end
+    hist = RFIVector{typeof(r)}()
+    return Approximation(f, d, r, allowed, s, hist)
+end
+
+
 
 ##### Helper functions
 

@@ -199,3 +199,12 @@ function pfe(
     r = PartialFractions(p, poles, c[degree+2:end])
     return Approximation(f, d, r, z -> true, collect(t))
 end
+
+# Evaluate at all the test points.
+function update_test_values!(values, r::PartialFractions, _, τ, fτ, idx_test, idx_new_test)
+    # Evaluate at all test points
+    V = view(values, idx_test)
+    T = view(τ, idx_test)
+    @. V = r(T)
+    return V
+end
