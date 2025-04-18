@@ -103,7 +103,7 @@ function update_test_values!(
     max_iter::Integer,
     max_test::Integer=max_iter+2
     )
-    Δ = Array{numeric_type}(undef, num_refine, max_test, max_iter + 2)
+    Δ = Array{numeric_type}(undef, max_test, num_refine+1, max_iter + 2)
     return Δ
 end
 
@@ -130,7 +130,6 @@ function update_test_values!(values, r::Thiele, Δ, τ, fτ, idx_test, idx_new_t
     for k in n-1:-1:1
         Dk = view(D, :, :, k)
         @inbounds @fastmath @. V = φ[k] + Dk / V
-        # V .= φ[k] .+ view(D, :, :, k) ./ V
     end
     return V
 end

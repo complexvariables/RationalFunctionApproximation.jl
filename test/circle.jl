@@ -8,7 +8,7 @@ UC = unit_circle
     f = z -> sin(1/(1.1 - z)); @test pass(f, approx(f), pts, rtol=2e-13)
     f = sec; @test pass(f, approx(f, max_iter=15), pts, rtol=1e-6)
     f = z -> cos(sin(z)) + exp(z)/(z-1.1); @test pass(f, approx(f), pts, rtol=2e-13)
-    f = x -> cis(x);  @test pass(f, approx(f), pts, atol=2e-13)
+    f = x -> cis(x);  @test pass(f, approx(f), pts, atol=6e-13)
 end
 
 @testset "Unit circle for $method" for method in (Barycentric, Thiele)

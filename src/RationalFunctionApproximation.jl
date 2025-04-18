@@ -17,7 +17,7 @@ export Barycentric, Thiele
 include("barycentric.jl")
 include("thiele.jl")
 
-export approximate, check, rewind, get_history
+export approximate, check, rewind, get_history, test_points
 include("approximate.jl")
 
 # legacy implementation of AAA

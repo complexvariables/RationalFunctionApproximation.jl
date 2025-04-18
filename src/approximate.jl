@@ -23,8 +23,7 @@ struct Approximation{T,S} <: Function
     domain::Domain
     fun::AbstractRationalInterpolant{T,S}
     allowed::Function
-    prenodes::Vector{T}
-    test_points::Vector{S}
+    path::DiscretizedPath
     history::RFIVector
 end
 
@@ -33,12 +32,10 @@ function Approximation(
     domain::Domain,
     fun::AbstractRationalInterpolant{T,S},
     allowed::Function,
-    prenodes::AbstractVector,
-    test_points::AbstractVector,
+    path::DiscretizedPath,
     hist::RFIVector = RFIVector{typeof(fun)}()
     ) where {T,S}
-    test = convert(Vector{S}, test_points)
-    return Approximation(f, domain, fun, allowed, prenodes, test, hist)
+    return Approximation{T,S}(f, domain, fun, allowed, path, hist)
 end
 
 (f::Approximation)(z) = f.fun(z)
@@ -54,6 +51,11 @@ degree(r::Approximation) = degree(r.fun)
 poles(F::Approximation) = poles(F.fun)
 residues(f::Approximation, args...) = residues(f.fun, args...)
 roots(f::Approximation) = roots(f.fun)
+
+function test_points(r::Approximation; with_parameters=false)
+    s, z = collect(r.path, :all)
+    return with_parameters ? (s, z) : z
+end
 
 #####
 ##### IMPLEMENTATION
@@ -109,7 +111,7 @@ function approximate(f::Function, R::ComplexRegions.AbstractRegion; kw...)
     # ::Function, ::AbstractRegion
     # Given a region as domain, we interpret poles as not being allowed in that region.
     r = approximate(f, R.boundary; allowed=z->!in(z,R), kw...)
-    return Approximation(f, R, r.fun, r.allowed, r.prenodes, r.test_points, r.history)
+    return Approximation(f, R, r.fun, r.allowed, r.path, r.history)
 end
 
 # ::Function, ::ComplexCurve
@@ -142,17 +144,15 @@ function approximate(f::Function, d::ComplexPath;
     stagnation = 20
     )
 
-    num_ref = 14    # initial number of test points between nodes; decreases to `refinement`
-    δ = float_type.((1:num_ref) / (num_ref+1))    # refinement fractions
+    num_ref = 15    # initial number of test points between nodes; decreases to `refinement`
     if allowed==true
         allowed = z -> true
     end
-    s = [zero(float_type)]         # pre-node parameters (except the last)
-    Δs = length(d) * [1 - s[1]]    # pre-node spacings
-    σ = point(d, s)            # vector of nodes points
-    if !isclosed(d)
-        # Include both endpoints as nodes for open paths:
-        push!(σ, point(d, length(d)*one(float_type)))
+
+    path = DiscretizedPath(d, [0, 1]; refinement=num_ref, maxpoints=max_iter+2)
+    (_, σ) = collect(path, 0)            # vector of nodes
+    if isclosed(d)
+        pop!(σ)
     end
     if isreal(d)
         # Enforce reality for a real domain:
@@ -160,10 +160,12 @@ function approximate(f::Function, d::ComplexPath;
     end
     fσ = f.(σ)         # f at nodes
 
-    # Arrays of test points have one column per node (except the last), num_ref rows
-    test = Matrix{float_type}(undef, num_ref, max_iter)    # parameter values of test points
-    τ = similar(σ, num_ref, max_iter + 1)             # test points
-    fτ = similar(fσ, num_ref, max_iter + 1)           # f at test points
+    # Arrays of test points have one row per node (except the last)
+    τ = path.points
+    idx_test = CartesianIndices((1:1, 2:num_ref+1))
+    idx_new_test = idx_test
+    fτ = Matrix{eltype(fσ)}(undef, size(τ))        # f at test points
+    fτ[idx_test] .= f.(τ[idx_test])
     number_type = promote_type(eltype(τ), eltype(fτ))
     values = similar(complex(fτ))
 
@@ -173,10 +175,8 @@ function approximate(f::Function, d::ComplexPath;
     lengths = Vector{Int}(undef, max_iter)
 
     # Initialize test points, data matrices, rational approximation
-    update_test_points!(d, f, test, τ, fτ, s, Δs, δ, 1:num_ref, [1])
     data = update_test_values!(method, number_type, num_ref, max_iter)
     r = method(number_type[], number_type[], number_type[])
-    idx_new_test = idx_test = CartesianIndices((1:num_ref, 1:1))
 
     # Add first node
     @views add_nodes!(r, data, τ, fτ, idx_test, σ, fσ)
@@ -222,48 +222,41 @@ function approximate(f::Function, d::ComplexPath;
                 r = method(σ[1:L], fσ[1:L], all_weights[1:L, L])
                 accepted = all(allowed, poles(r))
             end
-            println("breaking")
             break
         end
 
         # Add new node:
-        jnew = idx_max[2]           # which node owns the worst test point?
-        push!(s, test[idx_max])
-        push!(σ, τ[idx_max])
-        push!(fσ, fτ[idx_max])
+        idx_new = idx_test[idx_max]      # location of worst test point
+        push!(σ, τ[idx_new])
+        push!(fσ, fτ[idx_new])
         n_max = n += 1
 
-        # Update the node spacings:
-        Δj = Δs[jnew]
-        Δs[jnew] = test[idx_max] - s[jnew]
-        push!(Δs, s[jnew] + Δj - test[idx_max])
+        # Update the path discretization:
+        idx_new_test = add_point!(path, idx_new)
 
         # Update test points and matrices:
         if num_ref > refinement    # initial phase
-            num_ref -= 1    # gradually decrease initial refinement level
-            δ = float_type.((1:num_ref) / (num_ref+1))
+            num_ref -= 3    # gradually decrease refinement level
             # Wipe out the old test points and start over:
-            update_test_points!(d, f, test, τ, fτ, s, Δs, δ, 1:num_ref, 1:n)
-            idx_new_test = idx_test = CartesianIndices((1:num_ref, 1:n))
+            s = first(collect(path))
+            path = DiscretizedPath(d, s; refinement=num_ref, maxpoints=max_iter+2)
+            τ = path.points
+            idx_test = CartesianIndices((1:n, 2:num_ref+1))
+            idx_new_test = idx_test
+            fτ[idx_test] .= f.(τ[idx_test])
             r = method(number_type[], number_type[], number_type[])
             @views add_nodes!(r, data, τ, fτ, idx_test, σ, fσ)
         else    # steady-state refinement level
             # Replace one column and add a new column of test points:
             @views add_nodes!(r, data, τ, fτ, idx_test, [σ[end]], [fσ[end]])
-            update_test_points!(d, f, test, τ, fτ, s, Δs, δ, 1:num_ref, [jnew, n])
-            idx_test = CartesianIndices((1:num_ref, 1:n))
-            idx_new_test = idx_test[:, [jnew, n]]
+            idx_new_test = view(idx_new_test, :, 2:size(idx_new_test, 2))
+            idx_test = CartesianIndices((1:n, 2:num_ref+1))
+            fτ[idx_new_test] .= f.(τ[idx_new_test])
         end
     end
 
-    s = first(s, lengths[n])
-    test_points = vec(τ[1:num_ref, 1:n])
-    if !isclosed(d)
-        # Put the last node back in:
-        push!(s, one(float_type))
-    end
-    hist = RFIVector{typeof(r)}(σ, fσ, all_weights, lengths[1:n_max], n)
-    return Approximation(f, d, r, allowed, s, test_points, hist)
+    history = RFIVector{typeof(r)}(σ, fσ, all_weights, lengths[1:n_max], n)
+    return Approximation(f, d, r, allowed, path, history)
 end
 
 ##### Create an approximation on a discrete domain
@@ -365,55 +358,47 @@ function pfe(z, y, ζ, degree)
 end
 
 function approximate(
-    f::Function, d::ComplexPath, ζ::AbstractVector=[];
+    f::Function, d::ComplexCurveOrPath, ζ::AbstractVector;
     method = PartialFractions,
     float_type = promote_type(real_type(d), typeof(float(1))),
     tol = 1000*eps(float_type),
     degree = max(1, div(length(ζ), 2)),
     allowed = z -> true,
-    max_iter = 150,
-    refinement = 3,
-    stagnation = 20
+    max_iter = 100,
+    refinement = 200,
+    stagnation = 5
     )
 
-    num_ref = 14    # initial number of test points between nodes; decreases to `refinement`
-    δ = float_type.((1:num_ref) / (num_ref+1))    # refinement fractions
+    num_ref = max(refinement, 23)    # initial number of test points between nodes; decreases to `refinement`
     if allowed==true
         allowed = z -> true
     end
-    s = [zero(float_type)]         # pre-node parameters (except the last)
-    Δs = length(d) * [1 - s[1]]    # pre-node spacings
 
-    # Arrays of test points have one column per node (except the last), num_ref rows
-    test = Matrix{float_type}(undef, num_ref, max_iter)    # parameter values of test points
-    z₀ = point(d, 0.302528)
-    τ = Matrix{typeof(z₀)}(undef, num_ref, max_iter + 1)             # test points
-    fτ = Matrix{typeof(f(z₀))}(undef, num_ref, max_iter + 1)           # f at test points
-    number_type = promote_type(eltype(τ), eltype(fτ))
+    path = DiscretizedPath(d, [0, 1]; refinement=num_ref, maxpoints=max_iter+2)
+    τ = path.points
+    idx_test = CartesianIndices((1:1, 2:num_ref+1))
+    idx_new_test = idx_test
+    y = f.(τ[idx_test])
+    fτ = Matrix{eltype(y)}(undef, size(τ))          # f at test points
+    fτ[idx_test] .= y
     values = similar(complex(fτ))
 
     # Arrays to track iteration data and progress
     err = float_type[]    # approximation errors
 
     # Initialize test points and rational approximation
-    update_test_points!(d, f, test, τ, fτ, s, Δs, δ, 1:num_ref, [1])
-    idx_new_test = idx_test = CartesianIndices((1:num_ref, 1:1))
-    test_actual = view(fτ, idx_test)
     test_points = view(τ, idx_test)
+    test_actual = view(fτ, idx_test)
     r = pfe(vec(test_points), vec(test_actual), ζ, degree)
 
     # Main iteration
     n, n_max = 1, 1       # iteration counter, all-time max
+    stagnant = false      # hold until n >= stagnation
     while true
         test_values = view(values, idx_test)
-        test_points = view(τ, idx_test)
         @. test_values = r(test_points)
-        test_actual = view(fτ, idx_test)
-        if any(isnan, test_actual)
-            throw(ArgumentError("Function has NaN value at a test point"))
-        end
         fmax = norm(test_actual, Inf)     # scale of f
-        err_max, idx_max = findmax(abs, test_actual - test_values)
+        err_max, idx_max = findmax(abs(test_actual[i] - test_values[i]) for i in eachindex(test_actual))
         push!(err, err_max)
 
         # Have we succeeded?
@@ -422,46 +407,41 @@ function approximate(
         end
 
         # Do we quit?
-        plateau = exp(median(log.(last(err, stagnation))))
-        stagnant = (n > stagnation) && (plateau < last(err) < 1e-2*fmax)
+        if n >= stagnation
+            plateau = exp(median(log(x) for x in view(err, n-stagnation+1:n)))
+            stagnant = (plateau < last(err) < 1e-2*fmax)
+        end
         if (n == max_iter) || stagnant
             @warn("May not have converged to desired tolerance")
             # Backtrack to last acceptable approximation:
             break
         end
 
-        jnew = idx_max[2]           # which node owns the worst test point?
-        push!(s, test[idx_max])
+        idx_new = idx_test[idx_max]      # location of worst test point
+        idx_new_test = add_point!(path, idx_new)
         n_max = n += 1
-
-        # Update the node spacings:
-        Δj = Δs[jnew]
-        Δs[jnew] = test[idx_max] - s[jnew]
-        push!(Δs, s[jnew] + Δj - test[idx_max])
 
         # Update test points:
         if num_ref > refinement    # initial phase
-            num_ref -= 1    # gradually decrease initial refinement level
-            δ = float_type.((1:num_ref) / (num_ref+1))
-            # Wipe out the old test points and start over:
-            update_test_points!(d, f, test, τ, fτ, s, Δs, δ, 1:num_ref, 1:n)
-            idx_test = CartesianIndices((1:num_ref, 1:n))
+            num_ref -= 10    # gradually decrease initial refinement level
+            s = first(collect(path))
+            path = DiscretizedPath(d, s; refinement=num_ref, maxpoints=max_iter+2)
+            τ = path.points
+            idx_test = CartesianIndices((1:n, 2:num_ref+1))
+            idx_new_test = idx_test
+            fτ[idx_test] .= f.(τ[idx_test])
         else    # steady-state refinement level
             # Replace one column and add a new column of test points:
-            update_test_points!(d, f, test, τ, fτ, s, Δs, δ, 1:num_ref, [jnew, n])
-            idx_test = CartesianIndices((1:num_ref, 1:n))
+            idx_new_test = view(idx_new_test, :, 2:size(idx_new_test, 2))
+            idx_test = CartesianIndices((1:n, 2:num_ref+1))
+            fτ[idx_new_test] .= f.(τ[idx_new_test])
         end
         test_actual = view(fτ, idx_test)
         test_points = view(τ, idx_test)
         r = pfe(vec(test_points), vec(test_actual), ζ, degree)
     end
-    s = first(s, n)
-    if !isclosed(d)
-        # Put the last node back in:
-        push!(s, one(float_type))
-    end
     hist = RFIVector{typeof(r)}()
-    return Approximation(f, d, r, allowed, s, hist)
+    return Approximation(f, d, r, allowed, path, hist)
 end
 
 
@@ -493,8 +473,7 @@ function rewind(r::Approximation, idx::Integer)
     if isempty(r.history)
         @error("No convergence history exists.")
     end
-    new_rat = r.history[idx]
-    return Approximation(r.original, r.domain, new_rat, r.allowed, r.prenodes, r.history)
+    return Approximation(r.original, r.domain, r.history[idx], r.allowed, r.path, r.history)
 end
 
 """
@@ -519,27 +498,17 @@ function check(
     F::Approximation;
     quiet=false,
     prenodes=false,
-    refinement=30
+    refinement=20
     )
-    p = F.domain
-    if p isa AbstractVector    # discrete domain
-        τ = p
+    if F.domain isa AbstractVector    # discrete domain
+        τ = F.domain
         t = collect(eachindex(τ))
+    elseif refinement == :all
+        t, τ = collect(F.path, :all)
     else
-        if p isa ComplexSCRegion
-            p = p.boundary
-        end
-        s = sort(F.prenodes)
-        if isclosed(p)
-            s = [s; length(p)]
-        end
-        t, τ = refine(p, s, refinement, true)
-        idx = sortperm(t)
-        t = t[idx]
-        τ = τ[idx]
-    end
-    if isreal(nodes(F.fun))
-        τ = real(τ)
+        s, _ = collect(F.path, 0)
+        q = DiscretizedPath(F.path.path, s; refinement)
+        t, τ = collect(q, :all)
     end
     err = F.original.(τ) - F.fun.(τ)
     !quiet && @info f"Max error is {norm(err, Inf):.2e}"

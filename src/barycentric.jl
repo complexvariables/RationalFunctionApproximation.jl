@@ -193,8 +193,8 @@ function update_test_values!(
     max_iter::Integer,
     max_test::Integer=max_iter+1
     )
-    C = Array{numeric_type}(undef, num_refine, max_test, max_iter+2)
-    L = Array{numeric_type}(undef, num_refine, max_test, max_iter+2)
+    C = Array{numeric_type}(undef, max_test, num_refine+1, max_iter+2)
+    L = Array{numeric_type}(undef, max_test, num_refine+1, max_iter+2)
     return C, L
 end
 

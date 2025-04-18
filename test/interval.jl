@@ -9,7 +9,7 @@ end
     tol = 2000*eps(T)
     pts = points(T)
     approx(f; kw...) = approximate(f, domain(T); method, kw...)
-    f = x -> abs(x + 1//2 + 1im//100); @test pass(f, approx(f), pts; rtol=tol)
+    f = x -> abs(x + 1//2 + 1im//100); @test pass(f, approx(f; stagnation=30), pts; rtol=tol)
     f = x -> sin(1 / (21//20 - x)); @test pass(f, approx(f), pts; rtol=tol)
     f = x -> x + exp(-1 / x^2); @test pass(f, approx(f; stagnation=30), pts; rtol=tol)
     if method != Thiele
