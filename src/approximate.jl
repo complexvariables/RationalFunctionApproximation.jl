@@ -30,12 +30,11 @@ end
 function Approximation(
     f::Function,
     domain::Domain,
-    fun::AbstractRationalInterpolant{T,S},
+    fun::AbstractRationalInterpolant,
     allowed::Function,
-    path::DiscretizedPath,
-    hist::RFIVector = RFIVector{typeof(fun)}()
-    ) where {T,S}
-    return Approximation{T,S}(f, domain, fun, allowed, path, hist)
+    path::DiscretizedPath
+    )
+    return Approximation(f, domain, fun, allowed, path, RFIVector{typeof(fun)}())
 end
 
 (f::Approximation)(z) = f.fun(z)
@@ -150,7 +149,7 @@ function approximate(f::Function, d::ComplexPath;
     end
 
     path = DiscretizedPath(d, [0, 1]; refinement=num_ref, maxpoints=max_iter+2)
-    (_, σ) = collect(path, 0)            # vector of nodes
+    (_, σ) = collect(path, false)            # vector of nodes
     if isclosed(d)
         pop!(σ)
     end
@@ -504,11 +503,11 @@ function check(
         τ = F.domain
         t = collect(eachindex(τ))
     elseif refinement == :all
-        t, τ = collect(F.path, :all)
+        t, τ = collect(F.path, true)
     else
-        s, _ = collect(F.path, 0)
+        s, _ = collect(F.path)
         q = DiscretizedPath(F.path.path, s; refinement)
-        t, τ = collect(q, :all)
+        t, τ = collect(q, true)
     end
     err = F.original.(τ) - F.fun.(τ)
     !quiet && @info f"Max error is {norm(err, Inf):.2e}"

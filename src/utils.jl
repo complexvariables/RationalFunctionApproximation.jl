@@ -23,13 +23,31 @@ function ComplexRegions.dist(z::Number, p::ComplexRegions.AbstractCurve)
     return minimum(abs(z - point(p, t)) for t in range(0, 1, length=300))
 end
 
-struct DiscretizedPath{T,F}
-    path::T
-    points::Matrix
-    params::Matrix{F}
-    next::Vector{Int}
-end
+### DiscretizedPath
 
+struct DiscretizedPath{T,F}
+    path::T              # original Curve or Path
+    points::Matrix       # first column = active points, others are refinements
+    params::Matrix{F}    # first column = active points, others are refinements
+    next::Vector{Int}    # next[i] = index of the next point in the path
+end
+"""
+    DiscretizedPath(path, s::AbstractVector; kwargs...)
+    DiscretizedPath(path, n::Integer=0; kwargs...)
+
+Discretize a path, keeping the option of future making local refinements.
+
+# Arguments
+- `path`: a ComplexCurve or ComplexPath
+- `s`: a vector of parameter values
+- `n`: number of points to discretize the path
+
+# Keyword arguments
+- `refinement`: number of refinements to make between consecutive points
+- `maxpoints`: maximum number of points ever allowed
+
+See also [`collect`](@ref), [`add_point!`](@ref).
+"""
 function DiscretizedPath(path::ComplexCurveOrPath, s::AbstractVector; refinement=0, maxpoints=length(s))
     F = real_type(path)
     params = Matrix{F}(undef, maxpoints, refinement+1)
@@ -53,6 +71,22 @@ function DiscretizedPath(path::ComplexCurveOrPath=ComplexRegions.Circle(0,1), n:
     DiscretizedPath(path, range(0, length(path), n); kwargs...)
 end
 
+"""
+    add_point!(d::DiscretizedPath, idx)
+
+Add a new point to the discretization, and return the indexes of the new points. The indexes
+are valid on the `points` and `params` fields.
+
+# Arguments
+- `d`: a DiscretizedPath object
+- `idx`: a 2-element tuple, vector, or `CartesianIndex` into the `params` field. This identifies
+the point to be added to the discretization.
+
+# Returns
+- A 2-element vector of `CartesianIndices` into the `params` and `points` fields.
+
+See also [`DiscretizedPath`](@ref), [`collect`](@ref).
+"""
 function add_point!(d::DiscretizedPath, idx)
     @assert length(idx) == 2
     (idx[2] == 1) && return
@@ -86,14 +120,25 @@ function add_point!(d::DiscretizedPath, idx)
     push!(d.next, succ)       # old succcessor for the new point
     # return indexes into the new parts
     return [CartesianIndices((idx[1]:idx[1], 1:ref)); CartesianIndices((n:n, 1:ref))]
-    # return view(d.params, newbies, :), view(d.points, newbies, :)
 end
 
-function Base.collect(d::DiscretizedPath, depth=0)
+"""
+    collect(d::DiscretizedPath, refined=false)
+
+Collect the points and parameters of a discretized path.
+
+# Arguments
+- `d`: a DiscretizedPath object
+- `refined`: whether to return all points (if true) or only the active ones (if false)
+
+# Returns
+- Tuple of two vectors: parameter values and points on the path
+
+See also [`add_point!`](@ref), [`DiscretizedPath`](@ref).
+"""
+function Base.collect(d::DiscretizedPath, refined=false)
     n = length(d.next)
-    if depth == :all
-        depth = size(d.params, 2) - 1
-    end
+    depth = refined ? size(d.params, 2) - 1 : 0
     params = similar(d.params, depth+1, n)
     points = similar(d.points, depth+1, n)
     k = idx = 1
@@ -106,7 +151,6 @@ function Base.collect(d::DiscretizedPath, depth=0)
     s_fin = length(d.path)
     return [vec(params); s_fin], [vec(points); point(d.path, s_fin)]
 end
-
 
 # Refinement in parameter space
 function refine(t, N, include_ends=false)
