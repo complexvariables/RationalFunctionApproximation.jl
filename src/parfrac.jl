@@ -120,6 +120,14 @@ function PartialFractions(
     return PartialFractions{T}(ArnoldiPolynomial{T}(p), poles, residues)
 end
 
+function PartialFractions(z::AbstractVector, y::AbstractVector, ζ::AbstractVector, degree::Int)
+    B = ArnoldiBasis(z, degree)
+    C = [1 / (z - zp) for z in z, zp in ζ]
+    c = isempty(C) ? B.Q \ y : [B.Q C] \ y
+    p = ArnoldiPolynomial(c[1:degree+1], B)
+    return PartialFractions(p, ζ, c[degree+2:end])
+end
+
 function degrees(r::PartialFractions)
     d = degree(r.polynomial)
     n = length(r.poles)

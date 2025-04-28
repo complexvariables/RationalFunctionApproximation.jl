@@ -336,14 +336,6 @@ function approximate(y::AbstractVector{T}, z::AbstractVector{S};
     end
 end
 
-function pfe(z, y, ζ, degree)
-    B = ArnoldiBasis(z, degree)
-    C = [1 / (z - zp) for z in z, zp in ζ]
-    c = isempty(C) ? B.Q \ y : [B.Q C] \ y
-    p = ArnoldiPolynomial(c[1:degree+1], B)
-    return PartialFractions(p, ζ, c[degree+2:end])
-end
-
 function approximate(
     f::Function, d::ComplexCurveOrPath, ζ::AbstractVector;
     method = PartialFractions,
@@ -376,7 +368,7 @@ function approximate(
     # Initialize test points and rational approximation
     test_points = view(τ, idx_test)
     test_actual = view(fτ, idx_test)
-    r = pfe(vec(test_points), vec(test_actual), ζ, degree)
+    r = PartialFractions(vec(test_points), vec(test_actual), ζ, degree)
 
     # Main iteration
     n, n_max = 1, 1       # iteration counter, all-time max
@@ -425,7 +417,7 @@ function approximate(
         end
         test_actual = view(fτ, idx_test)
         test_points = view(τ, idx_test)
-        r = pfe(vec(test_points), vec(test_actual), ζ, degree)
+        r = PartialFractions(vec(test_points), vec(test_actual), ζ, degree)
     end
     hist = RFIVector{typeof(r)}()
     return Approximation(f, d, r, allowed, path, hist)
