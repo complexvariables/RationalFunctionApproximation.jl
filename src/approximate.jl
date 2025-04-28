@@ -255,7 +255,7 @@ function approximate(
     kw...
     )
     r, history, test = approximate(f.(z), z; history=true, kw...)
-    return Approximation(f, z, r, allowed, Float64[], test, history)
+    return Approximation(f, z, r, allowed, DiscretizedPath(), history)
 end
 
 # ::AbstractVector, ::AbstractVector
@@ -278,21 +278,21 @@ function approximate(y::AbstractVector{T}, z::AbstractVector{S};
     idx_max = argmax(abs(y - ȳ) for y in y)
     σ = [z[idx_max]]
     fσ = [y[idx_max]]
-    τ = reshape(z, 1, m)
-    fτ = reshape(y, 1, m)
+    τ = reshape(z, m, 1)
+    fτ = reshape(y, m, 1)
     values = similar(fτ)
 
     data = update_test_values!(method, number_type, 1, max_iter, m)
     r = method(number_type[], number_type[], number_type[])
-    idx_test = CartesianIndex.(1, 1:m)
+    idx_test = CartesianIndex.(1:m, 1)
     deleteat!(idx_test, idx_max)
     idx_new_test = reshape(idx_test, 1, :)
-    @views add_nodes!(r, data, τ, fτ, reshape(idx_test, 1, :), σ, fσ)
+    @views add_nodes!(r, data, τ, fτ, idx_test, σ, fσ)
     lengths = Vector{Int}(undef, max_iter)
     all_weights = Matrix{number_type}(undef, max_iter + 2, max_iter + 2)
     while true
-        test_values = update_test_values!(values, r, data, τ, fτ, reshape(idx_test, 1, :), idx_new_test)
-        test_actual = transpose(view(fτ, idx_test))
+        test_values = update_test_values!(values, r, data, τ, fτ, idx_test, idx_new_test)
+        test_actual = view(fτ, idx_test)
         if any(isnan, test_actual)
             throw(ArgumentError("Function has NaN value at a test point"))
         end
@@ -319,14 +319,14 @@ function approximate(y::AbstractVector{T}, z::AbstractVector{S};
         end
 
         # Add new node:
-        push!(σ, τ[idx_test[idx_max[2]]])
-        push!(fσ, fτ[idx_test[idx_max[2]]])
+        push!(σ, τ[idx_test[idx_max]])
+        push!(fσ, fτ[idx_test[idx_max]])
         n += 1
 
         # Update at the test points:
-        deleteat!(idx_test, idx_max[2])
+        deleteat!(idx_test, idx_max)
         @views add_nodes!(r, data, τ, fτ, idx_test, [σ[end]], [fσ[end]])
-        idx_new_test = CartesianIndices((1:1, 1:0))
+        idx_new_test = CartesianIndices((1:0, 1:1))
     end
     if history
         hist = RFIVector{typeof(r)}(σ, fσ, all_weights, lengths[1:n], n)
