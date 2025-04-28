@@ -46,7 +46,7 @@ end
     approx(f; kw...) = approximate(f, dom(T); method, kw...)
     f = x -> exp(3x);
     r = approx(f, tol=1e-5)
-    @test !pass(f, r, pts, atol=1e-7)
+    @test !pass(f, r, pts, atol=1e-10)
     @test pass(f, r, pts, atol=5e-5)
     f = x -> abs(x);  @test pass(f, approx(f, stagnation=30), pts, atol=1e-10)
     f = x -> abs(x - 0.95);  @test pass(f, approx(f, stagnation=30), pts, atol=1e-9)

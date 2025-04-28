@@ -160,49 +160,9 @@ function Base.show(io::IO, mimetype::MIME"text/plain", r::PartialFractions{T}) w
     end
 end
 
-# Discretize a path so that the distance to neighbors is no more than half the distance to the nearest pole.
-function _discretize(d::ComplexPath, poles::AbstractVector)
-    function pole_to_nbr_ratio(z, zp, k)
-        to_pole = sqrt(minimum(abs2(z[k] - p) for p in zp; init=Inf))
-        to_nbr = max(abs(z[k] - z[k-1]), abs(z[k] - z[k+1]))
-        return to_pole / to_nbr
-    end
-
-    t = range(0, length(d), 100)
-    z = point(d, t)
-    while any(pole_to_nbr_ratio(z, poles, k) < 2 for k in 2:length(z)-1)
-        t, z = refine(d, t, 2)
-        if length(t) > 2^14
-            @warn("Unable to refine the path sufficiently")
-            break
-        end
-    end
-    return t, z
-end
-
-function pfe(f::Function, d::ComplexCurve, poles; kw...)
-    pfe(f, Path(d), poles; kw...)
-end
-function pfe(f::Function, d::ComplexClosedCurve, poles; kw...)
-   pfe(f, ClosedPath(d), poles; kw...)
-end
-
-function pfe(
-    f::Function, d::ComplexPath, poles::AbstractVector;
-    degree = max(1, div(length(poles), 2))
-    )
-    t, z = _discretize(d, poles)
-    B = ArnoldiBasis(z, degree)
-    C = [1 / (z - zp) for z in z, zp in poles]
-    c = isempty(C) ? B.Q \ f.(z) : [B.Q C] \ f.(z)
-    p = ArnoldiPolynomial(c[1:degree+1], B)
-    r = PartialFractions(p, poles, c[degree+2:end])
-    return Approximation(f, d, r, z -> true, collect(t))
-end
-
 # Evaluate at all the test points.
 function update_test_values!(values, r::PartialFractions, _, τ, fτ, idx_test, idx_new_test)
-    # Evaluate at all test points
+    # Evaluate at all test points--no shortcuts here
     V = view(values, idx_test)
     T = view(τ, idx_test)
     @. V = r(T)

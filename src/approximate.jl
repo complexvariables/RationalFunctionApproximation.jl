@@ -119,18 +119,6 @@ approximate(f::Function, d::ComplexCurve; kw...) = approximate(f, Path(d); kw...
 # ::Function, ::ComplexPath
 approximate(f::Function, d::ComplexClosedCurve; kw...) = approximate(f, ClosedPath(d); kw...)
 
-# Update the matrices of test points and f values.
-function update_test_points!(path, fun, test, τ, fτ, s, Δs, δ, rows, cols)
-    # Each column belongs to one of the node parameter values and contains points
-    # that are equispaced up to the next one.
-    @inbounds @fastmath for i in rows, j in cols
-        test[i, j] = s[j] + δ[i] * Δs[j]
-        τ[i, j] = point(path, test[i, j])
-        fτ[i, j] = fun(τ[i, j])
-    end
-    return nothing
-end
-
 # All continuum methods end up here:
 # ::Function, ::ComplexPath
 function approximate(f::Function, d::ComplexPath;
