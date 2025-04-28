@@ -154,13 +154,9 @@ function roots(r::Barycentric)
     if ty in (Float64,)
         return filter(isfinite, eigvals(E, B))
     else
-        # super kludgy; thanks to Daan Huybrechs
-        μ = 11 - 17im  # shift since 0 may well be a root
-        E -= μ*B
-        EB = inv(E)*B
-        pp = eigvals(EB)
-        large_enough = abs.(pp) .> 1e-10
-        return μ .+ 1 ./ pp[large_enough]
+        # use generic linear algebra
+        _, _, _, _, ⍺, β = schur(complex(E), complex(B))
+        filter(isfinite, ⍺ ./ β)
     end
 end
 
