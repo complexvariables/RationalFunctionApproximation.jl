@@ -118,18 +118,10 @@ function update_test_values!(values, r::Thiele, Δ, τ, fτ, idx_test, idx_new_t
     end
 
     # Evaluate at all test points
-    if isa(idx_test, CartesianIndices)
-        D = view(Δ, idx_test, 1:n)
-    else
-        # slower route when test point indices are not contiguous
-        I = [CartesianIndex((idx, k)) for idx in idx_test, k in 1:n]
-        D = view(Δ, I)
-    end
     V = view(values, idx_test)
     V .= φ[n]
-    for k in n-1:-1:1
-        Dk = view(D, :, :, k)
-        @inbounds @fastmath @. V = φ[k] + Dk / V
+    @inbounds @fastmath for k in n-1:-1:1, i in eachindex(idx_test)
+        V[i] = φ[k] + Δ[idx_test[i], k] / V[i]
     end
     return V
 end
