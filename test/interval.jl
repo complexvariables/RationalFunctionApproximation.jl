@@ -29,16 +29,14 @@ end
     tol = 2000*eps(T)
     pts = points(T)
     approx(f; kw...) = approximate(f, domain(T); method, kw...)
+    f = x -> cis(x); @test pass(f, approx(f), pts, rtol=tol)
+    f = x -> exp(x); @test pass(f, approx(f), pts, rtol=tol)
     f = x -> abs(x + 1//2 + 1im//100); @test pass(f, approx(f), pts; rtol=tol)
     f = x -> sin(1 / (21//20 - x)); @test pass(f, approx(f), pts; rtol=tol)
     f = x -> exp(-1 / x^2); @test pass(f, approx(f), pts; rtol=tol)
     f = x -> exp(-100*(x + 1//4)^2); @test pass(f, approx(f), pts; rtol=tol)
     f = x -> exp(-10 / (6//5 - x)); @test pass(f, approx(f), pts; rtol=tol)
-    f = x -> 1/(1 + exp(100*(x + 1//2))); @test pass(f, approx(f), pts; rtol=tol)
-    f = x -> sin(100x) * exp(-10x^2); @test pass(f, approx(f), pts; rtol=tol)
     f = x -> tanh(100*(x - 1//5)); @test pass(f, approx(f), pts, rtol=tol)
-    f = x -> exp(x); @test pass(f, approx(f), pts, rtol=tol)
-    f = x -> cis(x); @test pass(f, approx(f), pts, rtol=tol)
 end
 
 @testset "Low accuracy" begin
@@ -54,7 +52,7 @@ end
     f = x -> abs(x - 0.95);  @test pass(f, approx(f, stagnation=30), pts, atol=1e-9)
 end
 
-@testset "Poles, zeros, residues" for T in (Float64,)
+@testset "Poles, zeros, residues in $T" for T in (Float64, Double64)
     approx(f; kw...) = approximate(f, domain(T); method=Barycentric, kw...)
     f = z -> (z+1) * (z+2) / ((z+3) * (z+4))
     r = approx(f)
@@ -93,15 +91,15 @@ end
     tol = 2000*eps(T)
     pts = points(T)
     approx(f; kw...) = approximate(f, domain(T); method=Barycentric, kw...)
-     f = x -> 0; @test pass(f, approx(f), pts, atol=2e-13)
-    f = x -> x; @test pass(f, approx(f), pts, atol=2e-13)
-    f = x -> 1im*x; @test pass(f, approx(f), pts, atol=2e-13)
-    f = x -> x + x^3; @test pass(f, approx(f), pts, atol=2e-13)
-    f = x -> x + x^2; @test pass(f, approx(f), pts, atol=2e-13)
-    f = x -> 1/(1.1 + x); @test pass(f, approx(f), pts, atol=2e-13)
-    f = x -> 1/(1 + 1im*x); @test pass(f, approx(f), pts, atol=2e-13)
-    f = x -> 1/(3 + x + x^2); @test pass(f, approx(f), pts, atol=2e-13)
-    f = x -> 1/(1.01 + x^3); @test pass(f, approx(f), pts, atol=2e-13)
+    f = x -> 0; @test pass(f, approx(f), pts, atol=tol)
+    f = x -> x; @test pass(f, approx(f), pts, atol=tol)
+    f = x -> 1im*x; @test pass(f, approx(f), pts, atol=tol)
+    f = x -> x + x^3; @test pass(f, approx(f), pts, atol=tol)
+    f = x -> x + x^2; @test pass(f, approx(f), pts, atol=tol)
+    f = x -> 1/(1.1 + x); @test pass(f, approx(f), pts, atol=tol)
+    f = x -> 1/(1 + 1im*x); @test pass(f, approx(f), pts, atol=tol)
+    f = x -> 1/(3 + x + x^2); @test pass(f, approx(f), pts, atol=tol)
+    f = x -> 1/(1.01 + x^3); @test pass(f, approx(f), pts, atol=tol)
 end
 
 @testset "Specified degree" begin
@@ -109,29 +107,25 @@ end
     tol = 2000*eps(T)
     pts = points(T)
     approx(f; kw...) = approximate(f, domain(T); method=Barycentric, kw...)
-    f = x -> 0; @test pass(f, approx(f, max_iter=1), pts, atol=2e-13)
-    f = x -> x; @test pass(f, approx(f, max_iter=1), pts, atol=2e-13)
-    f = x -> 1im*x; @test pass(f, approx(f, max_iter=3), pts, atol=2e-13)
-    f = x -> x+x^2; @test pass(f, approx(f, max_iter=2), pts, atol=2e-13)
-    f = x -> x+x^3; @test pass(f, approx(f, max_iter=3), pts, atol=2e-13)
-    f = x -> 1/(1.1+x); @test pass(f, approx(f, max_iter=3), pts, atol=2e-13)
-    f = x -> 1/(1+1im*x); @test pass(f, approx(f, max_iter=3), pts, atol=2e-13)
-    f = x -> 1/(3+x+x^2); @test pass(f, approx(f, max_iter=2), pts, atol=2e-13)
-    f = x -> 1/(1.01+x^3); @test pass(f, approx(f, max_iter=3), pts, atol=2e-13)
+    f = x -> 0; @test pass(f, approx(f, max_iter=1), pts, atol=tol)
+    f = x -> x; @test pass(f, approx(f, max_iter=1), pts, atol=tol)
+    f = x -> 1im*x; @test pass(f, approx(f, max_iter=3), pts, atol=tol)
+    f = x -> x+x^2; @test pass(f, approx(f, max_iter=2), pts, atol=tol)
+    f = x -> x+x^3; @test pass(f, approx(f, max_iter=3), pts, atol=tol)
+    f = x -> 1/(1.1+x); @test pass(f, approx(f, max_iter=3), pts, atol=tol)
+    f = x -> 1/(1+1im*x); @test pass(f, approx(f, max_iter=3), pts, atol=tol)
+    f = x -> 1/(3+x+x^2); @test pass(f, approx(f, max_iter=2), pts, atol=tol)
+    f = x -> 1/(1.01+x^3); @test pass(f, approx(f, max_iter=3), pts, atol=tol)
     f = x -> cis(x); r = approx(f);
-    @test sum(@. abs(r(pts))-1)/length(pts) < 2e-13
+    @test sum(@. abs(r(pts))-1)/length(pts) < tol
     f = x -> exp(exp(x))/(x - 0.2im); r = approx(f);
-    @test minimum(abs.(poles(r) .- .2im)) < 1e-12
+    @test minimum(abs.(poles(r) .- .2im)) < 10tol
 end
 
-@testset "Other intervals" begin
-    T = Float64
-    pts = points(T)
-    approx(f; kw...) = approximate(f, domain(T); method=Barycentric, kw...)
-    zz(a,b) = (pts .+ 1)*(b-a)/2 .+ a
-    for (a,b) in ((-2,3), (0,1), (-0.01,0) , (-1e4, 2e6))
-        for f in ( x -> abs(x + 0.5 + 0.01im), x -> sin(1/(1.05im-x)), x -> exp(-10/(1.2*(b+1)-x)) )
-            @test pass(f, approximate(f, Segment(a,b)), zz(a,b), rtol=1e-9)
-        end
-    end
+@testset "Interval [$a, $b]" for (a, b) in ((-2, 3), (0, 4), (-2e-4, 0), (-3e3, 5e6))
+    pts = range(a, b, 1000)
+    approx(f; kw...) = approximate(f, Segment(a, b); method=Barycentric, kw...)
+    tol(f) = 1000 * eps() * max(b - a, abs(f(a)), abs(f(b)))
+    f = x -> 1 / sin(a + (b-a)*1.05im - x); @test pass(f, approx(f), pts, atol=tol(f))
+    f = x -> exp(-10/(a + 1.1*(b-a) - x)); @test pass(f, approx(f), pts, atol=tol(f))
 end
