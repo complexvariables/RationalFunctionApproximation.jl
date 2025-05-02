@@ -9,6 +9,10 @@ global_logger(logger)
     include("aaa.jl")
 end
 
+@testset "Discretzed path" verbose=true begin
+    include("discretized-path.jl")
+end
+
 @testset "Real interval" verbose=true begin
     include("interval.jl")
 end

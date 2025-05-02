@@ -88,15 +88,18 @@ the point to be added to the discretization.
 See also [`DiscretizedPath`](@ref), [`collect`](@ref).
 """
 function add_point!(d::DiscretizedPath, idx)
-    @assert length(idx) == 2
+    if length(idx) != 2
+        throw(ArgumentError(idx, "must be a 2-element tuple or CartesianIndex"))
+    end
     (idx[2] == 1) && return
     n = length(d.next) + 1
     if n == size(d.points, 1)
-        error("Cannot add more points to the discretization")
+        throw(BoundsError("Cannot add more points to this discretization"))
     end
-    # if d.next[idx[1]] == 0
-    #     error("Cannot add points beyond the last")
-    # end
+    if idx[2] > size(d.params, 2)
+        throw(BoundsError(idx, "point is not in the discretization"))
+    end
+
     s_new = d.params[idx[1], idx[2]]
     ref = size(d.params, 2)
     # Replace row idx[1] with new values

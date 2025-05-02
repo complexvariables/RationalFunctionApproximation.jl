@@ -4,7 +4,7 @@ using LinearAlgebra, Statistics, GenericLinearAlgebra, ComplexRegions, GenericSc
 using PyFormattedStrings
 using Infiltrator
 
-export unit_interval, unit_circle, unit_disk
+export unit_interval, unit_circle, unit_disk, DiscretizedPath
 include("utils.jl")
 
 export nodes, weights, degree, degrees, poles, residues, roots
