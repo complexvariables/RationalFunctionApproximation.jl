@@ -46,7 +46,7 @@ Discretize a path, keeping the option of future making local refinements.
 - `refinement`: number of refinements to make between consecutive points
 - `maxpoints`: maximum number of points ever allowed
 
-See also [`collect`](@ref), [`add_point!`](@ref).
+See also [`collect`](@ref), [`add_node!`](@ref).
 """
 function DiscretizedPath(path::ComplexCurveOrPath, s::AbstractVector; refinement=0, maxpoints=length(s))
     F = real_type(path)
@@ -71,23 +71,28 @@ function DiscretizedPath(path::ComplexCurveOrPath=ComplexRegions.Circle(0,1), n:
     DiscretizedPath(path, range(0, length(path), n); kwargs...)
 end
 
+function DiscretizedPath(p::DiscretizedPath, refinement::Int)
+    s, _ = collect(p, :nodes)
+    maxpoints = max(length(s), size(p.points, 1))
+    return DiscretizedPath(p.path, s; refinement, maxpoints)
+end
 """
-    add_point!(d::DiscretizedPath, idx)
+    add_node!(d::DiscretizedPath, idx)
 
-Add a new point to the discretization, and return the indexes of the new points. The indexes
+Add a new node to the discretization, and return the indexes of all affected points. The indexes
 are valid on the `points` and `params` fields.
 
 # Arguments
 - `d`: a DiscretizedPath object
 - `idx`: a 2-element tuple, vector, or `CartesianIndex` into the `params` field. This identifies
-the point to be added to the discretization.
+the point to be promoted to a node.
 
 # Returns
 - A 2-element vector of `CartesianIndices` into the `params` and `points` fields.
 
 See also [`DiscretizedPath`](@ref), [`collect`](@ref).
 """
-function add_point!(d::DiscretizedPath, idx)
+function add_node!(d::DiscretizedPath, idx)
     if length(idx) != 2
         throw(ArgumentError(idx, "must be a 2-element tuple or CartesianIndex"))
     end
@@ -126,33 +131,45 @@ function add_point!(d::DiscretizedPath, idx)
 end
 
 """
-    collect(d::DiscretizedPath, refined=false)
+    collect(d::DiscretizedPath, which=:nodes)
 
 Collect the points and parameters of a discretized path.
 
 # Arguments
 - `d`: a DiscretizedPath object
-- `refined`: whether to return all points (if true) or only the active ones (if false)
+- `which`: return the nodes if :nodes, test points if :test, or all if :all
 
 # Returns
 - Tuple of two vectors: parameter values and points on the path
 
-See also [`add_point!`](@ref), [`DiscretizedPath`](@ref).
+See also [`add_node!`](@ref), [`DiscretizedPath`](@ref).
 """
-function Base.collect(d::DiscretizedPath, refined=false)
+function Base.collect(d::DiscretizedPath, which=:nodes)
     n = length(d.next)
-    depth = refined ? size(d.params, 2) - 1 : 0
-    params = similar(d.params, depth+1, n)
-    points = similar(d.points, depth+1, n)
+    if which == :nodes
+        columns = [1]
+    elseif which == :test
+        columns = 2:size(d.params, 2)
+    elseif which == :all
+        columns = 1:size(d.params, 2)
+    else
+        throw(ArgumentError(which, "must be :nodes, :test, or :all"))
+    end
+    params = similar(d.params, length(columns), n)
+    points = similar(d.points, length(columns), n)
     k = idx = 1
     while idx != 0
-        params[:, k] .= d.params[idx, 1:depth+1]
-        points[:, k] .= d.points[idx, 1:depth+1]
+        params[:, k] .= d.params[idx, columns]
+        points[:, k] .= d.points[idx, columns]
         idx = d.next[idx]
         k += 1
     end
-    s_fin = length(d.path)
-    return [vec(params); s_fin], [vec(points); point(d.path, s_fin)]
+    if which in (:nodes, :all)
+        s_fin = length(d.path)
+        return [vec(params); s_fin], [vec(points); point(d.path, s_fin)]
+    else
+        return vec(params), vec(points)
+    end
 end
 
 # Refinement in parameter space

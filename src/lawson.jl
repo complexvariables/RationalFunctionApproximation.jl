@@ -61,11 +61,10 @@ function minimax(r::Approximation, nsteps::Integer=20)
     if !isa(r.fun, Barycentric)
         error("`minimax`` only works with barycentric approximations")
     end
-    s = r.prenodes
-    p = isa(r.domain, ComplexSCRegion) ? boundary(r.domain) : r.domain
-    _, test = refine(p, s, 20)
+    p = DiscretizedPath(r.path, 20)
+    _, test = collect(p, :test)
     ftest = r.original.(test)
     ⍺, β = lawson(test, ftest, nodes(r.fun), values(r.fun), weights(r.fun), nsteps)
     r̂ = Barycentric(nodes(r.fun), ⍺ ./ β, β, ⍺)
-    return Approximation(r.original, r.domain, r̂, r.allowed, r.prenodes)
+    return Approximation(r.original, r.domain, r̂, r.allowed, r.path)
 end

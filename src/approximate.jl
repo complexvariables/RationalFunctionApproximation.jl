@@ -137,7 +137,7 @@ function approximate(f::Function, d::ComplexPath;
     end
 
     path = DiscretizedPath(d, [0, 1]; refinement=num_ref, maxpoints=max_iter+2)
-    (_, σ) = collect(path, false)            # vector of nodes
+    (_, σ) = collect(path, :nodes)            # vector of nodes
     if isclosed(d)
         pop!(σ)
     end
@@ -219,7 +219,7 @@ function approximate(f::Function, d::ComplexPath;
         n_max = n += 1
 
         # Update the path discretization:
-        idx_new_test = add_point!(path, idx_new)
+        idx_new_test = add_node!(path, idx_new)
 
         # Update test points and matrices:
         if num_ref > refinement    # initial phase
@@ -397,7 +397,7 @@ function approximate(
         end
 
         idx_new = idx_test[idx_max]      # location of worst test point
-        idx_new_test = add_point!(path, idx_new)
+        idx_new_test = add_node!(path, idx_new)
         n_max = n += 1
 
         # Update test points:
@@ -477,17 +477,16 @@ function check(
     F::Approximation;
     quiet=false,
     prenodes=false,
-    refinement=20
+    refinement=10
     )
     if F.domain isa AbstractVector    # discrete domain
         τ = F.domain
         t = collect(eachindex(τ))
-    elseif refinement == :all
-        t, τ = collect(F.path, true)
+    elseif refinement == :test
+        t, τ = collect(F.path, :test)
     else
-        s, _ = collect(F.path)
-        q = DiscretizedPath(F.path.path, s; refinement)
-        t, τ = collect(q, true)
+        q = DiscretizedPath(F.path, refinement)
+        t, τ = collect(q, :all)
     end
     err = F.original.(τ) - F.fun.(τ)
     !quiet && @info f"Max error is {norm(err, Inf):.2e}"
