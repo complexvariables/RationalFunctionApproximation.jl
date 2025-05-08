@@ -514,7 +514,7 @@ function get_history(r::Approximation{T,S}) where {T,S}
     zp = Vector{complex(S)}[]
     err = T[]
     allowed = BitVector[]
-    τ, _ = check(r, quiet=true)
+    τ, _ = check(r; refinement=:test, quiet=true)
     fτ = r.original.(τ)
     scale = maximum(abs, fτ)
     for (idx, n) in enumerate(hist.len)
