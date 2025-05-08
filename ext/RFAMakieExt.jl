@@ -3,13 +3,6 @@ module RFAMakieExt
 using RationalFunctionApproximation, Makie, ComplexRegions, Logging, Printf
 RFA = RationalFunctionApproximation
 
-"""
-    convergenceplot(r)
-
-Plot the convergence history of a rational approximation.
-
-Markers show the maximum error on (the boundary of) the domain as a function of the numerator/denominator degree. A red marker indicates that the approximation has disallowed poles in its domain. A gold halo highlights the best approximation.
-"""
 function RFA.convergenceplot(r::RFA.Approximation)
     deg, err, _, allowed, best = get_history(r)
     fig = Figure( )
@@ -21,11 +14,6 @@ function RFA.convergenceplot(r::RFA.Approximation)
     return fig
 end
 
-"""
-    errorplot(r; use_abs=false)
-
-Plot the pointwise error of an `Approximation` on (the boundary of) its domain. If the error is not real, then the real and imaginary parts are plotted separately, unless `use_abs=true`.
-"""
 function RFA.errorplot(r::RFA.Approximation; use_abs=false)
     fig = Figure( )
     ax = Axis(fig[1, 1], xlabel="boundary parameter", ylabel="error")

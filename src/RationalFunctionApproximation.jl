@@ -36,14 +36,31 @@ function animate(::Any)
     error("Load the Makie or Plots package first.")
 end
 
+"""
+    convergenceplot(r)
+
+Plot the convergence history of a rational approximation.
+
+Markers show the maximum error on (the boundary of) the domain as a function of the numerator/denominator degree. A red marker indicates that the approximation has disallowed poles in its domain. A gold halo highlights the best approximation.
+"""
 function convergenceplot(::Any)
     error("Load the Makie or Plots package first.")
 end
 
+"""
+    errorplot(r; use_abs=false)
+
+Plot the pointwise error of an `Approximation` on (the boundary of) its domain. If the error is not real, then the real and imaginary parts are plotted separately, unless `use_abs=true`.
+"""
 function errorplot(::Any; kwargs...)
     error("Load the Makie package first.")
 end
 
+"""
+    poleplot(r, idx=0)
+
+Plot the domain of the approximation `r` and the poles of the rational approximant. If `idx` is nonzero, it should be an index into the convergence history of `r`.
+"""
 function poleplot(::Any; kwargs...)
     error("Load the Makie package first.")
 end
