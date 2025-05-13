@@ -17,13 +17,36 @@ Base.isempty(r::AbstractRationalInterpolant) = isempty(nodes(r))
 
 "degrees(r) returns the degrees of the numerator and denominator of the rational `r`."
 degrees(r::AbstractRationalInterpolant) = error("`degrees` not implemented for $(typeof(r))")
+
 "degree(r) returns the degree of the denominator of the rational `r`."
 degree(r::AbstractRationalInterpolant) = error("`degree` not implemented for $(typeof(r))")
 
 "poles(r) returns the poles of the rational interpolant `r`."
 poles(::AbstractRationalInterpolant) = error("`poles` not implemented for $(typeof(r))")
-"residues(r, z) returns the residues of the rational interpolant `r` at the poles in `z`."
-residues(::AbstractRationalInterpolant, z) = error("`residues` not implemented for $(typeof(r))")
+
+"""
+    residues(r)
+
+Returns two vectors of the poles and residues of the rational function `r`.
+"""
+residues(::AbstractRationalInterpolant) = error("`residues` not implemented for $(typeof(r))")
+
+"""
+    Res(r, z)
+
+Returns the residue of the rational function `r` at the point `z`.
+"""
+function Res(f::Function, z::Number; radius=100eps(abs(z)), n=200)
+    # Attempt to use contour integration to find a residue
+    T = complex(typeof(float(z)))
+    trap = 0
+    for t in 0:n-1
+        c = cispi(T(2t / n))
+        trap += c * f(z + radius * c)
+    end
+    return radius * trap / n
+end
+
 "roots(r) returns the roots of the rational interpolant `r`."
 roots(::AbstractRationalInterpolant) = error("`roots` not implemented for $(typeof(r))")
 

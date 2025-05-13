@@ -124,19 +124,16 @@ function poles(r::Barycentric{T}) where T
     return pol
 end
 
-"""
-    residues(r)
-    residues(r, p=poles(r))
-
-Return the residues of the rational function `r`. If a vector `p` of poles is given, the
-residues are computed at those locations, preserving order.
-"""
-function residues(r::Barycentric, pol::AbstractVector=poles(r))
-    numer = t -> sum( w*y / (t-z) for (z, y, w) in zip(nodes(r), values(r), weights(r)))
-    denomdiff = t -> -sum( w / (t-z)^2 for (z, w) in zip(nodes(r), weights(r)))
-    res = similar( complex(pol) )
-    res .= numer.(pol) ./ denomdiff.(pol)
-    return res
+function residues(r::Barycentric)
+    ζ = poles(r)
+    res = similar( complex(ζ) )
+    z, y, w = nodes(r), values(r), weights(r)
+    for (i, t) in pairs(ζ)
+        numer = sum( w*y / (t-z) for (z, y, w) in zip(z, y, w))
+        denomdiff = -sum( w / (t-z)^2 for (z, w) in zip(z, w))
+        res[i] = numer / denomdiff
+    end
+    return ζ, res
 end
 
 """

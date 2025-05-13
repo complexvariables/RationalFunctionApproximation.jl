@@ -145,7 +145,7 @@ function evaluate(r::PartialFractions, z::Number)
 end
 
 poles(r::PartialFractions) = r.poles
-residues(r::PartialFractions) = r.residues
+residues(r::PartialFractions) = (r.poles, r.residues)
 Base.values(r::PartialFractions) = r.(nodes(r))
 nodes(r::PartialFractions) = nodes(r.polynomial)
 

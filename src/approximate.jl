@@ -348,7 +348,7 @@ function approximate(
     stagnation = 5
     )
 
-    num_ref = max(refinement, 23)    # initial number of test points between nodes; decreases to `refinement`
+    num_ref = max(refinement, 53)    # initial number of test points between nodes; decreases to `refinement`
     if allowed==true
         allowed = z -> true
     end
@@ -402,7 +402,7 @@ function approximate(
 
         # Update test points:
         if num_ref > refinement    # initial phase
-            num_ref -= 10    # gradually decrease initial refinement level
+            num_ref -= 20    # decrease from initial refinement level
             s = first(collect(path))
             path = DiscretizedPath(d, s; refinement=num_ref, maxpoints=max_iter+2)
             τ = path.points

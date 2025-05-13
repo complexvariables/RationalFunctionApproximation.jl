@@ -7,7 +7,7 @@ using Infiltrator
 export unit_interval, unit_circle, unit_disk, DiscretizedPath
 include("utils.jl")
 
-export nodes, weights, degree, degrees, poles, residues, roots
+export nodes, weights, degree, degrees, poles, Res, residues, roots
 include("abstract.jl")
 
 export PartialFractions, PartialFractionExpansion, pfe
