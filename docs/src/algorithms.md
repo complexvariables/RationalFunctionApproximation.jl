@@ -18,8 +18,7 @@ r = approximate(f, unit_interval)
 convergenceplot(r)
 ```
 
-(The plots in this documentation are made using `CairoMakie`, but the same functions are made available for `Plots`.)  
-In the plot above, the markers show the estimated max-norm error of the AAA rational interpolant over the domain as a function of the iteration counter. Each iteration adds one degree to both the numerator and denominator of the rational approximation. The gold halo indicates the final approximation chosen by the algorithm. The red dots indicate that a pole of the rational interpolant lies in the approximation domain. We can verify this fact by using `rewind` to recover the approximation from iteration 7:
+(The plots in this documentation are made using `CairoMakie`, but the same functions are made available for `Plots`.)  In the plot above, the markers show the estimated max-norm error of the AAA rational interpolant over the domain as a function of the iteration counter. Each iteration adds one degree to both the numerator and denominator of the rational approximation. The gold halo indicates the final approximation chosen by the algorithm. The red dots indicate that a pole of the rational interpolant lies in the approximation domain. We can verify this fact by using `rewind` to recover the approximation from iteration 7:
 
 ```@repl convergence
 r7 = rewind(r, 7)
@@ -61,9 +60,9 @@ convergenceplot(r)
 
 While finding a rational interpolant is a nonlinear problem, we can compute a linear variant if we prescribe the poles of the rational function. Specifically, given the poles $\zeta_1,\ldots, \zeta_n$, we can find a polynomial $p$ and residues $w_k$ such that
 
-$$
+```math
 f(z) \approx p(z) + \sum_{k=1}^n \frac{w_k}{z - \zeta_k}. 
-$$
+```
 
 When posed on a discrete set of test points, this is a linear least-squares problem. In order to represent the polynomial stably, an Arnoldi iteration is used to find a well-conditioned basis for the test points. 
 
@@ -76,14 +75,15 @@ r = approximate(f, Segment(-2, 2), ζ)
 ```
 
 ```@example convergence
-check(r);
+max_err(r) = println("Max error: ", maximum(abs, check(r)[2]))
+max_err(r);
 ```
 
 To get greater accuracy, we can increase the degree of the polynomial part.
 
 ```@example convergence
 r = approximate(f, Segment(-2, 2), ζ; degree=20)
-check(r);
+max_err(r);
 ```
 
 Note that the residues (in the exact function, all equal to one) may be accurate at the poles closest to the domain, but much less so elsewhere.
@@ -103,7 +103,7 @@ To what extent might these poles be suitable for a different function that has t
 
 ```@example convergence
 s = approximate(x -> exp(abs(x)), unit_interval, ζ; tol=1e-8, degree=20)
-check(s);
+max_err(r);
 ```
 
 ## Thiele continued fractions (experimental)
@@ -134,5 +134,5 @@ end
 ```@example convergence
 f = x -> x + cos(11x)
 r = approximate(f, unit_interval; method=Thiele)
-check(r);
+max_err(r);
 ```

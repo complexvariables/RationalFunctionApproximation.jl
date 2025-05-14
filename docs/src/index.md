@@ -10,7 +10,7 @@ Here's a smooth, gentle function on the interval $[-1, 1]$:
 
 ```@example interval
 using RationalFunctionApproximation, CairoMakie
-CairoMakie.update_theme!(size = (400, 250), fontsize=11)
+CairoMakie.update_theme!(size = (600, 400), fontsize=11)
 const shg = current_figure
 
 f = x -> exp(cos(4x) - sin(3x))
@@ -56,10 +56,7 @@ Note that the degree of the rational function increased to capture the additiona
 One interesting feature of a rational function is that it can have poles, or infinite value, at the roots of the denominator polynomial. In this case, the poles hint at where the function is most sharply peaked:
 
 ```@example interval
-p = poles(r)
-scatter(real(p), imag(p), markersize = 8, color=:red, axis=(aspect=DataAspect(), xticks=-3:5))
-lines!([-2, 4], [0, 0], linewidth=2, color=:black)
-shg()
+poleplot(r)
 ```
 
 Let's try approximating the hyperbolic secant function:

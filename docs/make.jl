@@ -19,7 +19,7 @@ makedocs(;
     ),
     pages=[
         "Introduction" => "index.md",
-        # "Algorithms" => "algorithms.md",
+        "Algorithms" => "algorithms.md",
         "Domains" => "domains.md",
         "Discrete data" => "discrete.md",
         "Minimax" => "minimax.md",
