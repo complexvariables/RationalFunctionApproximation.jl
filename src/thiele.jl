@@ -151,34 +151,9 @@ function add_node!(r::Thiele, new_σ, new_f)
     for k in 1:n-1
         d = φ[n] - φ[k]
         if iszero(d)
-            @infiltrate false
             error("Infinite inverse difference. Try breaking symmetry of the function.")
         end
         @inbounds @fastmath φ[n] = (σ[n] - σ[k]) / d
     end
     return r
 end
-
-# function clean(r::Approximation;
-#     tol=1000*eps(real(eltype(nodes(r)))),
-#     isbad = z -> dist(z, r.domain) < tol,
-#     )
-#     t = r.fun
-#     s = r.prenodes
-#     remove = [true]
-#     while any(remove)
-#         z, y = nodes(t), values(t)
-#         remove = falses(length(z))
-#         for p in filter(isbad, poles(t))
-#             _, idx = findmin(abs, z .- p)
-#             remove[idx] = true
-#         end
-#         remove[3] = false  # hack
-#         # @show findall(remove)
-#         @infiltrate
-#         t = Thiele(z[.!remove], y[.!remove])
-#         # @show length(s), length(t.nodes)
-#         # deleteat!(s, findall(remove))
-#     end
-#     return Approximation(r.original, r.domain, t, s, missing)
-# end

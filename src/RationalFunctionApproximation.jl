@@ -2,7 +2,6 @@ module RationalFunctionApproximation
 
 using LinearAlgebra, Statistics, GenericLinearAlgebra, ComplexRegions, GenericSchur
 using PyFormattedStrings
-using Infiltrator
 
 export unit_interval, unit_circle, unit_disk, DiscretizedPath
 include("utils.jl")
