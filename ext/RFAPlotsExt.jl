@@ -14,6 +14,25 @@ function RFA.convergenceplot(r::RFA.Approximation)
     return fig
 end
 
+function RFA.errorplot(r::RFA.Approximation; use_abs=false)
+    fig = plot(xlabel="boundary parameter", ylabel="error", legend=false)
+    # try to get enough points for a smooth result
+    N = ceil(Int, 1000 / length(nodes(r)))
+    t, τ, err = check(r, refinement=N, quiet=true, prenodes=true)
+    if use_abs
+        plot!(t, abs.(err))
+        ylabel!("| error |")
+    elseif isreal(err)
+        plot!(t, err)
+        ylabel!("error")
+    else
+        plot!(t, real.(err))
+        plot!(t, imag.(err))
+        ylabel!("Re, Im error")
+    end
+    return fig
+end
+
 # Plot the domain and the poles of the approximation
 @userplot PolePlot
 @recipe function foo(PP::PolePlot)
