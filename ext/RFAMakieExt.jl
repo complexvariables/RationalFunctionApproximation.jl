@@ -17,7 +17,9 @@ end
 function RFA.errorplot(r::RFA.Approximation; use_abs=false)
     fig = Figure( )
     ax = Axis(fig[1, 1], xlabel="boundary parameter", ylabel="error")
-    t, τ, err = check(r, quiet=true, prenodes=true)
+    # try to get enough points for a smooth result
+    N = ceil(Int, 1000 / length(nodes(r)))
+    t, τ, err = check(r, refinement=N, quiet=true, prenodes=true)
     if use_abs
         lines!(ax, t, abs.(err))
         ax.ylabel = "| error |"
