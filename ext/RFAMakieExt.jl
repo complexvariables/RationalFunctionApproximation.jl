@@ -8,9 +8,9 @@ function RFA.convergenceplot(r::RFA.Approximation)
     fig = Figure( )
     ax = Axis(fig[1,1], xlabel="degree", ylabel="relative max error", yscale=log10)
     color = [all(b) ? :darkblue : :red for b in allowed]
-    scatter!(ax, deg, err; color, colorrange=(0, 1), markersize=10)
+    scatter!(ax, deg, err; color, colorrange=(0, 1), markersize=8)
     scatter!(ax, deg[best], err[best],
-        color=RGBAf(1,1,1,0), strokecolor=:gold, strokewidth=3, markersize=16 )
+        color=RGBAf(1,1,1,0), strokecolor=:gold, strokewidth=3, markersize=13 )
     return fig
 end
 
