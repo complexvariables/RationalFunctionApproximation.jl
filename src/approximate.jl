@@ -113,15 +113,9 @@ function approximate(f::Function, R::ComplexRegions.AbstractRegion; kw...)
     return Approximation(f, R, r.fun, r.allowed, r.path, r.history)
 end
 
-# ::Function, ::ComplexCurve
-approximate(f::Function, d::ComplexCurve; kw...) = approximate(f, Path(d); kw...)
-
-# ::Function, ::ComplexPath
-approximate(f::Function, d::ComplexClosedCurve; kw...) = approximate(f, ClosedPath(d); kw...)
-
 # All continuum methods end up here:
 # ::Function, ::ComplexPath
-function approximate(f::Function, d::ComplexPath;
+function approximate(f::Function, d::Union{ComplexPath,ComplexCurve};
     method = Barycentric,
     float_type = promote_type(real_type(d), typeof(float(1))),
     tol = 1000*eps(float_type),
