@@ -26,7 +26,7 @@ end
     @test isapprox(sum(pol+zer), -10, atol=1e-12)
 
     f = x -> 2/(3 + x) + 5/(x - 2im);  r = approx(f)
-    @test isapprox(prod(values(residues(r))), 10, atol=1e-8)
+    @test isapprox(prod(residues(r)[2]), 10, atol=1e-8)
 
     f = x -> sinpi(10x);  r = approx(f);
     @test isapprox(sort(abs.(roots(r)))[19], 0.9, atol=1e-12)
@@ -42,12 +42,6 @@ end
     # f = x -> 1e100*sin(x); @test pass(f, approx(f, =5, lawson=20), pts, rtol=1e-6)
     # f = x -> 1e-100*cos(x); @test pass(f, approx(f, =5, lawson=20), pts, rtol=1e-6)
 end
-
-# @testset "Lawson" begin
-#     f = x -> exp(-10/(1.2-x)); @test pass(f, approx(f, =8, lawson=20), pts, rtol=1e-8)
-#     f = x -> exp(x); @test pass(f, approx(f, =3, lawson=20), pts, atol=1e-3)
-#     f = x -> cis(3x); @test pass(f, approx(f, =3, lawson=20), pts, atol=1e-3)
-# end
 
 @testset "Polynomials and reciprocals" begin
     args = Dict(:max_degree=>150, :tol=>1e-13)
