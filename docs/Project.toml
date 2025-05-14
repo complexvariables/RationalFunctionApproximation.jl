@@ -6,4 +6,9 @@ Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 DomainColoring = "c24f3079-adb7-4533-8329-9f66732e5e85"
 DoubleFloats = "497a8b3b-efae-58df-a0af-a86822472b78"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
-RationalFunctionApproximation = "c92886a3-cb30-4e18-b84f-372dde475ecc"
+
+[compat]
+CairoMakie = "0.13"
+ComplexPlots = "0.1"
+Documenter = "1"
+DomainColoring = "1"

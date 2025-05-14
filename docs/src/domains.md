@@ -1,8 +1,9 @@
 # Approximation on domains
 
-The AAA algorithm can be used to approximate functions on other domains as defined in the [`ComplexRegions`](https://complexvariables.github.io/ComplexRegions.jl/stable/) package. 
+Rational approximations can be found on domains other than intervals using the [`ComplexRegions`](https://complexvariables.github.io/ComplexRegions.jl/stable/) package.
 
 ## Unit circle and disk
+
 The domain `unit_circle` is predefined. Here's a function approximated on the unit circle:
 
 ```@example shapes
@@ -52,8 +53,8 @@ In the result above, the approximation is simply a constant function, as the alg
 
 ```@example shapes
 r = approximate(f, exterior(unit_circle))
-z, err = check(r)
-maximum(abs, err)
+max_err = maximum(abs, check(r)[2])
+println("Max error: ", max_err)
 ```
 
 ## Other shapes
@@ -96,7 +97,7 @@ shg()
 
 ## Unbounded domains
 
-It's also possible to approximate on unbounded domains, but this capability is not yet automated. For example, the function
+It's also possible to approximate on domains with an unbounded boundary curve, but this capability is not yet automated. For example, the function
 
 ```@example shapes
 f = z -> 1 / sqrt(z - (-1 + 3im))
