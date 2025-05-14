@@ -1,6 +1,6 @@
 module RFAPlotsExt
 
-using RationalFunctionApproximation, Plots
+using RationalFunctionApproximation, ComplexRegions, Plots
 RFA = RationalFunctionApproximation
 
 # Plot a convergence curve, showing which steps had bad poles
@@ -33,30 +33,27 @@ function RFA.errorplot(r::RFA.Approximation; use_abs=false)
     return fig
 end
 
-# Plot the domain and the poles of the approximation
-@userplot PolePlot
-@recipe function foo(PP::PolePlot)
-    @assert length(PP.args) == 1 && (typeof(PP.args[1]) <: Approximation)
-        "Must be given an Approximation object."
-
-    r = PP.args[1]
-
-    @series begin
-        label --> nothing
-        aspect_ratio --> 1
-        r.domain
-    end
-
-    @series begin
-        zp = poles(r.fun)
-        seriestype := :scatter
-        color --> :red
-        markerstrokewidth --> 0
-        label --> nothing
-        aspect_ratio --> 1
-        real(zp), imag(zp)
-    end
+function axisbox(z)
+    xbox, ybox = ComplexRegions.enclosing_box(z, 1.42)
+    center = [(box[2] + box[1]) / 2 for box in (xbox, ybox)]
+    radius = maximum((box[2] - box[1]) / 2 for box in (xbox, ybox))
+    xbox = center[1] .+ [-radius, radius]
+    ybox = center[2] .+ [-radius, radius]
+    return xbox, ybox
 end
 
+function RFA.poleplot(r::RFA.Approximation, idx::Integer=0)
+    fig = plot(xlabel="Re(z)", ylabel="Im(z)", aspect_ratio=1, legend=false)
+    z, _ = check(r, quiet=true)
+    z = [z; z[1]]
+    plot!(real(z), imag(z))
+    zp = iszero(idx) ? RFA.poles(r) : RFA.poles(rewind(r, idx))
+    color = [r.allowed(z) ? :black : :red for z in zp]
+    scatter!(real(zp), imag(zp); color, markersize=4)
+    xbox, ybox = axisbox(z)
+    xlims!(xbox...)
+    ylims!(ybox...)
+    return fig
+end
 
 end # module
