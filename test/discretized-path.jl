@@ -1,4 +1,4 @@
-@testset "Discretized interval in $T" for T in (Float64, Rational)
+@testset "Interval in $T" for T in (Float64, Rational)
     domain = Segment(T(0), T(1))
     p = DiscretizedPath(domain, 5)
     t, z = collect(p, :nodes)
@@ -13,7 +13,7 @@
     @test p.next == [2, 3, 4, 0]
     @test p.params[1:4, 3] ≈ @. (0:3) // 4 + (2//20)
 
-    A = reshape(T.(0:19) .// 20, 5, 4)
+    A = reshape(T.(0:19) / 20, 5, 4)
     t, z = collect(p, :all)
     @test isapprox(t[1:end-1], vec(A))
     t, z = collect(p, :test)

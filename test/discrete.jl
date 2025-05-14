@@ -65,7 +65,7 @@ end
     @test isapprox(sum(pol+zer), -10, rtol=5000*eps(T))
 
     f = x -> 2/(3 + x) + 5/(x - 2im);  r = approx(f)
-    @test isapprox(prod(values(residues(r))), 10, rtol=sqrt(eps(T)))
+    @test isapprox(prod(residues(r)[2]), 10, rtol=sqrt(eps(T)))
 
     f = x -> sinpi(10x);  r = approx(f);
     zer = roots(r)

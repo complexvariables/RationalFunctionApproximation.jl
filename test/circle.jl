@@ -37,7 +37,7 @@ end
     @test isapprox(sum(pol+zer), -10, atol=1e-12)
 
     f = z -> 2/(3+z) + 5/(z-2im);  F = approximate(f, UD)
-    @test isapprox( prod(values(residues(F))), 10, atol=1e-8 )
+    @test isapprox( prod(residues(F)[2]), 10, atol=1e-8 )
 
     f = z -> (z-(3+3im))/(z+2);  F = approximate(f, UD)
     pol, zer = poles(F), roots(F);  @test isapprox(pol[1]*zer[1], -6-6im, atol=1e-12)
