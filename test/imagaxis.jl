@@ -1,5 +1,5 @@
 dom(T=Float64) = Segment{T}(-1im, 1im)
-function points(T=Float64)
+function test_points(T=Float64)
     z = 1im * T(10) .^ range(T(-15), T(0), 500);
     return [-reverse(z); 0; z]
 end
@@ -7,7 +7,7 @@ end
 @testset "Basic functions for $method" for method in (Barycentric, Thiele)
     T = Float64
     tol = 2000*eps(T)
-    pts = points(T)
+    pts = test_points(T)
     approx(f; kw...) = approximate(f, dom(T); method, kw...)
     f = x -> abs(x + 1//2 + 1im//100); @test pass(f, approx(f), pts; rtol=tol)
     f = x -> sinh(1 / (21//20 - x)); @test pass(f, approx(f), pts; rtol=tol)
@@ -25,7 +25,7 @@ end
 
 @testset "Double64 for $method" for method in (Barycentric, Thiele)
     T = Double64
-    pts = points(T)
+    pts = test_points(T)
     tol = 2000*eps(T)
     approx(f; kw...) = approximate(f, dom(T); method, kw...)
     f = x -> abs(x + 1//2 + 1im//100); @test pass(f, approx(f), pts; rtol=tol)
@@ -42,7 +42,7 @@ end
 @testset "Low accuracy" begin
     T = Float64
     method = Barycentric
-    pts = points(T)
+    pts = test_points(T)
     approx(f; kw...) = approximate(f, dom(T); method, kw...)
     f = x -> exp(3x);
     r = approx(f, tol=1e-5)
@@ -75,7 +75,7 @@ end
 
 @testset "Vertical scaling in $T" for T in (Float64, Double64)
     approx(f; kw...) = approximate(f, dom(T); method=Barycentric, kw...)
-    pts = points(T)
+    pts = test_points(T)
     f = x -> T(10)^50*sinh(x); @test pass(f, approx(f), pts, rtol=2000*eps(T))
     f = x -> T(10)^(-50)*cosh(x); @test pass(f, approx(f), pts, rtol=2000*eps(T))
 end
@@ -89,7 +89,7 @@ end
 
 @testset "Polynomials and reciprocals" begin
     T = Float64
-    pts = points(T)
+    pts = test_points(T)
     tol = 2000*eps(T)
     approx(f; kw...) = approximate(f, dom(T); method=Barycentric, kw...)
     f = x -> 0; @test pass(f, approx(f), pts, atol=2e-13)
