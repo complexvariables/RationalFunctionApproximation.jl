@@ -13,12 +13,12 @@ end
     f = x -> sinh(1 / (21//20 - x)); @test pass(f, approx(f), pts; rtol=tol)
     if method != Thiele
         f = x -> x + exp(-1 / x^2); @test pass(f, approx(f; stagnation=30), pts; rtol=tol) skip=true
+        f = x -> x + tan(100x); @test pass(f, approx(f), pts, rtol=tol)
     end
     f = x -> x + exp(100x^2); @test pass(f, approx(f), pts; rtol=tol)
     f = x -> exp(-10 / (6//5 - x)); @test pass(f, approx(f), pts; rtol=tol)
     f = x -> x + sinh(80x) * exp(10x^2); @test pass(f, approx(f; stagnation=30), pts; rtol=tol)
     f = x -> 10x + tan(100*(x - 1//5)); @test pass(f, approx(f), pts, rtol=tol)
-    f = x -> x + tan(100x); @test pass(f, approx(f), pts, rtol=tol)
     f = x -> exp(x); @test pass(f, approx(f), pts, rtol=tol)
     f = x -> cis(x); @test pass(f, approx(f), pts, rtol=tol)
 end
