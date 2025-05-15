@@ -94,7 +94,7 @@ See also [`DiscretizedPath`](@ref), [`collect`](@ref).
 """
 function add_node!(d::DiscretizedPath, idx)
     if length(idx) != 2
-        throw(ArgumentError(idx, "must be a 2-element tuple or CartesianIndex"))
+        throw(ArgumentError("Second argument must be a 2-element tuple or CartesianIndex"))
     end
     (idx[2] == 1) && return
     n = length(d.next) + 1
@@ -102,7 +102,7 @@ function add_node!(d::DiscretizedPath, idx)
         throw(BoundsError("Cannot add more points to this discretization"))
     end
     if idx[2] > size(d.params, 2)
-        throw(BoundsError(idx, "point is not in the discretization"))
+        throw(BoundsError("Indicated new node is not in the discretization"))
     end
 
     s_new = d.params[idx[1], idx[2]]
@@ -153,7 +153,7 @@ function Base.collect(d::DiscretizedPath, which=:nodes)
     elseif which == :all
         columns = 1:size(d.params, 2)
     else
-        throw(ArgumentError(which, "must be :nodes, :test, or :all"))
+        throw(ArgumentError("Second argument must be :nodes, :test, or :all"))
     end
     params = similar(d.params, length(columns), n)
     points = similar(d.points, length(columns), n)

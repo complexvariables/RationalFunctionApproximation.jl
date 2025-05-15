@@ -122,7 +122,7 @@ end
 @testset "Interval [$a, $b]" for (a, b) in ((-2, 3), (0, 4), (-2e-4, 0), (-3e3, 5e6))
     pts = range(a, b, 1000)
     approx(f; kw...) = approximate(f, pts; method=Barycentric, kw...)
-    tol(f) = 1000 * eps() * max(b - a, abs(f(a)), abs(f(b)))
-    f = x -> 1 / sin(a + (b-a)*1.05im - x); @test pass(f, approx(f), pts, atol=tol(f))
-    f = x -> exp(-10/(a + 1.1*(b-a) - x)); @test pass(f, approx(f), pts, atol=tol(f))
+    toler(f) = 1000 * eps() * max(b - a, abs(f(a)), abs(f(b)))
+    f = x -> 1 / sin(a + (b-a)*1.05im - x); @test pass(f, approx(f), pts, atol=toler(f))
+    f = x -> exp(-10/(a + 1.1*(b-a) - x)); @test pass(f, approx(f), pts, atol=toler(f))
 end

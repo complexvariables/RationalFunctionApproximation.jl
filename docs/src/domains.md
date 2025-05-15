@@ -109,7 +109,7 @@ is analytic on the right half of the complex plane. In order to produce an appro
 z = cispi.(range(-1, 1, length=90))           # points on the unit circle
 φ = Mobius( [-1, -1im, 1], [1im, 0, -1im])    # unit circle ↦ imag axis
 extrema(real, φ.(z))
-``` 
+```
 
 By composing $f$ with $\phi$, we can approximate within the disk while $f$ is evaluated only on its native domain:
 
