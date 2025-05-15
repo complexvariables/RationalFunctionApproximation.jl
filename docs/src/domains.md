@@ -53,7 +53,7 @@ In the result above, the approximation is simply a constant function, as the alg
 
 ```@example shapes
 r = approximate(f, exterior(unit_circle))
-max_err = maximum(abs, check(r)[2])
+max_err = maximum(abs, check(r, quiet=true)[2])
 println("Max error: ", max_err)
 ```
 

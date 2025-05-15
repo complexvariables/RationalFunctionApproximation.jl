@@ -75,7 +75,7 @@ r = approximate(f, Segment(-2, 2), ζ)
 ```
 
 ```@example convergence
-max_err(r) = println("Max error: ", maximum(abs, check(r)[2]))
+max_err(r) = println("Max error: ", maximum(abs, check(r, quiet=true)[2]))
 max_err(r);
 ```
 
