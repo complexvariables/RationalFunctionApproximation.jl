@@ -28,10 +28,10 @@ makedocs(;
     ],
 )
 
-deploydocs(;
-    repo="github.com/complexvariables/RationalFunctionApproximation.jl",
-    target="build",
-    devbranch="main",
-    branch="gh-pages",
-    push_preview=true
+DocumenterVitepress.deploydocs(;
+    repo = "github.com/complexvariables/RationalFunctionApproximation.jl",
+    target = joinpath(@__DIR__, "build"),
+    branch = "gh-pages",
+    devbranch = "main",
+    push_preview = true,
 )
