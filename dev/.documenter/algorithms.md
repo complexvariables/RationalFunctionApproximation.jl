@@ -20,7 +20,7 @@ r = approximate(f, unit_interval)
 convergenceplot(r)
 ```
 
-![](vddfqrv.png){width=600px height=450px}
+![](qktsoyj.png){width=600px height=450px}
 
 (The plots in this documentation are made using `CairoMakie`, but the same functions are made available for `Plots`.)  In the plot above, the markers show the estimated max-norm error of the AAA rational interpolant over the domain as a function of the iteration counter. Each iteration adds one degree to both the numerator and denominator of the rational approximation. The gold halo indicates the final approximation chosen by the algorithm. The red dots indicate that a pole of the rational interpolant lies in the approximation domain. We can verify this fact by using `rewind` to recover the approximation from iteration 7:
 
@@ -48,7 +48,7 @@ r = approximate(f, unit_interval)
 convergenceplot(r)
 ```
 
-![](kgejltv.png){width=600px height=450px}
+![](llggzxc.png){width=600px height=450px}
 
 This effect is thought to be mainly due to roundoff and conditioning of the problem. In this case, if we use more accurate floating-point arithmetic, we can see that the AAA convergence continues steadily past the previous plateau. In the following, we apply `Double64` arithmetic, having used exact rational numbers already in the definition of `f`:
 
@@ -58,7 +58,7 @@ r = approximate(f, Segment{Double64}(-1, 1))
 convergenceplot(r)
 ```
 
-![](jdbvjoz.png){width=600px height=450px}
+![](llcjsmw.png){width=600px height=450px}
 
 In the extreme case of a function with a singularity on the domain, the convergence can be substantially affected:
 
@@ -68,7 +68,7 @@ r = approximate(f, unit_interval)
 convergenceplot(r)
 ```
 
-![](osfagay.png){width=600px height=450px}
+![](oygpofa.png){width=600px height=450px}
 
 In such a case, we might get improvement by increasing the number of allowed consecutive failures via the `stagnation` keyword argument:
 
@@ -77,7 +77,7 @@ r = approximate(f, unit_interval, stagnation=50)
 convergenceplot(r)
 ```
 
-![](egefgsm.png){width=600px height=450px}
+![](cvbnwpg.png){width=600px height=450px}
 
 ## Prescribed poles {#Prescribed-poles}
 
@@ -201,7 +201,7 @@ r = approximate(f, unit_interval; method=Thiele)
 convergenceplot(r)
 ```
 
-![](rlrfkqa.png){width=600px height=450px}
+![](ihxewhn.png){width=600px height=450px}
 
 Some common functions give an error due to a division by zero that is not mathematically important. Until a mechanism is implemented to handle this situation more gracefully, you can usually circumvent this problem by adding a term that breaks some symmetry.
 

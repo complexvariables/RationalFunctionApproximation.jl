@@ -23,12 +23,12 @@
 - [`RationalFunctionApproximation.minimax`](#RationalFunctionApproximation.minimax)
 - [`RationalFunctionApproximation.nodes`](#RationalFunctionApproximation.nodes-Tuple{RationalFunctionApproximation.AbstractRationalInterpolant})
 - [`RationalFunctionApproximation.poleplot`](#RationalFunctionApproximation.poleplot-Tuple{Any})
-- [`RationalFunctionApproximation.poles`](#RationalFunctionApproximation.poles-Union{Tuple{Barycentric{T}},%20Tuple{T}}%20where%20T)
 - [`RationalFunctionApproximation.poles`](#RationalFunctionApproximation.poles-Tuple{RationalFunctionApproximation.AbstractRationalInterpolant})
+- [`RationalFunctionApproximation.poles`](#RationalFunctionApproximation.poles-Union{Tuple{Barycentric{T}},%20Tuple{T}}%20where%20T)
 - [`RationalFunctionApproximation.residues`](#RationalFunctionApproximation.residues-Tuple{RationalFunctionApproximation.AbstractRationalInterpolant})
 - [`RationalFunctionApproximation.rewind`](#RationalFunctionApproximation.rewind-Tuple{RationalFunctionApproximation.Approximation,%20Integer})
-- [`RationalFunctionApproximation.roots`](#RationalFunctionApproximation.roots-Tuple{Barycentric})
 - [`RationalFunctionApproximation.roots`](#RationalFunctionApproximation.roots-Tuple{RationalFunctionApproximation.AbstractRationalInterpolant})
+- [`RationalFunctionApproximation.roots`](#RationalFunctionApproximation.roots-Tuple{Barycentric})
 
 <details class='jldocstring custom-block' open>
 <summary><a id='RationalFunctionApproximation.Approximation' href='#RationalFunctionApproximation.Approximation'><span class="jlbinding">RationalFunctionApproximation.Approximation</span></a> <Badge type="info" class="jlObjectType jlType" text="Type" /></summary>
@@ -59,7 +59,7 @@ Approximation of a function on a domain.
   
 
 
-<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/9aacd446fd6fae7e8f4c8fb8e019dfa3bf0a8288/src/approximate.jl#L7-L20" target="_blank" rel="noreferrer">source</a></Badge>
+<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/750aed7fda32202d74afdb177ea52cb8ea0bf9fd/src/approximate.jl#L7-L20" target="_blank" rel="noreferrer">source</a></Badge>
 
 </details>
 
@@ -88,7 +88,7 @@ Barycentric representation of a rational function.
   
 
 
-<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/9aacd446fd6fae7e8f4c8fb8e019dfa3bf0a8288/src/barycentric.jl#L2-L13" target="_blank" rel="noreferrer">source</a></Badge>
+<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/750aed7fda32202d74afdb177ea52cb8ea0bf9fd/src/barycentric.jl#L2-L13" target="_blank" rel="noreferrer">source</a></Badge>
 
 </details>
 
@@ -133,7 +133,7 @@ julia> r(1.5)
 
 
 
-<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/9aacd446fd6fae7e8f4c8fb8e019dfa3bf0a8288/src/barycentric.jl#L39-L64" target="_blank" rel="noreferrer">source</a></Badge>
+<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/750aed7fda32202d74afdb177ea52cb8ea0bf9fd/src/barycentric.jl#L39-L64" target="_blank" rel="noreferrer">source</a></Badge>
 
 </details>
 
@@ -167,7 +167,7 @@ Discretize a path, keeping the option of future making local refinements.
 See also [`collect`](/functions#Base.collect), [`add_node!`](/functions#RationalFunctionApproximation.add_node!-Tuple{DiscretizedPath,%20Any}).
 
 
-<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/9aacd446fd6fae7e8f4c8fb8e019dfa3bf0a8288/src/utils.jl#L34-L50" target="_blank" rel="noreferrer">source</a></Badge>
+<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/750aed7fda32202d74afdb177ea52cb8ea0bf9fd/src/utils.jl#L34-L50" target="_blank" rel="noreferrer">source</a></Badge>
 
 </details>
 
@@ -193,7 +193,7 @@ Sequence of rational interpolants produced by an iteration.
 See also: [`approximate`](/functions#RationalFunctionApproximation.approximate-Tuple{Function,%20ComplexRegions.AbstractRegion})
 
 
-<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/9aacd446fd6fae7e8f4c8fb8e019dfa3bf0a8288/src/abstract.jl#L99-L110" target="_blank" rel="noreferrer">source</a></Badge>
+<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/750aed7fda32202d74afdb177ea52cb8ea0bf9fd/src/abstract.jl#L99-L110" target="_blank" rel="noreferrer">source</a></Badge>
 
 </details>
 
@@ -222,7 +222,7 @@ Collect the points and parameters of a discretized path.
 See also [`add_node!`](/functions#RationalFunctionApproximation.add_node!-Tuple{DiscretizedPath,%20Any}), [`DiscretizedPath`](/functions#RationalFunctionApproximation.DiscretizedPath-Tuple{Union{ComplexRegions.AbstractCurve,%20ComplexRegions.AbstractPath},%20AbstractVector}).
 
 
-<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/9aacd446fd6fae7e8f4c8fb8e019dfa3bf0a8288/src/utils.jl#L133-L146" target="_blank" rel="noreferrer">source</a></Badge>
+<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/750aed7fda32202d74afdb177ea52cb8ea0bf9fd/src/utils.jl#L133-L146" target="_blank" rel="noreferrer">source</a></Badge>
 
 </details>
 
@@ -234,7 +234,7 @@ See also [`add_node!`](/functions#RationalFunctionApproximation.add_node!-Tuple{
 values(r) returns a vector of the nodal values of the rational interpolant `r`.
 
 
-<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/9aacd446fd6fae7e8f4c8fb8e019dfa3bf0a8288/src/abstract.jl#L11" target="_blank" rel="noreferrer">source</a></Badge>
+<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/750aed7fda32202d74afdb177ea52cb8ea0bf9fd/src/abstract.jl#L11" target="_blank" rel="noreferrer">source</a></Badge>
 
 </details>
 
@@ -251,7 +251,7 @@ Res(r, z)
 Returns the residue of the rational function `r` at the point `z`.
 
 
-<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/9aacd446fd6fae7e8f4c8fb8e019dfa3bf0a8288/src/abstract.jl#L34-L38" target="_blank" rel="noreferrer">source</a></Badge>
+<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/750aed7fda32202d74afdb177ea52cb8ea0bf9fd/src/abstract.jl#L34-L38" target="_blank" rel="noreferrer">source</a></Badge>
 
 </details>
 
@@ -325,7 +325,7 @@ julia> r(1im * π / 2)
 See also [`approximate`](/functions#RationalFunctionApproximation.approximate-Tuple{Function,%20ComplexRegions.AbstractRegion}) for approximating a function on a curve or region.
 
 
-<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/9aacd446fd6fae7e8f4c8fb8e019dfa3bf0a8288/src/aaa.jl#L8-L57" target="_blank" rel="noreferrer">source</a></Badge>
+<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/750aed7fda32202d74afdb177ea52cb8ea0bf9fd/src/aaa.jl#L8-L57" target="_blank" rel="noreferrer">source</a></Badge>
 
 </details>
 
@@ -356,7 +356,7 @@ the point to be promoted to a node.
 See also [`DiscretizedPath`](/functions#RationalFunctionApproximation.DiscretizedPath-Tuple{Union{ComplexRegions.AbstractCurve,%20ComplexRegions.AbstractPath},%20AbstractVector}), [`collect`](/functions#Base.collect).
 
 
-<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/9aacd446fd6fae7e8f4c8fb8e019dfa3bf0a8288/src/utils.jl#L79-L94" target="_blank" rel="noreferrer">source</a></Badge>
+<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/750aed7fda32202d74afdb177ea52cb8ea0bf9fd/src/utils.jl#L79-L94" target="_blank" rel="noreferrer">source</a></Badge>
 
 </details>
 
@@ -425,7 +425,7 @@ julia> check(r);   # accuracy over the domain
 
 
 
-<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/9aacd446fd6fae7e8f4c8fb8e019dfa3bf0a8288/src/approximate.jl#L65-L108" target="_blank" rel="noreferrer">source</a></Badge>
+<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/750aed7fda32202d74afdb177ea52cb8ea0bf9fd/src/approximate.jl#L65-L108" target="_blank" rel="noreferrer">source</a></Badge>
 
 </details>
 
@@ -460,7 +460,7 @@ Check the accuracy of a rational approximation `r` on its domain. Returns the te
 See also [`approximate`](/functions#RationalFunctionApproximation.approximate-Tuple{Function,%20ComplexRegions.AbstractRegion}).
 
 
-<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/9aacd446fd6fae7e8f4c8fb8e019dfa3bf0a8288/src/approximate.jl#L455-L472" target="_blank" rel="noreferrer">source</a></Badge>
+<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/750aed7fda32202d74afdb177ea52cb8ea0bf9fd/src/approximate.jl#L455-L472" target="_blank" rel="noreferrer">source</a></Badge>
 
 </details>
 
@@ -479,7 +479,7 @@ Plot the convergence history of a rational approximation.
 Markers show the maximum error on (the boundary of) the domain as a function of the numerator/denominator degree. A red marker indicates that the approximation has disallowed poles in its domain. A gold halo highlights the best approximation.
 
 
-<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/9aacd446fd6fae7e8f4c8fb8e019dfa3bf0a8288/src/RationalFunctionApproximation.jl#L38-L44" target="_blank" rel="noreferrer">source</a></Badge>
+<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/750aed7fda32202d74afdb177ea52cb8ea0bf9fd/src/RationalFunctionApproximation.jl#L38-L44" target="_blank" rel="noreferrer">source</a></Badge>
 
 </details>
 
@@ -496,7 +496,7 @@ decompose(r)
 Return the roots, poles, and residues of the rational interpolant `r`.
 
 
-<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/9aacd446fd6fae7e8f4c8fb8e019dfa3bf0a8288/src/abstract.jl#L53-L57" target="_blank" rel="noreferrer">source</a></Badge>
+<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/750aed7fda32202d74afdb177ea52cb8ea0bf9fd/src/abstract.jl#L53-L57" target="_blank" rel="noreferrer">source</a></Badge>
 
 </details>
 
@@ -508,7 +508,7 @@ Return the roots, poles, and residues of the rational interpolant `r`.
 degree(r) returns the degree of the denominator of the rational `r`.
 
 
-<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/9aacd446fd6fae7e8f4c8fb8e019dfa3bf0a8288/src/abstract.jl#L21" target="_blank" rel="noreferrer">source</a></Badge>
+<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/750aed7fda32202d74afdb177ea52cb8ea0bf9fd/src/abstract.jl#L21" target="_blank" rel="noreferrer">source</a></Badge>
 
 </details>
 
@@ -520,7 +520,7 @@ degree(r) returns the degree of the denominator of the rational `r`.
 degrees(r) returns the degrees of the numerator and denominator of the rational `r`.
 
 
-<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/9aacd446fd6fae7e8f4c8fb8e019dfa3bf0a8288/src/abstract.jl#L18" target="_blank" rel="noreferrer">source</a></Badge>
+<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/750aed7fda32202d74afdb177ea52cb8ea0bf9fd/src/abstract.jl#L18" target="_blank" rel="noreferrer">source</a></Badge>
 
 </details>
 
@@ -537,7 +537,7 @@ errorplot(r; use_abs=false)
 Plot the pointwise error of an `Approximation` on (the boundary of) its domain. If the error is not real, then the real and imaginary parts are plotted separately, unless `use_abs=true`.
 
 
-<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/9aacd446fd6fae7e8f4c8fb8e019dfa3bf0a8288/src/RationalFunctionApproximation.jl#L49-L53" target="_blank" rel="noreferrer">source</a></Badge>
+<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/750aed7fda32202d74afdb177ea52cb8ea0bf9fd/src/RationalFunctionApproximation.jl#L49-L53" target="_blank" rel="noreferrer">source</a></Badge>
 
 </details>
 
@@ -572,7 +572,7 @@ Parse the convergence history of a rational approximation.
 See also [`convergenceplot`](/functions#RationalFunctionApproximation.convergenceplot-Tuple{Any}).
 
 
-<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/9aacd446fd6fae7e8f4c8fb8e019dfa3bf0a8288/src/approximate.jl#L493-L507" target="_blank" rel="noreferrer">source</a></Badge>
+<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/750aed7fda32202d74afdb177ea52cb8ea0bf9fd/src/approximate.jl#L493-L507" target="_blank" rel="noreferrer">source</a></Badge>
 
 </details>
 
@@ -609,7 +609,7 @@ julia> check(r̂);
 
 
 
-<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/9aacd446fd6fae7e8f4c8fb8e019dfa3bf0a8288/src/lawson.jl#L28-L52" target="_blank" rel="noreferrer">source</a></Badge>
+<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/750aed7fda32202d74afdb177ea52cb8ea0bf9fd/src/lawson.jl#L28-L52" target="_blank" rel="noreferrer">source</a></Badge>
 
 </details>
 
@@ -621,7 +621,7 @@ julia> check(r̂);
 nodes(r) returns a vector of the interpolation nodes of the rational interpolant.
 
 
-<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/9aacd446fd6fae7e8f4c8fb8e019dfa3bf0a8288/src/abstract.jl#L9" target="_blank" rel="noreferrer">source</a></Badge>
+<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/750aed7fda32202d74afdb177ea52cb8ea0bf9fd/src/abstract.jl#L9" target="_blank" rel="noreferrer">source</a></Badge>
 
 </details>
 
@@ -638,7 +638,7 @@ poleplot(r, idx=0)
 Plot the domain of the approximation `r` and the poles of the rational approximant. If `idx` is nonzero, it should be an index into the convergence history of `r`.
 
 
-<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/9aacd446fd6fae7e8f4c8fb8e019dfa3bf0a8288/src/RationalFunctionApproximation.jl#L58-L62" target="_blank" rel="noreferrer">source</a></Badge>
+<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/750aed7fda32202d74afdb177ea52cb8ea0bf9fd/src/RationalFunctionApproximation.jl#L58-L62" target="_blank" rel="noreferrer">source</a></Badge>
 
 </details>
 
@@ -650,7 +650,7 @@ Plot the domain of the approximation `r` and the poles of the rational approxima
 poles(r) returns the poles of the rational interpolant `r`.
 
 
-<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/9aacd446fd6fae7e8f4c8fb8e019dfa3bf0a8288/src/abstract.jl#L24" target="_blank" rel="noreferrer">source</a></Badge>
+<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/750aed7fda32202d74afdb177ea52cb8ea0bf9fd/src/abstract.jl#L24" target="_blank" rel="noreferrer">source</a></Badge>
 
 </details>
 
@@ -667,7 +667,7 @@ poles(r)
 Return the poles of the rational function `r`.
 
 
-<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/9aacd446fd6fae7e8f4c8fb8e019dfa3bf0a8288/src/barycentric.jl#L104-L108" target="_blank" rel="noreferrer">source</a></Badge>
+<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/750aed7fda32202d74afdb177ea52cb8ea0bf9fd/src/barycentric.jl#L104-L108" target="_blank" rel="noreferrer">source</a></Badge>
 
 </details>
 
@@ -684,7 +684,7 @@ residues(r)
 Returns two vectors of the poles and residues of the rational function `r`.
 
 
-<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/9aacd446fd6fae7e8f4c8fb8e019dfa3bf0a8288/src/abstract.jl#L27-L31" target="_blank" rel="noreferrer">source</a></Badge>
+<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/750aed7fda32202d74afdb177ea52cb8ea0bf9fd/src/abstract.jl#L27-L31" target="_blank" rel="noreferrer">source</a></Badge>
 
 </details>
 
@@ -722,7 +722,7 @@ Barycentric{Float64, Float64} rational interpolant of type (10, 10) on the domai
 
 
 
-<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/9aacd446fd6fae7e8f4c8fb8e019dfa3bf0a8288/src/approximate.jl#L427-L447" target="_blank" rel="noreferrer">source</a></Badge>
+<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/750aed7fda32202d74afdb177ea52cb8ea0bf9fd/src/approximate.jl#L427-L447" target="_blank" rel="noreferrer">source</a></Badge>
 
 </details>
 
@@ -739,7 +739,7 @@ roots(r)
 Return the roots (zeros) of the rational function `r`.
 
 
-<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/9aacd446fd6fae7e8f4c8fb8e019dfa3bf0a8288/src/barycentric.jl#L139-L143" target="_blank" rel="noreferrer">source</a></Badge>
+<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/750aed7fda32202d74afdb177ea52cb8ea0bf9fd/src/barycentric.jl#L139-L143" target="_blank" rel="noreferrer">source</a></Badge>
 
 </details>
 
@@ -751,7 +751,7 @@ Return the roots (zeros) of the rational function `r`.
 roots(r) returns the roots of the rational interpolant `r`.
 
 
-<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/9aacd446fd6fae7e8f4c8fb8e019dfa3bf0a8288/src/abstract.jl#L50" target="_blank" rel="noreferrer">source</a></Badge>
+<Badge type="info" class="source-link" text="source"><a href="https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/750aed7fda32202d74afdb177ea52cb8ea0bf9fd/src/abstract.jl#L50" target="_blank" rel="noreferrer">source</a></Badge>
 
 </details>
 

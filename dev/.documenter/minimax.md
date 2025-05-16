@@ -24,7 +24,7 @@ The error varies a lot in amplitude over the interval:
 errorplot(r)
 ```
 
-![](pggixjr.png){width=600px height=400px}
+![](gbjsaai.png){width=600px height=400px}
 
 Now we apply 20 Lawson iterations to refine the approximation and approach the minimax ideal:
 
@@ -33,7 +33,7 @@ r = minimax(r, 20)
 errorplot(r)
 ```
 
-![](xwrkomi.png){width=600px height=400px}
+![](nknfiwi.png){width=600px height=400px}
 
 As you can see above, the error is now nearly equioscillatory over the interval. Moreover, the interpolation nodes appear to have shifted to resemble Chebyshev points of the first kind. If we try minimax approximation on the unit circle, however, equioscillation tends to lead to equally spaced nodes:
 
@@ -44,4 +44,4 @@ r = minimax(r, 20)
 errorplot(r, use_abs=false)
 ```
 
-![](zhlrbuu.png){width=600px height=400px}
+![](xunymbk.png){width=600px height=400px}

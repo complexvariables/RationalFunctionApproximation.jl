@@ -18,7 +18,7 @@ f = x -> exp(cos(4x) - sin(3x))
 lines(-1..1, f)
 ```
 
-![](tvayloo.png){width=600px height=400px}
+![](zsyyted.png){width=600px height=400px}
 
 To create a rational function that approximates $f$ well on this domain, we make a call to the `approximate` function:
 
@@ -51,7 +51,7 @@ z, err = check(r)
 lines(z, err)
 ```
 
-![](jrcfvwh.png){width=600px height=400px}
+![](ifnojba.png){width=600px height=400px}
 
 The rational approximant interpolates $f$ at nodes that were selected iteratively to represent the function well.
 
@@ -61,7 +61,7 @@ scatter!(x, 0*x, markersize = 8, color=:black)
 shg()
 ```
 
-![](hfoxunt.png){width=600px height=400px}
+![](hrtddvi.png){width=600px height=400px}
 
 We could choose to approximate over a wider interval:
 
@@ -84,7 +84,7 @@ One interesting feature of a rational function is that it can have poles, or inf
 poleplot(r)
 ```
 
-![](pficwiz.png){width=600px height=400px}
+![](psqjyne.png){width=600px height=400px}
 
 More typically, however, a function that is well-behaved on the real axis has a singularity structure lurking in the complex plane, and the poles of rational functions provide a unique way to cope with them. For instance, let&#39;s try approximating the hyperbolic secant function:
 
@@ -130,7 +130,7 @@ lines!(r.domain, linewidth=3, color=:white)
 shg()
 ```
 
-![](qbfguma.png){width=600px height=400px}
+![](hqutarn.png){width=600px height=400px}
 
 A meromorphic function such as sech has only those isolated poles as singularities, and getting those right is most of the battle. By contrast, the function $\log(x + 0.05i)$ has a branch point at $x = -0.05i$ necessitating a branch cut connecting it to infinity. A rational approximant uses poles to construct a proxy branch cut:
 
@@ -142,7 +142,7 @@ lines!(r.domain, linewidth=3, color=:white)
 shg()
 ```
 
-![](dpwpvsf.png){width=600px height=400px}
+![](czelkcd.png){width=600px height=400px}
 
 We close with a function having a singularity that lies on the interval: $|x|$. A famous result of Newman in 1964 proved that the best rational approximation of degree $n$ has root-exponential convergence.
 
@@ -151,7 +151,7 @@ r = approximate(abs, unit_interval; tol=1e-12)
 convergenceplot(r)
 ```
 
-![](utqmfoc.png){width=600px height=400px}
+![](nbivnal.png){width=600px height=400px}
 
 (The errors increase for odd degrees above because they are being measured at the test points discovered at the end of the iteration, not the ones during the iteration.) We find that the nodes of the approximant are also distributed (nearly) root-exponentially around the singularity:
 
@@ -160,7 +160,7 @@ z = filter(>(0), nodes(r))
 scatter(sort(abs.(z)), axis=(ylabel="| node |", yscale=log10,))
 ```
 
-![](fuhhgfv.png){width=600px height=400px}
+![](sujdhaz.png){width=600px height=400px}
 
 ## Contents {#Contents}
 - [Algorithms](/algorithms#Algorithms) describes the algorithms available for rational approximation.

@@ -27,7 +27,7 @@ This approximation is accurate to 13 digits, as we can see by plotting the error
 errorplot(r)
 ```
 
-![](tzzzdfn.png){width=600px height=450px}
+![](zybdmbu.png){width=600px height=450px}
 
 Here is how the approximation looks in the complex plane (using a black cross to mark the pole):
 
@@ -40,7 +40,7 @@ limits!(-1.5, 1.5, -1.5, 1.5)
 shg()
 ```
 
-![](itgrggf.png){width=600px height=450px}
+![](bnybbtd.png){width=600px height=450px}
 
 Above, you can also see the zeros at roots of unity.
 
@@ -54,7 +54,7 @@ lines!(unit_circle, color=:white, linewidth=4)
 shg()
 ```
 
-![](cdmrgfj.png){width=600px height=450px}
+![](oxgixyx.png){width=600px height=450px}
 
 We can request an approximation that is analytic in a region. In this case, it would not make sense to request one on the unit disk, since the singularities are necessary:
 
@@ -94,7 +94,7 @@ lines!(boundary(r.domain), color=:white, linewidth=4)
 shg()
 ```
 
-![](krqqwpn.png){width=600px height=450px}
+![](xnumdhb.png){width=600px height=450px}
 
 ```julia
 c = Shapes.hypo(5)
@@ -104,7 +104,7 @@ lines!(c, color=:white, linewidth=4)
 shg()
 ```
 
-![](auoykre.png){width=600px height=450px}
+![](xhytqxw.png){width=600px height=450px}
 
 Here are the predefined shapes:
 
@@ -124,7 +124,7 @@ resize_to_layout!(fig)
 shg()
 ```
 
-![](dixfjey.png){width=400px height=400px}
+![](xyinwgi.png){width=400px height=400px}
 
 ## Unbounded domains {#Unbounded-domains}
 
@@ -164,7 +164,7 @@ scatter!(nodes(r.fun), color=:black, markersize=8)
 shg()
 ```
 
-![](fbyxkah.png){width=600px height=450px}
+![](qnkiuvp.png){width=600px height=450px}
 
 Above, the black markers show the nodes of the interpolant. We can view the same approximation within the right half-plane by composing $r$ with $\phi^{-1}$:
 
@@ -177,4 +177,4 @@ limits!(-8, 8, -8, 8)
 shg()
 ```
 
-![](ewejydl.png){width=600px height=450px}
+![](pbfivwm.png){width=600px height=450px}
