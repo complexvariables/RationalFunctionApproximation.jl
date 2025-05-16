@@ -279,14 +279,15 @@ function approximate(y::AbstractVector{T}, z::AbstractVector{S};
     data = update_test_values!(method, number_type, 1, max_iter, m)
     r = method(number_type[], number_type[], number_type[])
     idx_test = CartesianIndex.(1:m, 1)
-    deleteat!(idx_test, idx_max)
-    idx_new_test = reshape(idx_test, 1, :)
-    @views add_nodes!(r, data, τ, fτ, idx_test, σ, fσ)
+    idx_test_active = trues(m)
+    idx_test_active[idx_max] = false
+    idx_new_test = reshape(idx_test[idx_test_active], 1, :)
+    @views add_nodes!(r, data, τ, fτ, idx_test[idx_test_active], σ, fσ)
     lengths = Vector{Int}(undef, max_iter)
     all_weights = Matrix{number_type}(undef, max_iter + 2, max_iter + 2)
     while true
-        test_values = update_test_values!(values, r, data, τ, fτ, idx_test, idx_new_test)
-        test_actual = view(fτ, idx_test)
+        test_values = update_test_values!(values, r, data, τ, fτ, idx_test[idx_test_active], idx_new_test)
+        test_actual = view(fτ, idx_test[idx_test_active])
         if any(isnan, test_actual)
             throw(ArgumentError("Function has NaN value at a test point"))
         end
@@ -313,13 +314,15 @@ function approximate(y::AbstractVector{T}, z::AbstractVector{S};
         end
 
         # Add new node:
-        push!(σ, τ[idx_test[idx_max]])
-        push!(fσ, fτ[idx_test[idx_max]])
+        i_node = idx_test[findall(idx_test_active)[idx_max]]
+        push!(σ, τ[i_node])
+        push!(fσ, fτ[i_node])
         n += 1
+        println("n = ", n, "  idx_max = ", idx_max, "  i_node = ", i_node)
 
-        # Update at the test points:
-        deleteat!(idx_test, idx_max)
-        @views add_nodes!(r, data, τ, fτ, idx_test, [σ[end]], [fσ[end]])
+        # Update the test points:
+        idx_test_active[i_node] = false
+        @views add_nodes!(r, data, τ, fτ, idx_test[idx_test_active], [σ[end]], [fσ[end]])
         idx_new_test = CartesianIndices((1:0, 1:1))
     end
     if history

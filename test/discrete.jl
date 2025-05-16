@@ -16,6 +16,8 @@
     f = x -> x + tanh(100x); @test pass(f, approx(f; stagnation=20), pts, rtol=tol)
     f = x -> exp(x); @test pass(f, approx(f), pts, rtol=tol)
     f = x -> cis(x); @test pass(f, approx(f), pts, rtol=tol)
+    # inspired by bug for julia 1.10 in deleteat! usage
+    f = x -> tanh(5 * (x - 0.2)); pts = -1:0.01:1; @test pass(f, approx(f), pts, rtol=tol)
 end
 
 
