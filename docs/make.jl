@@ -13,15 +13,15 @@ makedocs(;
     sitename="RationalFunctionApproximation.jl",
     doctest=false,
     plugins=[bib],
-    format=DocumenterVitepress.MarkdownVitepress(;
-        repo = "https://github.com/complexvariables/RationalFunctionApproximation.jl",
-        devbranch = "main",
-    #format=Documenter.HTML(;
-     #   prettyurls=get(ENV, "CI", "false") == "true",
-      #  canonical="https://complexvariables.github.io/RationalFunctionApproximation.jl",
-       # edit_link="main",
-        #repolink="https://github.com/complexvariables/RationalFunctionApproximation.jl",
-        #assets=String[],
+    # format=DocumenterVitepress.MarkdownVitepress(;
+    #     repo = "https://github.com/complexvariables/RationalFunctionApproximation.jl",
+    #     devbranch = "main",
+    format=Documenter.HTML(;
+       prettyurls=get(ENV, "CI", "false") == "true",
+       canonical="https://complexvariables.github.io/RationalFunctionApproximation.jl",
+       edit_link="main",
+        repolink="https://github.com/complexvariables/RationalFunctionApproximation.jl",
+        assets=String[],
     ),
     pages=[
         "Introduction" => "index.md",
