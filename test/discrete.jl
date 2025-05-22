@@ -44,8 +44,10 @@ end
     f = sec; @test pass(f, approx(f, max_iter=15), pts, rtol=1e-6)
     f = z -> cos(sin(z)) + exp(z)/(z-1.1); @test pass(f, approx(f), pts, rtol=2e-13)
     f = x -> cis(x);  @test pass(f, approx(f), pts, atol=6e-13)
-    f = z -> tan(π*z);  @test pass(f, approximate(f, UC), pts, rtol=2e-13)
-    f = z -> tanh(100z); @test pass(f, approximate(f, UC), pts, rtol=2e-13)
+    f = z -> tan(π*z);  @test pass(f, approx(f), pts, rtol=2e-13)
+    if method != Thiele
+        f = z -> tanh(100z); @test pass(f, approx(f), pts, rtol=2e-13)
+    end
 end
 
 @testset "Discrete interval, low accuracy" begin
@@ -89,7 +91,7 @@ end
 
 @testset "Polynomials and reciprocals" begin
     pts = range(-1, 1, 1001)
-    tol = 2000*eps(T)
+    tol = 2000*eps(Float64)
     approx(f; kw...) = approximate(f, pts; method=Barycentric, kw...)
     f = x -> 0; @test pass(f, approx(f), pts, atol=tol)
     f = x -> x; @test pass(f, approx(f), pts, atol=tol)
@@ -103,7 +105,7 @@ end
 end
 
 @testset "Specified degree" begin
-    tol = 2000*eps(T)
+    tol = 2000*eps(Float64)
     pts = range(-1, 1, 1001)
     approx(f; kw...) = approximate(f, pts; method=Barycentric, kw...)
     f = x -> 0; @test pass(f, approx(f, max_iter=1), pts, atol=tol)

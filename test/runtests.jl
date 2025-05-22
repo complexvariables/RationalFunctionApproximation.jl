@@ -9,6 +9,10 @@ global_logger(logger)
     include("aaa.jl")
 end
 
+@testset "Discrete domains" verbose=true begin
+    include("discrete.jl")
+end
+
 @testset "Discretzed path" verbose=true begin
     include("discretized-path.jl")
 end
