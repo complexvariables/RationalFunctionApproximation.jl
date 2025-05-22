@@ -39,6 +39,15 @@ jobs:
       - uses: julia-actions/cache@v2
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
+      - name: Run tests with coverage
+        run: julia --project=. -e 'using Pkg; Pkg.test(coverage=true)'
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage/lcov.info
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: true
   # docs:
   #   name: Documentation
   #   runs-on: ubuntu-latest
