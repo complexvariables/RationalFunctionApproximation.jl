@@ -1,14 +1,18 @@
-segment(T=Float64) = Segment{T}(-1, 1)
-function test_points(T=Float64)
+domain = Dict()
+for T in (Float64, Double64)
+    domain[T] = Segment{T}(-1, 1)
+end
+test_points = Dict()
+for T in (Float64, Double64)
     z = T(10) .^ range(T(-15), T(0), 500);
-    return [-reverse(z); 0; z]
+    test_points[T] = [-reverse(z); 0; z]
 end
 
 @testset "Basic functions for $method" for method in (Barycentric, Thiele)
     T = Float64
     tol = 2000*eps(T)
-    pts = test_points(T)
-    approx(f; kw...) = approximate(f, segment(T); method, kw...)
+    pts = test_points[T]
+    approx(f; kw...) = approximate(f, domain[T]; method, kw...)
     f = x -> sin(1 / (21//20 - x)); @test pass(f, approx(f), pts; rtol=tol)
     f = x -> 1im*x + exp(-1 / x^2); @test pass(f, approx(f; stagnation=30), pts; rtol=tol)
     if method != Thiele
@@ -25,25 +29,26 @@ end
 
 @testset "Double64 for $method" for method in (Barycentric, Thiele)
     T = Double64
-    method = Barycentric
     tol = 2000*eps(T)
-    pts = test_points(T)
-    approx(f; kw...) = approximate(f, segment(T); method, kw...)
+    pts = test_points[T]
+    approx(f; kw...) = approximate(f, domain[T]; method, kw...)
     f = x -> cis(x); @test pass(f, approx(f), pts, rtol=tol)
     f = x -> exp(x); @test pass(f, approx(f), pts, rtol=tol)
-    f = x -> abs(x + 1//2 + 1im//100); @test pass(f, approx(f), pts; rtol=tol)
+    if method != Thiele
+        f = x -> abs(x + 1//2 + 1im//100); @test pass(f, approx(f), pts; rtol=tol)
+        f = x -> exp(-1 / x^2); @test pass(f, approx(f), pts; rtol=tol)
+        f = x -> exp(-60*(x + 1//6)^2); @test pass(f, approx(f), pts; rtol=tol)
+    end
     f = x -> sin(1 / (21//20 - x)); @test pass(f, approx(f), pts; rtol=tol)
-    f = x -> exp(-1 / x^2); @test pass(f, approx(f), pts; rtol=tol)
-    f = x -> exp(-100*(x + 1//4)^2); @test pass(f, approx(f), pts; rtol=tol)
     f = x -> exp(-10 / (6//5 - x)); @test pass(f, approx(f), pts; rtol=tol)
-    f = x -> tanh(100*(x - 1//5)); @test pass(f, approx(f), pts, rtol=tol)
+    f = x -> x + tanh(100*(x - 1//5)); @test pass(f, approx(f), pts, rtol=tol)
 end
 
 @testset "Low accuracy" begin
     T = Float64
     method = Barycentric
-    pts = test_points(T)
-    approx(f; kw...) = approximate(f, segment(T); method, kw...)
+    pts = test_points[T]
+    approx(f; kw...) = approximate(f, domain[T]; method, kw...)
     f = x -> exp(3x);
     r = approx(f, tol=1e-5)
     @test !pass(f, r, pts, atol=1e-7)
@@ -53,7 +58,7 @@ end
 end
 
 @testset "Poles, zeros, residues in $T" for T in (Float64, Double64)
-    approx(f; kw...) = approximate(f, segment(T); method=Barycentric, kw...)
+    approx(f; kw...) = approximate(f, domain[T]; method=Barycentric, kw...)
     f = z -> (z+1) * (z+2) / ((z+3) * (z+4))
     r = approx(f)
     pol = poles(r)
@@ -74,8 +79,8 @@ end
 end
 
 @testset "Vertical scaling in $T" for T in (Float64, Double64)
-    pts = test_points(T)
-    approx(f; kw...) = approximate(f, segment(T); method=Barycentric, kw...)
+    pts = test_points[T]
+    approx(f; kw...) = approximate(f, domain[T]; method=Barycentric, kw...)
     f = x -> T(10)^50 * sin(x); @test pass(f, approx(f), pts, rtol=2000*eps(T))
     f = x -> T(10)^(-50) * cos(x); @test pass(f, approx(f), pts, rtol=2000*eps(T))
 end
@@ -89,8 +94,8 @@ end
 @testset "Polynomials and reciprocals" begin
     T = Float64
     tol = 2000*eps(T)
-    pts = test_points(T)
-    approx(f; kw...) = approximate(f, segment(T); method=Barycentric, kw...)
+    pts = test_points[T]
+    approx(f; kw...) = approximate(f, domain[T]; method=Barycentric, kw...)
     f = x -> 0; @test pass(f, approx(f), pts, atol=tol)
     f = x -> x; @test pass(f, approx(f), pts, atol=tol)
     f = x -> 1im*x; @test pass(f, approx(f), pts, atol=tol)
@@ -105,8 +110,8 @@ end
 @testset "Specified degree" begin
     T = Float64
     tol = 2000*eps(T)
-    pts = test_points(T)
-    approx(f; kw...) = approximate(f, segment(T); method=Barycentric, kw...)
+    pts = test_points[T]
+    approx(f; kw...) = approximate(f, domain[T]; method=Barycentric, kw...)
     f = x -> 0; @test pass(f, approx(f, max_iter=1), pts, atol=tol)
     f = x -> x; @test pass(f, approx(f, max_iter=1), pts, atol=tol)
     f = x -> 1im*x; @test pass(f, approx(f, max_iter=3), pts, atol=tol)

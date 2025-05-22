@@ -17,8 +17,8 @@ end
     include("interval.jl")
 end
 
-@testset "Imaginary axis" verbose=true begin
-    include("imagaxis.jl")
+@testset "Imaginary interval" verbose=true begin
+    include("imaginterval.jl")
 end
 
 @testset "Circle and disk" verbose=true begin
