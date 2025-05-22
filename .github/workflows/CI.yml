@@ -46,9 +46,9 @@ jobs:
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
         with:
+          token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage-lcov.info
           flags: unittests
           name: codecov-umbrella
-          fail_ci_if_error: true
-          token: ${{ secrets.CODECOV_TOKEN }}
-  
+          fail_ci_if_error: false
+          slug: complexvariables/RationalFunctionApproximation.jl
