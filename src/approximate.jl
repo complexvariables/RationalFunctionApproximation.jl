@@ -39,9 +39,11 @@ end
 
 (f::Approximation)(z) = f.fun(z)
 
+# COV_EXCL_START
 function Base.show(io::IO, ::MIME"text/plain", f::Approximation)
     print(io, f.fun, " on the domain: ", f.domain)
 end
+# COV_EXCL_STOP
 
 nodes(r::Approximation, args...) = nodes(r.fun, args...)
 Base.values(r::Approximation, args...) = values(r.fun, args...)
@@ -318,7 +320,7 @@ function approximate(y::AbstractVector{T}, z::AbstractVector{S};
         push!(σ, τ[i_node])
         push!(fσ, fτ[i_node])
         n += 1
-        println("n = ", n, "  idx_max = ", idx_max, "  i_node = ", i_node)
+        # println("n = ", n, "  idx_max = ", idx_max, "  i_node = ", i_node)
 
         # Update the test points:
         idx_test_active[i_node] = false

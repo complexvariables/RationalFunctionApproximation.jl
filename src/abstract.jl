@@ -4,6 +4,7 @@
 # subtypes are T = float type, S = value type (T or Complex{T})
 abstract type AbstractRationalInterpolant{T,S} <: Function end
 
+# COV_EXCL_START
 # Interface stubs
 (r::AbstractRationalInterpolant)(z) = evaluate(r, z)
 "nodes(r) returns a vector of the interpolation nodes of the rational interpolant."
@@ -49,6 +50,7 @@ end
 
 "roots(r) returns the roots of the rational interpolant `r`."
 roots(::AbstractRationalInterpolant) = error("`roots` not implemented for $(typeof(r))")
+# COV_EXCL_STOP
 
 """
     decompose(r)
@@ -60,6 +62,7 @@ function decompose(r::AbstractRationalInterpolant)
     return roots(r), p, residues(r, p)
 end
 
+# COV_EXCL_START
 function Base.show(io::IO, mimetype::MIME"text/plain", r::AbstractRationalInterpolant)
     ioc = IOContext(io,:compact=>get(io, :compact, true))
     len = length(r)
@@ -92,6 +95,7 @@ function Base.show(io::IO, r::AbstractRationalInterpolant)
         "$(typeof(r)) rational interpolant of type $(degrees(r))"
     )
 end
+# COV_EXCL_STOP
 
 ##### AbstractRFIVector for storing convergence history
 
