@@ -41,10 +41,12 @@ jobs:
       # - uses: julia-actions/julia-runtest@v1
       - name: Run tests with coverage
         run: julia --project=. -e 'using Pkg; Pkg.test(coverage=true)'
+      - name: Generate coverage report
+        run: julia --project=. -e 'using Pkg; Pkg.add("Coverage"); using Coverage; LCOV.writefile("coverage-lcov.info", process_folder())'
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
         with:
-          files: ./coverage/lcov.info
+          files: ./coverage-lcov.info
           flags: unittests
           name: codecov-umbrella
           fail_ci_if_error: true
