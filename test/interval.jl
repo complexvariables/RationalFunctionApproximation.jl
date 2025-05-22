@@ -57,7 +57,7 @@ end
     f = x -> abs(x - 0.95);  @test pass(f, approx(f, stagnation=30), pts, atol=1e-9)
 end
 
-@testset "Poles, zeros, residues in $T" for T in (Float64, Double64)
+@testset "Poles, zeros, residues in $T for Barycentric" for T in (Float64, Double64)
     approx(f; kw...) = approximate(f, domain[T]; method=Barycentric, kw...)
     f = z -> (z+1) * (z+2) / ((z+3) * (z+4))
     r = approx(f)
@@ -76,6 +76,27 @@ end
     f = z -> (z - (3 + 3im))/(z + 2);  r = approx(f)
     pol,zer = poles(r), roots(r)
     @test isapprox(pol[1]*zer[1], -6-6im, rtol=5000*eps(T))
+end
+
+@testset "Poles, zeros, residues for Thiele" begin
+    approx(f; kw...) = approximate(f, domain[Float64]; method=Thiele, kw...)
+    f = z -> (z+1) * (z+2) / ((z+3) * (z+4))
+    r = approx(f)
+    pol = poles(r)
+    zer = roots(r)
+    @test isapprox(sum(pol + zer), -10, rtol=5000*eps())
+
+    f = x -> 2/(1.2 + x) + 3/(x - 1.25im);  r = approx(f)
+    @test isapprox(prod(residues(r)[2]), 6, rtol=0.01)
+
+    f = x -> sinpi(10x) + x - 9//10;  r = approx(f);
+    zer = roots(r)
+    miss = minimum(abs, zer .- 9//10)
+    @test miss < 1e-8
+
+    f = z -> (z - (3 + 3im))/(z + 2);  r = approx(f)
+    pol, zer = poles(r), roots(r)
+    @test isapprox(pol[1]*zer[1], -6-6im, rtol=5000*eps())
 end
 
 @testset "Vertical scaling in $T" for T in (Float64, Double64)
