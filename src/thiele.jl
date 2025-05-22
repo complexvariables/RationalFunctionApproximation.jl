@@ -62,16 +62,17 @@ function roots(r::Thiele{S,T}) where {S,T}
     return filter(isfinite, eigvals(D, C))
 end
 
-function residues(r::Thiele, pol::AbstractVector=poles(r))
+function residues(r::Thiele)
     # This is a low-accuracy version for speed.
-    res = similar( complex(pol) )
+    ζ = poles(r)
+    res = similar( complex(ζ) )
     T = eltype(res)
     circ = [cispi(T(2k // 9)) for k in 0:8]
-    for (i, z) in enumerate(pol)
-        δ = minimum(abs, pol[[1:i-1;i+1:end]] .- z) / 2
+    for (i, z) in enumerate(ζ)
+        δ = minimum(abs, ζ[[1:i-1;i+1:end]] .- z) / 2
         res[i] = (δ / 9) * sum(u * r(z + δ*u) for u in circ)
     end
-    return res
+    return ζ, res
 end
 
 function Thiele(nodes::AbstractVector, values::AbstractVector, weights::AbstractVector)
