@@ -57,6 +57,19 @@ end
     f = x -> abs(x - 0.95);  @test pass(f, approx(f, stagnation=30), pts, atol=1e-9)
 end
 
+@testset "Nodes, values, degree" begin
+    r = approximate(exp, unit_interval; method=Barycentric)
+    @test length(nodes(r)) == 7
+    @test minimum(nodes(r)) ≈ -1
+    @test maximum(nodes(r)) ≈ 1
+    @test length(values(r)) == 7
+    @test minimum(values(r)) ≈ exp(-1)
+    @test maximum(values(r)) ≈ exp(1)
+    @test degree(r) == length(nodes(r)) - 1
+    tp = test_points(r)
+    @test pass(exp, r, tp, rtol=1000eps())
+end
+
 @testset "Poles, zeros, residues in $T for Barycentric" for T in (Float64, Double64)
     approx(f; kw...) = approximate(f, domain[T]; method=Barycentric, kw...)
     f = z -> (z+1) * (z+2) / ((z+3) * (z+4))

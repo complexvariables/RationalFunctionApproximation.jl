@@ -13,6 +13,15 @@ approx(f; kw...) = aaa(f; kw...)
     f = x -> abs(x - 0.95);  @test pass(f, approx(f), pts, atol=1e-6)
 end
 
+@testset "Fully discrete" begin
+    f = x -> sin(1/(1.05-x)); @test pass(f, aaa(f.(pts), pts), pts, atol=2e-13)
+    f = x -> exp(-1/(x^2)); @test pass(f, aaa(f.(pts), pts), pts, rtol=4e-13)
+    f = x -> exp(-20x^2); @test pass(f, aaa(f.(pts), pts), pts, rtol=2e-13)
+    f = x -> exp(-10/(1.2-x)); @test pass(f, aaa(f.(pts), pts), pts, rtol=1e-12)
+    f = x -> 1/(1+exp(10*(x+.5))); @test pass(f, aaa(f.(pts), pts), pts, atol=2e-13)
+    f = x -> sin(100x) * exp(-10x^2); @test pass(f, aaa(f.(pts), pts), pts, atol=1e-11)
+end
+
 @testset "Low-accuracy" begin
     f = x -> exp(3x);
     @test !pass(f, approx(f, tol=1e-4), pts, atol=1e-8)
