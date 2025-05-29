@@ -32,3 +32,7 @@ end
 @testset "Custom curve" verbose=true begin
     include("custom.jl")
 end
+
+@testset "Prescribed poles" verbose=true begin
+    include("parfrac.jl")
+end

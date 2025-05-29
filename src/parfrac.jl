@@ -149,6 +149,7 @@ residues(r::PartialFractions) = (r.poles, r.residues)
 Base.values(r::PartialFractions) = r.(nodes(r))
 nodes(r::PartialFractions) = nodes(r.polynomial)
 
+# COV_EXCL_START
 function Base.show(io::IO, mimetype::MIME"text/plain", r::PartialFractions{T}) where {T}
     ioc = IOContext(io,:compact=>get(io, :compact, true))
     print(ioc, "$T partial fraction expansion of type $(degrees(r))")
@@ -167,7 +168,9 @@ function Base.show(io::IO, mimetype::MIME"text/plain", r::PartialFractions{T}) w
         end
     end
 end
+# COV_EXCL_STOP
 
+# TODO: Is this function needed?
 # Evaluate at all the test points.
 function update_test_values!(values, r::PartialFractions, _, τ, fτ, idx_test, idx_new_test)
     # Evaluate at all test points--no shortcuts here
@@ -175,4 +178,24 @@ function update_test_values!(values, r::PartialFractions, _, τ, fτ, idx_test, 
     T = view(τ, idx_test)
     @. V = r(T)
     return V
+end
+
+function refine_by_singularity(d::ComplexCurveOrPath, ζ::AbstractVector)
+    # Iteratively refine a discretization of a curve/path such that the distance between adjacent points is no more than 1/2 the distance to any singularity.
+    path = DiscretizedPath(d, range(0, length(d), 101); refinement=3, maxpoints=20_000)
+    isempty(ζ) && return path
+    z = [1.]
+    while length(z) < 19_000
+        Δ = spacing(path)
+        m, n = size(Δ)
+        z = path.points[1:m, 2:n]
+        s = [minimum(abs(z - w) for w in ζ) for z in z]
+        ρ, idx = findmax(Δ[:, 2:n] ./ s)
+        if ρ <= 0.5
+            return path
+        end
+        add_node!(path, (idx[1], idx[2]+1))
+    end
+    @warn "Refinement was not successful"
+    return path
 end

@@ -335,6 +335,7 @@ function approximate(y::AbstractVector{T}, z::AbstractVector{S};
     end
 end
 
+# Prescribed poles
 function approximate(
     f::Function, d::ComplexCurveOrPath, ζ::AbstractVector;
     method = PartialFractions,

@@ -1,9 +1,9 @@
-const ComplexPath = ComplexRegions.AbstractPath
-const ComplexCurve = ComplexRegions.AbstractCurve
-const ComplexCurveOrPath = Union{ComplexCurve, ComplexPath}
-const ComplexClosedPath = ComplexRegions.AbstractClosedPath
-const ComplexClosedCurve = ComplexRegions.AbstractClosedCurve
-const ComplexClosedCurveOrPath = Union{ComplexClosedCurve, ComplexClosedPath}
+const ComplexPath{T} = ComplexRegions.AbstractPath{T}
+const ComplexCurve{T} = ComplexRegions.AbstractCurve{T}
+const ComplexCurveOrPath{T} = Union{ComplexCurve{T}, ComplexPath{T}}
+const ComplexClosedPath{T} = ComplexRegions.AbstractClosedPath{T}
+const ComplexClosedCurve{T} = ComplexRegions.AbstractClosedCurve{T}
+const ComplexClosedCurveOrPath{T} = Union{ComplexClosedCurve{T}, ComplexClosedPath{T}}
 const ComplexSCRegion = ComplexRegions.AbstractSimplyConnectedRegion
 const RealComplex{T} = Union{T, ComplexValues.AnyComplex{T}}
 const VectorRealComplex{T} = Union{Vector{T}, Vector{Complex{T}}}
@@ -170,6 +170,30 @@ function Base.collect(d::DiscretizedPath, which=:nodes)
     else
         return vec(params), vec(points)
     end
+end
+
+# Find the distance to the nearest neighbor at every point.
+function spacing(d::DiscretizedPath{T,F}) where {T,F}
+    m = length(d.next)
+    n = size(d.params, 2)
+    Δ = fill(F(Inf), m, n)
+    k = idx = 1
+    while true
+        δ = @. abs(d.points[idx, 2:n] - d.points[idx, 1:n-1])
+        @. Δ[idx, 2:n-1] = min(δ[1:n-2], δ[2:n-1])
+        Δ[idx, 1] = min(Δ[idx, 1], δ[1])
+        idx1 = d.next[idx]
+        if idx1 == 0
+            Δ[idx, n] = δ[n-1]
+            break
+        end
+        δ₊ = abs(d.points[idx1, 1] - d.points[idx, n])
+        Δ[idx, n] = min(δ[n-1], δ₊)
+        Δ[idx1, 1] = δ₊
+        idx = idx1
+        k += 1
+    end
+    return Δ
 end
 
 # Refinement in parameter space
