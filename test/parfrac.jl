@@ -17,7 +17,7 @@
     f, ζ = (x -> exp(-10 / (6//5 - x)), [6//5]); @test pass(f, approx(f, ζ), pts; rtol=tol)
     f, ζ = (x -> exp(x), []); @test pass(f, approx(f, ζ), pts; rtol=tol)
     f, ζ = (x -> exp(x), []); @test pass(f, approx(f, ζ), pts; rtol=tol)
-    f, ζ = (x -> 1 / sin(x - 789//788), []); @test pass(f, approx(f, ζ), pts; rtol=tol)
+    f, ζ = (x -> 1 / sin(x - 789//788), [789//788]); @test pass(f, approx(f, ζ), pts; rtol=tol)
     f, ζ = (x -> x + 2im*x^2, []); @test pass(f, approx(f, ζ; degree=3), pts, atol=2e-13)
     f, ζ = (x -> 1 / (101//100 + x), [-101//100]); @test pass(f, approx(f, ζ; degree=4), pts; rtol=1e-12)
 end

@@ -66,7 +66,7 @@ end
     @test minimum(values(r)) ≈ exp(-1)
     @test maximum(values(r)) ≈ exp(1)
     @test degree(r) == length(nodes(r)) - 1
-    tp = test_points(r)
+    tp = RationalFunctionApproximation.test_points(r)
     @test pass(exp, r, tp, rtol=1000eps())
 end
 
