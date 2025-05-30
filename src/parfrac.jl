@@ -67,6 +67,7 @@ Base.length(p::ArnoldiPolynomial) = length(p.coeff)
 degree(p::ArnoldiPolynomial) = length(p.coeff) - 1
 nodes(p::ArnoldiPolynomial) = nodes(p.basis)
 
+# COV_EXCL_START
 function Base.show(io::IO, mimetype::MIME"text/plain", p::ArnoldiPolynomial)
     ioc = IOContext(io,:compact=>get(io, :compact, true))
     len = length(p)
@@ -76,6 +77,7 @@ function Base.show(io::IO, mimetype::MIME"text/plain", p::ArnoldiPolynomial)
         print(ioc, "Arnoldi polynomial of degree $(len-1)")
     end
 end
+# COV_EXCL_STOP
 
 (p::ArnoldiPolynomial)(z) = evaluate(p, z)
 function evaluate(p::ArnoldiPolynomial, z::Number)
@@ -170,19 +172,12 @@ function Base.show(io::IO, mimetype::MIME"text/plain", r::PartialFractions{T}) w
 end
 # COV_EXCL_STOP
 
-# TODO: Is this function needed?
-# Evaluate at all the test points.
-function update_test_values!(values, r::PartialFractions, _, τ, fτ, idx_test, idx_new_test)
-    # Evaluate at all test points--no shortcuts here
-    V = view(values, idx_test)
-    T = view(τ, idx_test)
-    @. V = r(T)
-    return V
-end
-
-function refine_by_singularity(d::ComplexCurveOrPath, ζ::AbstractVector)
+function refine_by_singularity(d::ComplexCurveOrPath, ζ::AbstractVector;
+    refinement::Int=2,
+    maxpoints::Int=20_000
+    )
     # Iteratively refine a discretization of a curve/path such that the distance between adjacent points is no more than 1/2 the distance to any singularity.
-    path = DiscretizedPath(d, range(0, length(d), 101); refinement=3, maxpoints=20_000)
+    path = DiscretizedPath(d, range(0, length(d), 101); refinement, maxpoints)
     isempty(ζ) && return path
     z = [1.]
     while length(z) < 19_000

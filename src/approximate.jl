@@ -343,19 +343,23 @@ function approximate(
     tol = 1000*eps(float_type),
     degree = max(1, div(length(ζ), 2)),
     allowed = z -> true,
-    max_iter = 100,
-    refinement = 200,
-    stagnation = 5
+    max_iter = 1000,
+    refinement = 3,
+    stagnation = 100
     )
 
-    num_ref = max(refinement, 53)    # initial number of test points between nodes; decreases to `refinement`
     if allowed==true
         allowed = z -> true
     end
 
-    path = DiscretizedPath(d, [0, 1]; refinement=num_ref, maxpoints=max_iter+2)
+    # s = range(0, length(d), min(200, 3*(degree + 2)))
+    # path = DiscretizedPath(d, s; refinement=num_ref, maxpoints=max_iter+2)
+    path = refine_by_singularity(d, ζ; refinement)
+    σ = collect(path, :nodes)[2]            # vector of nodes
+    n_nodes = length(σ)
+    fσ = f.(σ)         # f at nodes
     τ = path.points
-    idx_test = CartesianIndices((1:1, 2:num_ref+1))
+    idx_test = CartesianIndices((1:n_nodes-1, 2:refinement+1))
     idx_new_test = idx_test
     y = f.(τ[idx_test])
     fτ = Matrix{eltype(y)}(undef, size(τ))          # f at test points
@@ -368,7 +372,7 @@ function approximate(
     # Initialize test points and rational approximation
     test_points = view(τ, idx_test)
     test_actual = view(fτ, idx_test)
-    r = PartialFractions(vec(test_points), vec(test_actual), ζ, degree)
+    r = PartialFractions(σ, fσ, ζ, degree)
 
     # Main iteration
     n, n_max = 1, 1       # iteration counter, all-time max
@@ -392,32 +396,23 @@ function approximate(
         end
         if (n == max_iter) || stagnant
             @warn("May not have converged to desired tolerance")
-            # Backtrack to last acceptable approximation:
             break
         end
 
         idx_new = idx_test[idx_max]      # location of worst test point
         idx_new_test = add_node!(path, idx_new)
+        push!(σ, τ[idx_new])
+        push!(fσ, f(τ[idx_new]))
+        n_nodes += 1
         n_max = n += 1
 
-        # Update test points:
-        if num_ref > refinement    # initial phase
-            num_ref -= 20    # decrease from initial refinement level
-            s = first(collect(path))
-            path = DiscretizedPath(d, s; refinement=num_ref, maxpoints=max_iter+2)
-            τ = path.points
-            idx_test = CartesianIndices((1:n, 2:num_ref+1))
-            idx_new_test = idx_test
-            fτ[idx_test] .= f.(τ[idx_test])
-        else    # steady-state refinement level
-            # Replace one column and add a new column of test points:
-            idx_new_test = view(idx_new_test, :, 2:size(idx_new_test, 2))
-            idx_test = CartesianIndices((1:n, 2:num_ref+1))
-            fτ[idx_new_test] .= f.(τ[idx_new_test])
-        end
+        # Replace one column and add a new column of test points:
+        idx_test = CartesianIndices((1:n_nodes-1, 2:refinement+1))
+        fτ[idx_new_test] .= f.(τ[idx_new_test])
+        idx_new_test = view(idx_new_test, :, 2:size(idx_new_test, 2))
         test_actual = view(fτ, idx_test)
         test_points = view(τ, idx_test)
-        r = PartialFractions(vec(test_points), vec(test_actual), ζ, degree)
+        r = PartialFractions(σ, fσ, ζ, degree)
     end
     hist = RFIVector{typeof(r)}()
     return Approximation(f, d, r, allowed, path, hist)
