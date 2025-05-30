@@ -99,10 +99,10 @@ function add_node!(d::DiscretizedPath, idx)
     (idx[2] == 1) && return
     n = length(d.next) + 1
     if n == size(d.points, 1)
-        throw(BoundsError("Cannot add more points to this discretization"))
+        throw(error("Cannot add more points to this discretization"))
     end
     if idx[2] > size(d.params, 2)
-        throw(BoundsError("Indicated new node is not in the discretization"))
+        throw(error("Indicated new node is not in the discretization"))
     end
 
     s_new = d.params[idx[1], idx[2]]
