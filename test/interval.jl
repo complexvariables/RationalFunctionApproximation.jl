@@ -24,7 +24,10 @@ end
     f = x -> 10im*x + tanh(100*(x - 1//5)); @test pass(f, approx(f), pts, rtol=tol)
     f = x -> x + tanh(100x); @test pass(f, approx(f), pts, rtol=tol)
     f = x -> exp(x); @test pass(f, approx(f), pts, rtol=tol)
-    f = x -> cis(x); @test pass(f, approx(f), pts, rtol=tol)
+    f = x -> cis(x); r = approx(f)
+    @test pass(f, r, pts, rtol=tol)
+    _, err = check(r; quiet=true)
+    @test maximum(abs, err) < tol
 end
 
 @testset "Double64 for $method" for method in (Barycentric, Thiele)
@@ -66,8 +69,20 @@ end
     @test minimum(values(r)) ≈ exp(-1)
     @test maximum(values(r)) ≈ exp(1)
     @test degree(r) == length(nodes(r)) - 1
+    @test degrees(r) == (degree(r), degree(r))
     tp = RationalFunctionApproximation.test_points(r)
     @test pass(exp, r, tp, rtol=1000eps())
+    deg, err, zp, allowed, best = get_history(r)
+    @test deg[end] == degree(r)
+    r = approximate(exp, unit_interval; method=Thiele)
+    @test length(nodes(r)) == 11
+    @test minimum(nodes(r)) ≈ -1
+    @test maximum(nodes(r)) ≈ 1
+    @test length(values(r)) == 11
+    @test minimum(values(r)) ≈ exp(-1)
+    @test maximum(values(r)) ≈ exp(1)
+    @test degree(r) == 5
+    @test degrees(r) == (5, 5)
 end
 
 @testset "Poles, zeros, residues in $T for Barycentric" for T in (Float64, Double64)
@@ -110,6 +125,11 @@ end
     f = z -> (z - (3 + 3im))/(z + 2);  r = approx(f)
     pol, zer = poles(r), roots(r)
     @test isapprox(pol[1]*zer[1], -6-6im, rtol=5000*eps())
+
+    f = x -> sinpi(x) + x - 9//10;
+    x = range(-1, 1, 20);
+    r = Thiele(x, f.(x))
+    @test maximum(abs(r(x) - f(x)) for x in range(-1,1,1000)) < 1e-10
 end
 
 @testset "Vertical scaling in $T" for T in (Float64, Double64)

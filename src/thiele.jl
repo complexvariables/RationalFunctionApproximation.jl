@@ -86,14 +86,13 @@ end
 
 function Thiele(x::AbstractVector, y::AbstractVector)
     idx = axes(x, 1)
-    @assert idx == axes(y, 1)
     d = copy(y)
     for (len, i) in enumerate(idx)
         for k in first(idx, len-1)
             d[i] = (x[i] - x[k]) / (d[i] - d[k])
         end
     end
-    return Thiele(x, y, d)
+    return Thiele(collect(x), y, d)
 end
 
 # First call to allocate space for the pairwise difference matrix

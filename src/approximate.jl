@@ -49,6 +49,7 @@ nodes(r::Approximation, args...) = nodes(r.fun, args...)
 Base.values(r::Approximation, args...) = values(r.fun, args...)
 weights(r::Approximation, args...) = weights(r.fun, args...)
 degree(r::Approximation) = degree(r.fun)
+degrees(r::Approximation) = degrees(r.fun)
 poles(F::Approximation) = poles(F.fun)
 residues(f::Approximation, args...) = residues(f.fun, args...)
 roots(f::Approximation) = roots(f.fun)
@@ -345,7 +346,7 @@ function approximate(
     allowed = z -> true,
     max_iter = 1000,
     refinement = 3,
-    stagnation = 100
+    stagnation = 20
     )
 
     if allowed==true
@@ -354,7 +355,8 @@ function approximate(
 
     # s = range(0, length(d), min(200, 3*(degree + 2)))
     # path = DiscretizedPath(d, s; refinement=num_ref, maxpoints=max_iter+2)
-    path = refine_by_singularity(d, ζ; refinement)
+    init = max(400, length(d) * 100)
+    path = refine_by_singularity(d, ζ; refinement, init)
     σ = collect(path, :nodes)[2]            # vector of nodes
     n_nodes = length(σ)
     fσ = f.(σ)         # f at nodes
@@ -375,7 +377,7 @@ function approximate(
     r = PartialFractions(σ, fσ, ζ, degree)
 
     # Main iteration
-    n, n_max = 1, 1       # iteration counter, all-time max
+    n, = 1     # iteration counter, all-time max
     stagnant = false      # hold until n >= stagnation
     while true
         test_values = view(values, idx_test)
@@ -404,7 +406,7 @@ function approximate(
         push!(σ, τ[idx_new])
         push!(fσ, f(τ[idx_new]))
         n_nodes += 1
-        n_max = n += 1
+        n += 1
 
         # Replace one column and add a new column of test points:
         idx_test = CartesianIndices((1:n_nodes-1, 2:refinement+1))
@@ -520,14 +522,4 @@ function get_history(r::Approximation{T,S}) where {T,S}
         push!(err, maximum(abs, rn.(τ) - fτ) / scale)
     end
     return deg, err, zp, allowed, hist.best
-end
-
-# Remove any poles on the domain.  (TODO: Remove?)
-function cleanup_poles(f::Approximation, isbad=z->dist(z, f.domain)==0 )
-    r = f.fun
-    p = filter(!isbad, poles(r))
-    res = residues(r, p)
-    k = sum(weights(r) .* values(r)) / sum(weights(r))
-    pfd(s) = k + sum(a/(s-z) for (a,z) in zip(res, p))
-    return pfd
 end

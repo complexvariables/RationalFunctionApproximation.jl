@@ -31,6 +31,7 @@ include("operations.jl")
 # These are overloaded by plotting extensions.
 export convergenceplot, errorplot, animate, poleplot
 
+# COV_EXCL_START
 function animate(::Any)
     error("Load the Makie or Plots package first.")
 end
@@ -63,5 +64,6 @@ Plot the domain of the approximation `r` and the poles of the rational approxima
 function poleplot(::Any; kwargs...)
     error("Load the Makie package first.")
 end
+# COV_EXCL_END
 
 end  # module

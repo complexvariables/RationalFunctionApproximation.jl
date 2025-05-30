@@ -52,16 +52,6 @@ end
 roots(::AbstractRationalInterpolant) = error("`roots` not implemented for $(typeof(r))")
 # COV_EXCL_STOP
 
-"""
-    decompose(r)
-
-Return the roots, poles, and residues of the rational interpolant `r`.
-"""
-function decompose(r::AbstractRationalInterpolant)
-    p = poles(r)
-    return roots(r), p, residues(r, p)
-end
-
 # COV_EXCL_START
 function Base.show(io::IO, mimetype::MIME"text/plain", r::AbstractRationalInterpolant)
     ioc = IOContext(io,:compact=>get(io, :compact, true))

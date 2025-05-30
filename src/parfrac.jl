@@ -29,10 +29,11 @@ function ArnoldiBasis(z::AbstractVector=ComplexF64[], m::Integer=0)
     H = similar(v, m+1, m)
     Q[:, 1] .= 1
     for m in 1:m
-        @. v = z * Q[:, m]
+        v = z .* Q[:, m]
         for k in 1:m
-            @views H[k, m] = dot(Q[:, k], v) / n
-            @. v -= @views(H[k, m] * Q[:, k])
+            Qk = view(Q, :, k)
+            H[k, m] = dot(Qk, v) / n
+            v .-= H[k, m] * Qk
         end
         H[m+1, m] = norm(v) / sqrt(n)
         @. Q[:, m+1] = v / H[m+1, m]
@@ -173,11 +174,12 @@ end
 # COV_EXCL_STOP
 
 function refine_by_singularity(d::ComplexCurveOrPath, ζ::AbstractVector;
+    init=100,
     refinement::Int=2,
     maxpoints::Int=20_000
     )
     # Iteratively refine a discretization of a curve/path such that the distance between adjacent points is no more than 1/2 the distance to any singularity.
-    path = DiscretizedPath(d, range(0, length(d), 101); refinement, maxpoints)
+    path = DiscretizedPath(d, range(0, length(d), init+1); refinement, maxpoints)
     isempty(ζ) && return path
     z = [1.]
     while length(z) < 19_000
