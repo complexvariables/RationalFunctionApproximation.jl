@@ -5,7 +5,7 @@
     @test length(t) == length(z) == 5
     @test isapprox(z, (0:4) .// 4)
     @test isapprox(t, (0:4) .// 4)
-    @test_throws BoundsError RFA.add_node!(p, [1, 2])
+    @test_throws ErrorException RFA.add_node!(p, [1, 2])
 
     p = DiscretizedPath(domain, (0:4) .// 4; refinement=4)
     @test size(p.params) == (5, 5)
