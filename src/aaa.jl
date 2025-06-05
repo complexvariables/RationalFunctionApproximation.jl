@@ -118,6 +118,9 @@ function aaa(y::AbstractVector{<:Number}, z::AbstractVector{<:Number};
             break
         end
 
+        # To make sure columns of V won't be thrown away in svd and prevent overfitting
+        if n>=((m+1)>>1) break end
+
         _, j = findmax(abs, R)
         push!(node_index, j)
         delete!(test_index, j)
