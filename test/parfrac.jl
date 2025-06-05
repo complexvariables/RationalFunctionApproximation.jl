@@ -8,7 +8,7 @@
         return [-reverse(z); 0; z]
     end
     pts = points(T)
-    approx(f, ζ; kw...) = approximate(f, domain[T], ζ; degree=30, tol, kw...)
+    approx(f, ζ; kw...) = approximate(f, domain[T], ζ; degree=30, kw...)
 
     f, ζ = (x -> 1im*tan(x), [-π/2, π/2, -3π/2, 3π/2]); @test pass(f, approx(f, ζ), pts; rtol=tol)
     f, ζ = (x -> tanh(x), 1im*[-π/2, π/2, -3π/2, 3π/2]); @test pass(f, approx(f, ζ), pts; rtol=tol)
@@ -31,7 +31,7 @@ end
     end
     tol = 1e-6
     pts = points(T)
-    approx(f, ζ; kw...) = approximate(f, domain[T], ζ; degree=30, tol, kw...)
+    approx(f, ζ; kw...) = approximate(f, domain[T], ζ; degree=30, kw...)
 
     f, ζ = (x -> 1im*tan(x), [-π/2, π/2, -3π/2, 3π/2]); @test pass(f, approx(f, ζ), pts; rtol=tol)
     f, ζ = (x -> tanh(x), 1im*[-π/2, π/2, -3π/2, 3π/2]); @test pass(f, approx(f, ζ), pts; rtol=tol)
@@ -52,7 +52,7 @@ end
         return [-reverse(z); 0; z]
     end
     pts = points(T)
-    approx(f, ζ; kw...) = approximate(f, domain[T], ζ; degree=80, tol, kw...)
+    approx(f, ζ; kw...) = approximate(f, domain[T], ζ; degree=80, kw...)
 
     f, ζ = (x -> tanh(x), 1im*[-π/2, π/2, -3π/2, 3π/2]); @test pass(f, approx(f, ζ), pts; rtol=tol)
     f, ζ = (x -> 1 / sin(21//20 - x), [21//20]); @test pass(f, approx(f, ζ), pts; rtol=tol)
@@ -65,7 +65,7 @@ end
     tol = 1e-6
     domain[T] = Circle{T}(0, 1)
     pts = [cispi(T(2t)) for t in 0:1//500:1]
-    approx(f, ζ; kw...) = approximate(f, domain[T], ζ; degree=30, tol, kw...)
+    approx(f, ζ; kw...) = approximate(f, domain[T], ζ; degree=30, kw...)
 
     f, ζ = (x -> 1im*tan(x), [-π/2, π/2, -3π/2, 3π/2]); @test pass(f, approx(f, ζ), pts; rtol=tol)
     f, ζ = (x -> tanh(x), 1im*[-π/2, π/2, -3π/2, 3π/2]); @test pass(f, approx(f, ζ), pts; rtol=tol)

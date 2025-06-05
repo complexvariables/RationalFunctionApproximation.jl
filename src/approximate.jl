@@ -340,87 +340,18 @@ end
 function approximate(
     f::Function, d::ComplexCurveOrPath, ζ::AbstractVector;
     method = PartialFractions,
-    float_type = promote_type(real_type(d), typeof(float(1))),
-    tol = 1000*eps(float_type),
     degree = max(1, div(length(ζ), 2)),
-    allowed = z -> true,
-    max_iter = 1000,
+    init =  max(400, length(d) * 100),
     refinement = 3,
-    stagnation = 20
     )
 
-    if allowed==true
-        allowed = z -> true
-    end
-
-    # s = range(0, length(d), min(200, 3*(degree + 2)))
-    # path = DiscretizedPath(d, s; refinement=num_ref, maxpoints=max_iter+2)
-    init = max(400, length(d) * 100)
     path = refine_by_singularity(d, ζ; refinement, init)
-    σ = collect(path, :nodes)[2]            # vector of nodes
-    n_nodes = length(σ)
-    fσ = f.(σ)         # f at nodes
-    τ = path.points
-    idx_test = CartesianIndices((1:n_nodes-1, 2:refinement+1))
-    idx_new_test = idx_test
-    y = f.(τ[idx_test])
-    fτ = Matrix{eltype(y)}(undef, size(τ))          # f at test points
-    fτ[idx_test] .= y
-    values = similar(complex(fτ))
-
-    # Arrays to track iteration data and progress
-    err = float_type[]    # approximation errors
-
-    # Initialize test points and rational approximation
-    test_points = view(τ, idx_test)
-    test_actual = view(fτ, idx_test)
+    _, σ = collect(path, :nodes)
+    fσ = f.(σ)
     r = PartialFractions(σ, fσ, ζ, degree)
-
-    # Main iteration
-    n, = 1     # iteration counter, all-time max
-    stagnant = false      # hold until n >= stagnation
-    while true
-        test_values = view(values, idx_test)
-        @. test_values = r(test_points)
-        fmax = norm(test_actual, Inf)     # scale of f
-        err_max, idx_max = findmax(abs(test_actual[i] - test_values[i]) for i in eachindex(test_actual))
-        push!(err, err_max)
-
-        # Have we succeeded?
-        if (last(err) <= tol*fmax)
-            break
-        end
-
-        # Do we quit?
-        if n >= stagnation
-            plateau = exp(median(log(x) for x in view(err, n-stagnation+1:n)))
-            stagnant = (plateau < last(err) < 1e-2*fmax)
-        end
-        if (n == max_iter) || stagnant
-            @warn("May not have converged to desired tolerance")
-            break
-        end
-
-        idx_new = idx_test[idx_max]      # location of worst test point
-        idx_new_test = add_node!(path, idx_new)
-        push!(σ, τ[idx_new])
-        push!(fσ, f(τ[idx_new]))
-        n_nodes += 1
-        n += 1
-
-        # Replace one column and add a new column of test points:
-        idx_test = CartesianIndices((1:n_nodes-1, 2:refinement+1))
-        fτ[idx_new_test] .= f.(τ[idx_new_test])
-        idx_new_test = view(idx_new_test, :, 2:size(idx_new_test, 2))
-        test_actual = view(fτ, idx_test)
-        test_points = view(τ, idx_test)
-        r = PartialFractions(σ, fσ, ζ, degree)
-    end
     hist = RFIVector{typeof(r)}()
-    return Approximation(f, d, r, allowed, path, hist)
+    return Approximation(f, d, r, z -> true, path, hist)
 end
-
-
 
 ##### Helper functions
 
