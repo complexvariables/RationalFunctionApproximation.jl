@@ -430,7 +430,7 @@ end
 Rewind a rational approximation to a state encountered during an iteration.
 
 # Arguments
-- `r::Approximation}`: the approximation to rewind
+- `r::Approximation`: the approximation to rewind
 - `index::Integer`: the iteration number to rewind to
 
 # Returns
