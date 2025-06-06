@@ -40,7 +40,8 @@ end
 
 # COV_EXCL_START
 function Base.show(io::IO, ::MIME"text/plain", f::Approximation)
-    print(io, f.fun, " on the domain: ", f.domain)
+    print(io, f.fun)
+    print(IOContext(io, :compact=>true), " on the domain: ", f.domain)
 end
 # COV_EXCL_STOP
 
