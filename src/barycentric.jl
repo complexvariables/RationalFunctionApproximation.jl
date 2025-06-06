@@ -106,7 +106,7 @@ end
 
 Return the poles of the rational function `r`.
 """
-function poles(r::Barycentric{T}) where T
+function poles(r::Barycentric{T,S}) where {T,S}
     w = weights(r)
     nonzero = @. !iszero(w)
     z, w = nodes(r)[nonzero], w[nonzero]

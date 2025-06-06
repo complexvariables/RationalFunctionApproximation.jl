@@ -20,11 +20,11 @@ Approximation of a function on a domain.
 """
 struct Approximation{T,S} <: Function
     original::Function
-    domain::Domain
-    fun::AbstractRationalInterpolant{T,S}
+    domain::Domain{T}
+    fun::Union{AbstractRationalInterpolant{T,S},AbstractRationalFunction{S}}
     allowed::Function
     path::DiscretizedPath
-    history::RFIVector
+    history::Union{RFIVector,Nothing}
 end
 
 function Approximation(
@@ -349,8 +349,7 @@ function approximate(
     _, σ = collect(path, :nodes)
     fσ = f.(σ)
     r = PartialFractions(σ, fσ, ζ, degree)
-    hist = RFIVector{typeof(r)}()
-    return Approximation(f, d, r, z -> true, path, hist)
+    return Approximation(f, d, r, z -> true, path, nothing)
 end
 
 ##### Helper functions

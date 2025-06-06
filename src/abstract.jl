@@ -1,36 +1,41 @@
 
 ##### AbstractRationalInterpolant interface
 
-# subtypes are T = float type, S = value type (T or Complex{T})
-abstract type AbstractRationalInterpolant{T,S} <: Function end
+# parameter S is the value type
+abstract type AbstractRationalFunction{S} <: Function end
+(r::AbstractRationalFunction)(z) = evaluate(r, z)
+Base.eltype(::AbstractRationalFunction{S}) where {S} = S
 
 # COV_EXCL_START
-# Interface stubs
-(r::AbstractRationalInterpolant)(z) = evaluate(r, z)
-"nodes(r) returns a vector of the interpolation nodes of the rational interpolant."
-nodes(::AbstractRationalInterpolant) = error("`nodes` not implemented for $(typeof(r))")
-"values(r) returns a vector of the nodal values of the rational interpolant `r`."
-Base.values(::AbstractRationalInterpolant) = error("`values` not implemented for $(typeof(r))")
-weights(::AbstractRationalInterpolant) = error("`weights` not implemented for $(typeof(r))")
-Base.eltype(r::AbstractRationalInterpolant) = eltype(values(r))
-Base.length(r::AbstractRationalInterpolant) = length(nodes(r))
-Base.isempty(r::AbstractRationalInterpolant) = isempty(nodes(r))
-
 "degrees(r) returns the degrees of the numerator and denominator of the rational `r`."
-degrees(r::AbstractRationalInterpolant) = error("`degrees` not implemented for $(typeof(r))")
+degrees(r::AbstractRationalFunction) = error("`degrees` not implemented for $(typeof(r))")
 
 "degree(r) returns the degree of the denominator of the rational `r`."
-degree(r::AbstractRationalInterpolant) = error("`degree` not implemented for $(typeof(r))")
+degree(r::AbstractRationalFunction) = error("`degree` not implemented for $(typeof(r))")
 
 "poles(r) returns the poles of the rational interpolant `r`."
-poles(::AbstractRationalInterpolant) = error("`poles` not implemented for $(typeof(r))")
+poles(::AbstractRationalFunction) = error("`poles` not implemented for $(typeof(r))")
 
-"""
-    residues(r)
+"residues(r) returns two vectors of the poles and residues of the rational function `r`."
+residues(::AbstractRationalFunction) = error("`residues` not implemented for $(typeof(r))")
 
-Returns two vectors of the poles and residues of the rational function `r`.
-"""
-residues(::AbstractRationalInterpolant) = error("`residues` not implemented for $(typeof(r))")
+Base.isempty(r::AbstractRationalFunction) = degrees(r) == (0, 0)
+
+"roots(r) returns the roots of the rational function `r`."
+roots(::AbstractRationalFunction) = error("`roots` not implemented for $(typeof(r))")
+
+function Base.show(io::IO, mimetype::MIME"text/plain", r::AbstractRationalFunction)
+    ioc = IOContext(io, :compact=>get(io, :compact, true))
+    println(ioc, "$(typeof(r)) rational function of type $(degrees(r)):")
+end
+
+function Base.show(io::IO, r::AbstractRationalFunction)
+    print(
+        IOContext(io, :compact=>true),
+        "$(typeof(r)) rational function of type $(degrees(r))"
+    )
+end
+#COV_EXCL_STOP
 
 """
     Res(r, z)
@@ -48,8 +53,16 @@ function Res(f::Function, z::Number; radius=100eps(abs(z)), n=200)
     return radius * trap / n
 end
 
-"roots(r) returns the roots of the rational interpolant `r`."
-roots(::AbstractRationalInterpolant) = error("`roots` not implemented for $(typeof(r))")
+# parameters are T = float type, S = value type (T or Complex{T})
+abstract type AbstractRationalInterpolant{T,S} <: AbstractRationalFunction{S} end
+
+# COV_EXCL_START
+# Interface stubs
+"nodes(r) returns a vector of the interpolation nodes of the rational interpolant."
+nodes(::AbstractRationalInterpolant) = error("`nodes` not implemented for $(typeof(r))")
+"values(r) returns a vector of the nodal values of the rational interpolant `r`."
+Base.values(::AbstractRationalInterpolant) = error("`values` not implemented for $(typeof(r))")
+Base.length(r::AbstractRationalInterpolant) = length(nodes(r))
 # COV_EXCL_STOP
 
 # COV_EXCL_START
