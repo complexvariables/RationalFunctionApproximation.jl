@@ -214,7 +214,7 @@ function Base.show(io::IO, mimetype::MIME"text/plain", r::PartialFractions{T}) w
     if length(r.poles) > 0
         println(ioc, " with poles=>residues:")
         # print out 3 nodes=>values
-        nv, rest = Iterators.peel( zip(poles(r), residues(r)) )
+        nv, rest = Iterators.peel( zip(residues(r)...) )
         print(ioc, "    ", Pair(nv...))
         rest = collect(rest)
         next2 = Iterators.take(rest, 2)
