@@ -97,6 +97,13 @@ function evaluate(p::ArnoldiPolynomial, z::Number)
     return g
 end
 
+import Base.\
+function \(B::ArnoldiBasis, f::Function)
+    y = f.(nodes(B))
+    c = B.Q \ y
+    return ArnoldiPolynomial(c, B)
+end
+
 # Partial fraction expansion of a rational function.
 struct PartialFractions{S} <: AbstractRationalFunction{S}
     polynomial::ArnoldiPolynomial{S}
