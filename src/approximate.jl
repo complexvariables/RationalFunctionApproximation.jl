@@ -376,6 +376,46 @@ function refine_by_singularity(d::ComplexCurveOrPath, ζ::AbstractVector;
     return path
 end
 
+"""
+    approximate(f, domain, poles)
+
+Computes a linear least-squares approximation with prescribed poles.
+
+# Arguments
+## Continuous domain
+- `f::Function`: function to approximate
+- `domain`: curve, path, or region from ComplexRegions
+
+## Discrete domain
+- `f::Function`: function to approximate
+- `z::AbstractVector`: point set on which to approximate
+
+# Keywords
+- `degree`: degree of the polynomial part of the approximant (defaults to length(poles) ÷ 2)
+- `init`: initial number of nodes on the path (continuum only)
+- `refinement`: number of test points between adjacent nodes (continuum only)
+
+# Returns
+- `r::Approximation`: the rational approximant
+
+See also [`Approximation`](@ref), [`check`](@ref), [`rewind`](@ref).
+
+# Examples
+```julia-repl
+julia> f = tanh;
+
+julia> ζ = 1im*[-π/2, π/2];
+
+julia> r = approximate(f, unit_interval, ζ; degree=10)
+PartialFractions{ComplexF64} rational function of type (12, 2) on the domain: Segment(-1.0,1.0)
+
+julia> ( r(0.3), f(0.3) )
+(0.2913126124509021 + 1.1102230246251565e-16im, 0.2913126124515909)
+
+julia> check(r);   # accuracy over the domain
+[ Info: Max error is 2.75e-12
+```
+"""
 function approximate(
     f::Function, d::ComplexCurveOrPath, ζ::AbstractVector;
     degree = max(1, div(length(ζ), 2)),

@@ -1,4 +1,13 @@
-# Stable basis for polynomials via the Arnoldi process on a given set of nodes.
+"""
+    ArnoldiBasis (type)
+
+Well-conditioned representation for polynomials on a discrete point set.
+
+# Fields
+- `nodes`: evaluation points
+- `Q`: orthogonal basis
+- `H`: orthogonalization coefficients
+"""
 struct ArnoldiBasis{T}
     nodes::Vector{T}
     Q::Matrix{T}
@@ -42,6 +51,15 @@ function ArnoldiBasis(z::AbstractVector=ComplexF64[], m::Integer=0)
 end
 
 # Polynomial represented in an Arnoldi basis.
+"""
+    ArnoldiPolynomial (type)
+
+Polynomial representation using an ArnoldiBasis.
+
+# Fields
+- `coeff`: vector of coefficients
+- `basis`: ArnoldiBasis for the polynomial
+"""
 struct ArnoldiPolynomial{T} <: Function
     coeff::Vector{T}
     basis::ArnoldiBasis{T}
@@ -80,6 +98,11 @@ function Base.show(io::IO, mimetype::MIME"text/plain", p::ArnoldiPolynomial)
 end
 # COV_EXCL_STOP
 
+"""
+    p(z)
+    evaluate(p, z)
+Evaluate the ArnoldiPolynomial `p` at `z`.
+"""
 (p::ArnoldiPolynomial)(z) = evaluate(p, z)
 function evaluate(p::ArnoldiPolynomial, z::Number)
     g = p.coeff[1]
@@ -97,7 +120,24 @@ function evaluate(p::ArnoldiPolynomial, z::Number)
     return g
 end
 
-import Base.\
+import Base.(\)
+"""
+    \\(B::ArnoldiBasis, f::Function)
+Find the least-squares projection of `f` onto the `B`, returning an ArnoldiPolynomial.
+
+# Example
+````julia-repl
+julia> z = point(Circle(0, 1), range(0, 1, 800));
+
+julia> B = ArnoldiBasis(z, 10);
+
+julia> p = B \\ cos
+Arnoldi polynomial of degree 10
+
+julia> maximum(abs, p.(z) - cos.(z))
+2.780564247091573e-7
+````
+"""
 function \(B::ArnoldiBasis, f::Function)
     y = f.(nodes(B))
     c = B.Q \ y
@@ -105,6 +145,16 @@ function \(B::ArnoldiBasis, f::Function)
 end
 
 # Partial fraction expansion of a rational function.
+"""
+    PartialFractions (type)
+
+Well-conditioned representation for polynomials on a discrete point set.
+
+# Fields
+- `polynomial::ArnoldiPolynomial`: analytic part
+- `poles::Vector`: poles
+- `residues::Vector`: residues (i.e., coefficients of the partial fractions)
+"""
 struct PartialFractions{S} <: AbstractRationalFunction{S}
     polynomial::ArnoldiPolynomial{S}
     poles::Vector{S}
