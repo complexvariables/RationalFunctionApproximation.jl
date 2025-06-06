@@ -177,27 +177,3 @@ function Base.show(io::IO, mimetype::MIME"text/plain", r::PartialFractions{T}) w
     end
 end
 # COV_EXCL_STOP
-
-function refine_by_singularity(d::ComplexCurveOrPath, ζ::AbstractVector;
-    init=100,
-    refinement::Int=2,
-    maxpoints::Int=20_000
-    )
-    # Iteratively refine a discretization of a curve/path such that the distance between adjacent points is no more than 1/2 the distance to any singularity.
-    path = DiscretizedPath(d, range(0, length(d), init+1); refinement, maxpoints)
-    isempty(ζ) && return path
-    z = [1.]
-    while length(z) < 19_000
-        Δ = spacing(path)
-        m, n = size(Δ)
-        z = path.points[1:m, 2:n]
-        s = [minimum(abs(z - w) for w in ζ) for z in z]
-        ρ, idx = findmax(Δ[:, 2:n] ./ s)
-        if ρ <= 0.5
-            return path
-        end
-        add_node!(path, (idx[1], idx[2]+1))
-    end
-    @warn "Refinement was not successful"
-    return path
-end
