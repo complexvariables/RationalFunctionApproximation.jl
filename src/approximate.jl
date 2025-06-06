@@ -14,8 +14,7 @@ Approximation of a function on a domain.
 - `domain`: the domain of the approximation
 - `fun`: the barycentric representation of the approximation
 - `allowed`: function to determine if a pole is allowed
-- `prenodes`: the prenodes of the approximation
-- `test_points`: test points where residual was computed
+- `path`: a `DiscretizedPath` for the domain boundary
 - `history`: all approximations in the iteration
 """
 struct Approximation{T,S} <: Function
@@ -34,7 +33,7 @@ function Approximation(
     allowed::Function,
     path::DiscretizedPath
     )
-    return Approximation(f, domain, fun, allowed, path, RFIVector{typeof(fun)}())
+    return Approximation(f, domain, fun, allowed, path, nothing)
 end
 
 (f::Approximation)(z) = f.fun(z)
@@ -63,7 +62,7 @@ end
 ##### IMPLEMENTATION
 #####
 
-##### Create an approximation on a continuous domain
+##### Interpolation on a continuous domain
 
 """
     approximate(f, domain)
@@ -243,7 +242,7 @@ function approximate(f::Function, d::Union{ComplexPath,ComplexCurve};
     return Approximation(f, d, r, allowed, path, history)
 end
 
-##### Create an approximation on a discrete domain
+##### Interpolation on a discrete domain
 
 # ::Function, ::AbstractVector
 function approximate(
@@ -321,7 +320,6 @@ function approximate(y::AbstractVector{T}, z::AbstractVector{S};
         push!(σ, τ[i_node])
         push!(fσ, fτ[i_node])
         n += 1
-        # println("n = ", n, "  idx_max = ", idx_max, "  i_node = ", i_node)
 
         # Update the test points:
         idx_test_active[i_node] = false
