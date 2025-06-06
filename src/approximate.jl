@@ -343,8 +343,13 @@ function approximate(
     return PartialFractions(z, y, ζ, degree)
 end
 
-function approximate(f::Function, z::AbstractVector, ζ::AbstractVector; kw...)
-    return approximate(f.(z), z, ζ; kw...)
+function approximate(
+    f::Function, z::AbstractVector, ζ::AbstractVector;
+    allowed = z -> true,
+    kw...
+    )
+    r = approximate(f.(z), z, ζ; kw...)
+    return Approximation(f, z, r, allowed, DiscretizedPath(), nothing)
 end
 
 function approximate(
