@@ -334,10 +334,21 @@ function approximate(y::AbstractVector{T}, z::AbstractVector{S};
     end
 end
 
-# Prescribed poles
+##### Least-squares approximation at prescribed poles
+
+function approximate(
+    y::AbstractVector, z::AbstractVector, ζ::AbstractVector;
+    degree = max(1, div(length(ζ), 2)),
+    )
+    return PartialFractions(z, y, ζ, degree)
+end
+
+function approximate(f::Function, z::AbstractVector, ζ::AbstractVector; kw...)
+    return approximate(f.(z), z, ζ; kw...)
+end
+
 function approximate(
     f::Function, d::ComplexCurveOrPath, ζ::AbstractVector;
-    method = PartialFractions,
     degree = max(1, div(length(ζ), 2)),
     init =  max(400, length(d) * 100),
     refinement = 3,
