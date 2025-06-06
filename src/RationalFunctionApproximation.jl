@@ -9,7 +9,7 @@ include("utils.jl")
 export nodes, weights, degree, degrees, poles, Res, residues, roots
 include("abstract.jl")
 
-export PartialFractions, PartialFractionExpansion, pfe
+export ArnoldiBasis, ArnoldiPolynomial, PartialFractions
 include("parfrac.jl")
 
 export Barycentric, Thiele
