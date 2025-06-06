@@ -98,13 +98,13 @@ function evaluate(p::ArnoldiPolynomial, z::Number)
 end
 
 # Partial fraction expansion of a rational function.
-struct PartialFractions{T,S} <: AbstractRationalInterpolant{T,S}
+struct PartialFractions{S} <: AbstractRationalFunction{S}
     polynomial::ArnoldiPolynomial{S}
     poles::Vector{S}
     residues::Vector{S}
     function PartialFractions{S}(p::ArnoldiPolynomial{S}, poles::AbstractVector{S}, residues::AbstractVector{S}) where {S}
         @assert length(poles) == length(residues)
-        return new{real_type(S),S}(p, poles, residues)
+        return new{S}(p, poles, residues)
     end
 end
 
@@ -149,8 +149,6 @@ end
 
 poles(r::PartialFractions) = r.poles
 residues(r::PartialFractions) = (r.poles, r.residues)
-Base.values(r::PartialFractions) = r.(nodes(r))
-nodes(r::PartialFractions) = nodes(r.polynomial)
 
 # COV_EXCL_START
 function Base.show(io::IO, mimetype::MIME"text/plain", r::PartialFractions{T}) where {T}
