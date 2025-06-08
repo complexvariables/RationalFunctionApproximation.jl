@@ -1,4 +1,13 @@
-# Stable basis for polynomials via the Arnoldi process on a given set of nodes.
+"""
+    ArnoldiBasis (type)
+
+Well-conditioned representation for polynomials on a discrete point set.
+
+# Fields
+- `nodes`: evaluation points
+- `Q`: orthogonal basis
+- `H`: orthogonalization coefficients
+"""
 struct ArnoldiBasis{T}
     nodes::Vector{T}
     Q::Matrix{T}
@@ -42,6 +51,15 @@ function ArnoldiBasis(z::AbstractVector=ComplexF64[], m::Integer=0)
 end
 
 # Polynomial represented in an Arnoldi basis.
+"""
+    ArnoldiPolynomial (type)
+
+Polynomial representation using an ArnoldiBasis.
+
+# Fields
+- `coeff`: vector of coefficients
+- `basis`: ArnoldiBasis for the polynomial
+"""
 struct ArnoldiPolynomial{T} <: Function
     coeff::Vector{T}
     basis::ArnoldiBasis{T}
@@ -80,6 +98,11 @@ function Base.show(io::IO, mimetype::MIME"text/plain", p::ArnoldiPolynomial)
 end
 # COV_EXCL_STOP
 
+"""
+    p(z)
+    evaluate(p, z)
+Evaluate the ArnoldiPolynomial `p` at `z`.
+"""
 (p::ArnoldiPolynomial)(z) = evaluate(p, z)
 function evaluate(p::ArnoldiPolynomial, z::Number)
     g = p.coeff[1]
@@ -97,14 +120,48 @@ function evaluate(p::ArnoldiPolynomial, z::Number)
     return g
 end
 
+import Base.(\)
+"""
+    \\(B::ArnoldiBasis, f::Function)
+Find the least-squares projection of `f` onto the `B`, returning an ArnoldiPolynomial.
+
+# Example
+````julia-repl
+julia> z = point(Circle(0, 1), range(0, 1, 800));
+
+julia> B = ArnoldiBasis(z, 10);
+
+julia> p = B \\ cos
+Arnoldi polynomial of degree 10
+
+julia> maximum(abs, p.(z) - cos.(z))
+2.780564247091573e-7
+````
+"""
+function \(B::ArnoldiBasis, f::Function)
+    y = f.(nodes(B))
+    c = B.Q \ y
+    return ArnoldiPolynomial(c, B)
+end
+
 # Partial fraction expansion of a rational function.
-struct PartialFractions{T,S} <: AbstractRationalInterpolant{T,S}
+"""
+    PartialFractions (type)
+
+Well-conditioned representation for polynomials on a discrete point set.
+
+# Fields
+- `polynomial::ArnoldiPolynomial`: analytic part
+- `poles::Vector`: poles
+- `residues::Vector`: residues (i.e., coefficients of the partial fractions)
+"""
+struct PartialFractions{S} <: AbstractRationalFunction{S}
     polynomial::ArnoldiPolynomial{S}
     poles::Vector{S}
     residues::Vector{S}
     function PartialFractions{S}(p::ArnoldiPolynomial{S}, poles::AbstractVector{S}, residues::AbstractVector{S}) where {S}
         @assert length(poles) == length(residues)
-        return new{real_type(S),S}(p, poles, residues)
+        return new{S}(p, poles, residues)
     end
 end
 
@@ -149,8 +206,6 @@ end
 
 poles(r::PartialFractions) = r.poles
 residues(r::PartialFractions) = (r.poles, r.residues)
-Base.values(r::PartialFractions) = r.(nodes(r))
-nodes(r::PartialFractions) = nodes(r.polynomial)
 
 # COV_EXCL_START
 function Base.show(io::IO, mimetype::MIME"text/plain", r::PartialFractions{T}) where {T}
@@ -159,7 +214,7 @@ function Base.show(io::IO, mimetype::MIME"text/plain", r::PartialFractions{T}) w
     if length(r.poles) > 0
         println(ioc, " with poles=>residues:")
         # print out 3 nodes=>values
-        nv, rest = Iterators.peel( zip(poles(r), residues(r)) )
+        nv, rest = Iterators.peel( zip(residues(r)...) )
         print(ioc, "    ", Pair(nv...))
         rest = collect(rest)
         next2 = Iterators.take(rest, 2)
@@ -172,27 +227,3 @@ function Base.show(io::IO, mimetype::MIME"text/plain", r::PartialFractions{T}) w
     end
 end
 # COV_EXCL_STOP
-
-function refine_by_singularity(d::ComplexCurveOrPath, ζ::AbstractVector;
-    init=100,
-    refinement::Int=2,
-    maxpoints::Int=20_000
-    )
-    # Iteratively refine a discretization of a curve/path such that the distance between adjacent points is no more than 1/2 the distance to any singularity.
-    path = DiscretizedPath(d, range(0, length(d), init+1); refinement, maxpoints)
-    isempty(ζ) && return path
-    z = [1.]
-    while length(z) < 19_000
-        Δ = spacing(path)
-        m, n = size(Δ)
-        z = path.points[1:m, 2:n]
-        s = [minimum(abs(z - w) for w in ζ) for z in z]
-        ρ, idx = findmax(Δ[:, 2:n] ./ s)
-        if ρ <= 0.5
-            return path
-        end
-        add_node!(path, (idx[1], idx[2]+1))
-    end
-    @warn "Refinement was not successful"
-    return path
-end

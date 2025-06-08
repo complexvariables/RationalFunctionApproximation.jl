@@ -14,17 +14,16 @@ Approximation of a function on a domain.
 - `domain`: the domain of the approximation
 - `fun`: the barycentric representation of the approximation
 - `allowed`: function to determine if a pole is allowed
-- `prenodes`: the prenodes of the approximation
-- `test_points`: test points where residual was computed
+- `path`: a `DiscretizedPath` for the domain boundary
 - `history`: all approximations in the iteration
 """
 struct Approximation{T,S} <: Function
     original::Function
-    domain::Domain
-    fun::AbstractRationalInterpolant{T,S}
+    domain::Domain{T}
+    fun::Union{AbstractRationalInterpolant{T,S},AbstractRationalFunction{S}}
     allowed::Function
     path::DiscretizedPath
-    history::RFIVector
+    history::Union{RFIVector,Nothing}
 end
 
 function Approximation(
@@ -34,7 +33,7 @@ function Approximation(
     allowed::Function,
     path::DiscretizedPath
     )
-    return Approximation(f, domain, fun, allowed, path, RFIVector{typeof(fun)}())
+    return Approximation(f, domain, fun, allowed, path, nothing)
 end
 
 (f::Approximation)(z) = f.fun(z)
@@ -63,7 +62,7 @@ end
 ##### IMPLEMENTATION
 #####
 
-##### Create an approximation on a continuous domain
+##### Interpolation on a continuous domain
 
 """
     approximate(f, domain)
@@ -243,7 +242,7 @@ function approximate(f::Function, d::Union{ComplexPath,ComplexCurve};
     return Approximation(f, d, r, allowed, path, history)
 end
 
-##### Create an approximation on a discrete domain
+##### Interpolation on a discrete domain
 
 # ::Function, ::AbstractVector
 function approximate(
@@ -321,7 +320,6 @@ function approximate(y::AbstractVector{T}, z::AbstractVector{S};
         push!(σ, τ[i_node])
         push!(fσ, fτ[i_node])
         n += 1
-        # println("n = ", n, "  idx_max = ", idx_max, "  i_node = ", i_node)
 
         # Update the test points:
         idx_test_active[i_node] = false
@@ -336,91 +334,101 @@ function approximate(y::AbstractVector{T}, z::AbstractVector{S};
     end
 end
 
-# Prescribed poles
+##### Least-squares approximation at prescribed poles
+
 function approximate(
-    f::Function, d::ComplexCurveOrPath, ζ::AbstractVector;
-    method = PartialFractions,
-    float_type = promote_type(real_type(d), typeof(float(1))),
-    tol = 1000*eps(float_type),
+    y::AbstractVector, z::AbstractVector, ζ::AbstractVector;
     degree = max(1, div(length(ζ), 2)),
-    allowed = z -> true,
-    max_iter = 1000,
-    refinement = 3,
-    stagnation = 20
     )
-
-    if allowed==true
-        allowed = z -> true
-    end
-
-    # s = range(0, length(d), min(200, 3*(degree + 2)))
-    # path = DiscretizedPath(d, s; refinement=num_ref, maxpoints=max_iter+2)
-    init = max(400, length(d) * 100)
-    path = refine_by_singularity(d, ζ; refinement, init)
-    σ = collect(path, :nodes)[2]            # vector of nodes
-    n_nodes = length(σ)
-    fσ = f.(σ)         # f at nodes
-    τ = path.points
-    idx_test = CartesianIndices((1:n_nodes-1, 2:refinement+1))
-    idx_new_test = idx_test
-    y = f.(τ[idx_test])
-    fτ = Matrix{eltype(y)}(undef, size(τ))          # f at test points
-    fτ[idx_test] .= y
-    values = similar(complex(fτ))
-
-    # Arrays to track iteration data and progress
-    err = float_type[]    # approximation errors
-
-    # Initialize test points and rational approximation
-    test_points = view(τ, idx_test)
-    test_actual = view(fτ, idx_test)
-    r = PartialFractions(σ, fσ, ζ, degree)
-
-    # Main iteration
-    n, = 1     # iteration counter, all-time max
-    stagnant = false      # hold until n >= stagnation
-    while true
-        test_values = view(values, idx_test)
-        @. test_values = r(test_points)
-        fmax = norm(test_actual, Inf)     # scale of f
-        err_max, idx_max = findmax(abs(test_actual[i] - test_values[i]) for i in eachindex(test_actual))
-        push!(err, err_max)
-
-        # Have we succeeded?
-        if (last(err) <= tol*fmax)
-            break
-        end
-
-        # Do we quit?
-        if n >= stagnation
-            plateau = exp(median(log(x) for x in view(err, n-stagnation+1:n)))
-            stagnant = (plateau < last(err) < 1e-2*fmax)
-        end
-        if (n == max_iter) || stagnant
-            @warn("May not have converged to desired tolerance")
-            break
-        end
-
-        idx_new = idx_test[idx_max]      # location of worst test point
-        idx_new_test = add_node!(path, idx_new)
-        push!(σ, τ[idx_new])
-        push!(fσ, f(τ[idx_new]))
-        n_nodes += 1
-        n += 1
-
-        # Replace one column and add a new column of test points:
-        idx_test = CartesianIndices((1:n_nodes-1, 2:refinement+1))
-        fτ[idx_new_test] .= f.(τ[idx_new_test])
-        idx_new_test = view(idx_new_test, :, 2:size(idx_new_test, 2))
-        test_actual = view(fτ, idx_test)
-        test_points = view(τ, idx_test)
-        r = PartialFractions(σ, fσ, ζ, degree)
-    end
-    hist = RFIVector{typeof(r)}()
-    return Approximation(f, d, r, allowed, path, hist)
+    return PartialFractions(z, y, ζ, degree)
 end
 
+function approximate(
+    f::Function, z::AbstractVector, ζ::AbstractVector;
+    allowed = z -> true,
+    kw...
+    )
+    r = approximate(f.(z), z, ζ; kw...)
+    return Approximation(f, z, r, allowed, DiscretizedPath(), nothing)
+end
 
+function refine_by_singularity(d::ComplexCurveOrPath, ζ::AbstractVector;
+    init=100,
+    refinement::Int=2,
+    maxpoints::Int=20_000
+    )
+    # Iteratively refine a discretization of a curve/path such that the distance between adjacent points is no more than 1/2 the distance to any singularity.
+    path = DiscretizedPath(d, range(0, length(d), init+1); refinement, maxpoints)
+    isempty(ζ) && return path
+    z = [1.]
+    while length(z) < 19_000
+        Δ = spacing(path)
+        m, n = size(Δ)
+        z = path.points[1:m, 2:n]
+        s = [minimum(abs(z - w) for w in ζ) for z in z]
+        ρ, idx = findmax(Δ[:, 2:n] ./ s)
+        if ρ <= 0.5
+            return path
+        end
+        add_node!(path, (idx[1], idx[2]+1))
+    end
+    @warn "Refinement was not successful"
+    return path
+end
+
+"""
+    approximate(f, domain, poles)
+
+Computes a linear least-squares approximation with prescribed poles.
+
+# Arguments
+## Continuous domain
+- `f::Function`: function to approximate
+- `domain`: curve, path, or region from ComplexRegions
+
+## Discrete domain
+- `f::Function`: function to approximate
+- `z::AbstractVector`: point set on which to approximate
+
+# Keywords
+- `degree`: degree of the polynomial part of the approximant (defaults to length(poles) ÷ 2)
+- `init`: initial number of nodes on the path (continuum only)
+- `refinement`: number of test points between adjacent nodes (continuum only)
+
+# Returns
+- `r::Approximation`: the rational approximant
+
+See also [`Approximation`](@ref), [`check`](@ref), [`rewind`](@ref).
+
+# Examples
+```julia-repl
+julia> f = tanh;
+
+julia> ζ = 1im*[-π/2, π/2];
+
+julia> r = approximate(f, unit_interval, ζ; degree=10)
+PartialFractions{ComplexF64} rational function of type (12, 2) on the domain: Segment(-1.0,1.0)
+
+julia> ( r(0.3), f(0.3) )
+(0.2913126124509021 + 1.1102230246251565e-16im, 0.2913126124515909)
+
+julia> check(r);   # accuracy over the domain
+[ Info: Max error is 2.75e-12
+```
+"""
+function approximate(
+    f::Function, d::ComplexCurveOrPath, ζ::AbstractVector;
+    degree = max(1, div(length(ζ), 2)),
+    init =  max(400, length(d) * 100),
+    refinement = 3,
+    )
+
+    path = refine_by_singularity(d, ζ; refinement, init)
+    _, σ = collect(path, :nodes)
+    fσ = f.(σ)
+    r = PartialFractions(σ, fσ, ζ, degree)
+    return Approximation(f, d, r, z -> true, path, nothing)
+end
 
 ##### Helper functions
 
@@ -430,7 +438,7 @@ end
 Rewind a rational approximation to a state encountered during an iteration.
 
 # Arguments
-- `r::Approximation}`: the approximation to rewind
+- `r::Approximation`: the approximation to rewind
 - `index::Integer`: the iteration number to rewind to
 
 # Returns

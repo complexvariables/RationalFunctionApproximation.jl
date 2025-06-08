@@ -102,7 +102,7 @@ r = approximate(abs, unit_interval, tol=1e-9)
 To what extent might these poles be suitable for a different function that has the same singularity?
 
 ```@example convergence
-s = approximate(x -> exp(abs(x)), unit_interval, ζ; tol=1e-8, degree=20)
+s = approximate(x -> exp(abs(x)), unit_interval, ζ; degree=20)
 max_err(r);
 ```
 
