@@ -23,7 +23,7 @@ struct Approximation{T,S} <: Function
     fun::Union{AbstractRationalInterpolant{T,S},AbstractRationalFunction{S}}
     allowed::Function
     path::DiscretizedPath
-    history::Union{RFIVector,Nothing}
+    history::Union{Vector{<:IterationRecord},Nothing}
 end
 
 function Approximation(
@@ -118,130 +118,130 @@ end
 
 # All continuum methods end up here:
 # ::Function, ::ComplexPath
-function approximate(f::Function, d::Union{ComplexPath,ComplexCurve};
-    method = Barycentric,
-    float_type = promote_type(real_type(d), typeof(float(1))),
-    tol = 1000*eps(float_type),
-    allowed::Union{Function,Bool} = z -> dist(z, d) > tol,
-    max_iter = 150,
-    refinement = 3,
-    stagnation = 20
-    )
+# function approximate(f::Function, d::Union{ComplexPath,ComplexCurve};
+#     method = Barycentric,
+#     float_type = promote_type(real_type(d), typeof(float(1))),
+#     tol = 1000*eps(float_type),
+#     allowed::Union{Function,Bool} = z -> dist(z, d) > tol,
+#     max_iter = 150,
+#     refinement = 3,
+#     stagnation = 20
+#     )
 
-    num_ref = 15    # initial number of test points between nodes; decreases to `refinement`
-    if allowed==true
-        allowed = z -> true
-    end
+#     num_ref = 15    # initial number of test points between nodes; decreases to `refinement`
+#     if allowed==true
+#         allowed = z -> true
+#     end
 
-    path = DiscretizedPath(d, [0, 1]; refinement=num_ref, maxpoints=max_iter+2)
-    (_, σ) = collect(path, :nodes)            # vector of nodes
-    if isclosed(d)
-        pop!(σ)
-    end
-    if isreal(d)
-        # Enforce reality for a real domain:
-        σ = real(σ)
-    end
-    fσ = f.(σ)         # f at nodes
+#     path = DiscretizedPath(d, [0, 1]; refinement=num_ref, maxpoints=max_iter+2)
+#     (_, σ) = collect(path, :nodes)            # vector of nodes
+#     if isclosed(d)
+#         pop!(σ)
+#     end
+#     if isreal(d)
+#         # Enforce reality for a real domain:
+#         σ = real(σ)
+#     end
+#     fσ = f.(σ)         # f at nodes
 
-    # Arrays of test points have one row per node (except the last)
-    τ = path.points
-    idx_test = CartesianIndices((1:1, 2:num_ref+1))
-    idx_new_test = idx_test
-    fτ = Matrix{eltype(fσ)}(undef, size(τ))        # f at test points
-    fτ[idx_test] .= f.(τ[idx_test])
-    number_type = promote_type(eltype(τ), eltype(fτ))
-    values = similar(complex(fτ))
+#     # Arrays of test points have one row per node (except the last)
+#     τ = path.points
+#     idx_test = CartesianIndices((1:1, 2:num_ref+1))
+#     idx_new_test = idx_test
+#     fτ = Matrix{eltype(fσ)}(undef, size(τ))        # f at test points
+#     fτ[idx_test] .= f.(τ[idx_test])
+#     number_type = promote_type(eltype(τ), eltype(fτ))
+#     values = similar(complex(fτ))
 
-    # Arrays to track iteration data and progress
-    err = float_type[]    # approximation errors
-    all_weights = Matrix{number_type}(undef, max_iter+2, max_iter+2)
-    lengths = Vector{Int}(undef, max_iter)
+#     # Arrays to track iteration data and progress
+#     err = float_type[]    # approximation errors
+#     all_weights = Matrix{number_type}(undef, max_iter+2, max_iter+2)
+#     lengths = Vector{Int}(undef, max_iter)
 
-    # Initialize test points, data matrices, rational approximation
-    data = update_test_values!(method, number_type, num_ref, max_iter)
-    r = method(number_type[], number_type[], number_type[])
+#     # Initialize test points, data matrices, rational approximation
+#     data = update_test_values!(method, number_type, num_ref, max_iter)
+#     r = method(number_type[], number_type[], number_type[])
 
-    # Add first node
-    @views add_nodes!(r, data, τ, fτ, idx_test, σ, fσ)
+#     # Add first node
+#     @views add_nodes!(r, data, τ, fτ, idx_test, σ, fσ)
 
-    # Main iteration
-    n, n_max = 1, 1       # iteration counter, all-time max
-    stagnant = false      # hold until n >= stagnation
-    while true
-        test_values = update_test_values!(values, r, data, τ, fτ, idx_test, idx_new_test)
-        test_actual = view(fτ, idx_test)
-        fmax = norm(test_actual, Inf)     # scale of f
-        if any(isnan, test_actual)
-            throw(ArgumentError("Function has NaN value at a test point"))
-        end
-        err_max, idx_max = findmax(abs(test_actual[i] - test_values[i]) for i in eachindex(test_actual))
-        push!(err, err_max)
-        lengths[n] = L = length(nodes(r))
-        all_weights[1:L, L] .= weights(r)
+#     # Main iteration
+#     n, n_max = 1, 1       # iteration counter, all-time max
+#     stagnant = false      # hold until n >= stagnation
+#     while true
+#         test_values = update_test_values!(values, r, data, τ, fτ, idx_test, idx_new_test)
+#         test_actual = view(fτ, idx_test)
+#         fmax = norm(test_actual, Inf)     # scale of f
+#         if any(isnan, test_actual)
+#             throw(ArgumentError("Function has NaN value at a test point"))
+#         end
+#         err_max, idx_max = findmax(abs(test_actual[i] - test_values[i]) for i in eachindex(test_actual))
+#         push!(err, err_max)
+#         lengths[n] = L = length(nodes(r))
+#         all_weights[1:L, L] .= weights(r)
 
-        # Have we succeeded?
-        if (last(err) <= tol*fmax) && all(allowed, poles(r))
-            break
-        end
+#         # Have we succeeded?
+#         if (last(err) <= tol*fmax) && all(allowed, poles(r))
+#             break
+#         end
 
-        # Do we quit?
-        if n >= stagnation
-            plateau = exp(median(log(x) for x in view(err, n-stagnation+1:n)))
-            stagnant = (plateau < last(err) < 1e-2*fmax)
-        end
-        if (n == max_iter) || stagnant
-            @warn("May not have converged to desired tolerance")
-            # Backtrack to last acceptable approximation:
-            n += 1
-            accepted = false
-            while !accepted
-                n -= 1
-                if n == 0
-                    @warn "No acceptable approximation found"
-                    n = n_max
-                    break
-                end
-                L = lengths[n]
-                r = method(σ[1:L], fσ[1:L], all_weights[1:L, L])
-                accepted = all(allowed, poles(r))
-            end
-            break
-        end
+#         # Do we quit?
+#         if n >= stagnation
+#             plateau = exp(median(log(x) for x in view(err, n-stagnation+1:n)))
+#             stagnant = all(plateau < e < 1e-2*fmax for e in last(err, max(1, stagnation ÷ 3)))
+#         end
+#         if (n == max_iter) || stagnant
+#             @warn("May not have converged to desired tolerance")
+#             # Backtrack to last acceptable approximation:
+#             n += 1
+#             accepted = false
+#             while !accepted
+#                 n -= 1
+#                 if n == 0
+#                     @warn "No acceptable approximation found"
+#                     n = n_max
+#                     break
+#                 end
+#                 L = lengths[n]
+#                 r = method(σ[1:L], fσ[1:L], all_weights[1:L, L])
+#                 accepted = all(allowed, poles(r))
+#             end
+#             break
+#         end
 
-        # Add new node:
-        idx_new = idx_test[idx_max]      # location of worst test point
-        push!(σ, τ[idx_new])
-        push!(fσ, fτ[idx_new])
-        n_max = n += 1
+#         # Add new node:
+#         idx_new = idx_test[idx_max]      # location of worst test point
+#         push!(σ, τ[idx_new])
+#         push!(fσ, fτ[idx_new])
+#         n_max = n += 1
 
-        # Update the path discretization:
-        idx_new_test = add_node!(path, idx_new)
+#         # Update the path discretization:
+#         idx_new_test = add_node!(path, idx_new)
 
-        # Update test points and matrices:
-        if num_ref > refinement    # initial phase
-            num_ref -= 3    # gradually decrease refinement level
-            # Wipe out the old test points and start over:
-            s = first(collect(path))
-            path = DiscretizedPath(d, s; refinement=num_ref, maxpoints=max_iter+2)
-            τ = path.points
-            idx_test = CartesianIndices((1:n, 2:num_ref+1))
-            idx_new_test = idx_test
-            fτ[idx_test] .= f.(τ[idx_test])
-            r = method(number_type[], number_type[], number_type[])
-            @views add_nodes!(r, data, τ, fτ, idx_test, σ, fσ)
-        else    # steady-state refinement level
-            # Replace one column and add a new column of test points:
-            @views add_nodes!(r, data, τ, fτ, idx_test, [σ[end]], [fσ[end]])
-            idx_new_test = view(idx_new_test, :, 2:size(idx_new_test, 2))
-            idx_test = CartesianIndices((1:n, 2:num_ref+1))
-            fτ[idx_new_test] .= f.(τ[idx_new_test])
-        end
-    end
+#         # Update test points and matrices:
+#         if num_ref > refinement    # initial phase
+#             num_ref -= 3    # gradually decrease refinement level
+#             # Wipe out the old test points and start over:
+#             s = first(collect(path))
+#             path = DiscretizedPath(d, s; refinement=num_ref, maxpoints=max_iter+2)
+#             τ = path.points
+#             idx_test = CartesianIndices((1:n, 2:num_ref+1))
+#             idx_new_test = idx_test
+#             fτ[idx_test] .= f.(τ[idx_test])
+#             r = method(number_type[], number_type[], number_type[])
+#             @views add_nodes!(r, data, τ, fτ, idx_test, σ, fσ)
+#         else    # steady-state refinement level
+#             # Replace one column and add a new column of test points:
+#             @views add_nodes!(r, data, τ, fτ, idx_test, [σ[end]], [fσ[end]])
+#             idx_new_test = view(idx_new_test, :, 2:size(idx_new_test, 2))
+#             idx_test = CartesianIndices((1:n, 2:num_ref+1))
+#             fτ[idx_new_test] .= f.(τ[idx_new_test])
+#         end
+#     end
 
-    history = RFIVector{typeof(r)}(σ, fσ, all_weights, lengths[1:n_max], n)
-    return Approximation(f, d, r, allowed, path, history)
-end
+#     history = RFIVector{typeof(r)}(σ, fσ, all_weights, lengths[1:n_max], n)
+#     return Approximation(f, d, r, allowed, path, history)
+# end
 
 ##### Interpolation on a discrete domain
 
@@ -256,84 +256,6 @@ function approximate(
 end
 
 # ::AbstractVector, ::AbstractVector
-function approximate(y::AbstractVector{T}, z::AbstractVector{S};
-    method = Barycentric,
-    float_type = promote_type(real_type(eltype(z)), typeof(float(1))),
-    tol = 1000*eps(float_type),
-    max_iter = 100,
-    stagnation = 16,
-    history = false
-    ) where {T<:Number,S<:Number}
-
-    m = length(z)
-    n = 1    # iteration counter
-    fmax = norm(y, Inf)     # scale of f
-    number_type = promote_type(eltype(z), eltype(y))
-    err = float_type[]
-
-    ȳ = sum(y) / m
-    idx_max = argmax(abs(y - ȳ) for y in y)
-    σ = [z[idx_max]]
-    fσ = [y[idx_max]]
-    τ = reshape(z, m, 1)
-    fτ = reshape(y, m, 1)
-    values = similar(fτ)
-
-    data = update_test_values!(method, number_type, 1, max_iter, m)
-    r = method(number_type[], number_type[], number_type[])
-    idx_test = CartesianIndex.(1:m, 1)
-    idx_test_active = trues(m)
-    idx_test_active[idx_max] = false
-    idx_new_test = reshape(idx_test[idx_test_active], 1, :)
-    @views add_nodes!(r, data, τ, fτ, idx_test[idx_test_active], σ, fσ)
-    lengths = Vector{Int}(undef, max_iter)
-    all_weights = Matrix{number_type}(undef, max_iter + 2, max_iter + 2)
-    while true
-        test_values = update_test_values!(values, r, data, τ, fτ, idx_test[idx_test_active], idx_new_test)
-        test_actual = view(fτ, idx_test[idx_test_active])
-        if any(isnan, test_actual)
-            throw(ArgumentError("Function has NaN value at a test point"))
-        end
-        err_max, idx_max = findmax(abs, test_actual - test_values)
-        push!(err, err_max)
-        lengths[n] = L = length(nodes(r))
-        all_weights[1:L, L] .= weights(r)
-
-        # Are we done?
-        if (last(err) <= tol*fmax)    # success
-            break
-        end
-
-        # Do we quit?
-        stagnant = if n >= stagnation
-            plateau = exp(median(log(x) for x in view(err, n-stagnation+1:n)))
-            (plateau < last(err) < 1e-2*fmax)
-        else
-            false
-        end
-        if (n == max_iter) || stagnant
-            @warn("May not have converged to desired tolerance")
-            break
-        end
-
-        # Add new node:
-        i_node = idx_test[findall(idx_test_active)[idx_max]]
-        push!(σ, τ[i_node])
-        push!(fσ, fτ[i_node])
-        n += 1
-
-        # Update the test points:
-        idx_test_active[i_node] = false
-        @views add_nodes!(r, data, τ, fτ, idx_test[idx_test_active], [σ[end]], [fσ[end]])
-        idx_new_test = CartesianIndices((1:0, 1:1))
-    end
-    if history
-        hist = RFIVector{typeof(r)}(σ, fσ, all_weights, lengths[1:n], n)
-        return r, hist, vec(τ[idx_test])
-    else
-        return r
-    end
-end
 
 ##### Least-squares approximation at prescribed poles
 
@@ -455,10 +377,10 @@ Barycentric{Float64, Float64} rational interpolant of type (10, 10) on the domai
 ```
 """
 function rewind(r::Approximation, idx::Integer)
-    if isempty(r.history)
+    if isnothing(r.history)
         @error("No convergence history exists.")
     end
-    return Approximation(r.original, r.domain, r.history[idx], r.allowed, r.path, r.history)
+    return Approximation(r.original, r.domain, r.history[idx].interpolant, r.allowed, r.path, r.history)
 end
 
 """
@@ -514,21 +436,83 @@ Parse the convergence history of a rational approximation.
 
 See also [`convergenceplot`](@ref).
 """
+# function get_history(r::Approximation{T,S}) where {T,S}
+#     hist = r.history
+#     deg = Int[]
+#     zp = Vector{complex(S)}[]
+#     err = T[]
+#     allowed = BitVector[]
+#     τ, _ = check(r; refinement=:test, quiet=true)
+#     fτ = r.original.(τ)
+#     scale = maximum(abs, fτ)
+#     for (idx, n) in enumerate(hist.len)
+#         rn = hist[idx]
+#         push!(deg, degree(rn))
+#         push!(zp, poles(rn))
+#         push!(allowed, r.allowed.(zp[end]))
+#         push!(err, maximum(abs, rn.(τ) - fτ) / scale)
+#     end
+#     return deg, err, zp, allowed, hist.best
+# end
+
 function get_history(r::Approximation{T,S}) where {T,S}
     hist = r.history
     deg = Int[]
     zp = Vector{complex(S)}[]
     err = T[]
     allowed = BitVector[]
-    τ, _ = check(r; refinement=:test, quiet=true)
-    fτ = r.original.(τ)
-    scale = maximum(abs, fτ)
-    for (idx, n) in enumerate(hist.len)
-        rn = hist[idx]
-        push!(deg, degree(rn))
-        push!(zp, poles(rn))
-        push!(allowed, r.allowed.(zp[end]))
-        push!(err, maximum(abs, rn.(τ) - fτ) / scale)
+    # τ, _ = check(r; refinement=:test, quiet=true)
+    # fτ = r.original.(τ)
+    # scale = maximum(abs, fτ)
+    best = 0
+    for (idx, record) in enumerate(hist)
+        fun = record.interpolant
+        push!(deg, degree(fun))
+        if ismissing(record.poles)
+            record.poles = poles(fun)
+        end
+        push!(zp, record.poles)
+        push!(allowed, r.allowed.(record.poles))
+        push!(err, record.error)
+        if length(nodes(r)) == length(nodes(fun))
+            best = idx
+        end
     end
-    return deg, err, zp, allowed, hist.best
+    return deg, err, zp, allowed, best
+end
+
+# -1: success
+# 0: continue
+# n: iteration number to stop at
+function quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
+    n = length(history)
+    err = [h.error for h in history]
+    status = 0
+    if (err[end] <= tol*fmax)
+        if (allowed === true)
+            status = -1
+        else
+            zp = history[end].poles = poles(history[end].interpolant)
+            status = all(allowed, zp) ? -1 : 0
+        end
+    else
+        stagnant = false
+        if n >= stagnation
+            plateau = exp(median(log(x) for x in view(err, n-stagnation+1:n)))
+            stagnant = all(plateau < e < fmax/100 for e in last(err, max(1, stagnation ÷ 2)))
+        end
+        if (n == max_iter) || stagnant
+            if !(allowed === true)
+                # Backtrack to last acceptable approximation:
+                accepted = false
+                while !accepted && n > 0
+                    n -= 1
+                    zp = history[n].poles = poles(history[n].interpolant)
+                    accepted = all(allowed, zp)
+                end
+            end
+            status = n
+        end
+    end
+    return status
 end

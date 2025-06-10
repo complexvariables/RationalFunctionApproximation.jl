@@ -30,6 +30,10 @@ function degrees(r::Thiele)
 end
 degree(r::Thiele) = div(length(r.nodes) - 1, 2)
 
+function Base.copy(r::Thiele)
+    return Thiele(copy(r.nodes), copy(r.values), copy(r.weights))
+end
+
 function evaluate(r::Thiele, z::Number)
     n = length(r.nodes)
     u = last(r.weights)
@@ -95,65 +99,152 @@ function Thiele(x::AbstractVector, y::AbstractVector)
     return Thiele(collect(x), y, d)
 end
 
-# First call to allocate space for the pairwise difference matrix
-function update_test_values!(
-    ::Type{Thiele},
-    numeric_type::Type,
-    num_refine::Integer,
-    max_iter::Integer,
-    max_test::Integer=max_iter+2
-    )
-    Δ = Array{numeric_type}(undef, max_test, num_refine+1, max_iter + 2)
-    return Δ
-end
-
-# Update the difference matrix at new test points, then evaluate at all the test points.
-function update_test_values!(values, r::Thiele, Δ, τ, fτ, idx_test, idx_new_test)
-    σ, φ = r.nodes, r.weights
-    n = length(σ)
-
-    # Update the difference matrix at new test points for all nodes
-    @inbounds @fastmath for i in idx_new_test, j in eachindex(σ)
-        Δ[i, j] = τ[i] - σ[j]
-    end
-
-    # Evaluate at all test points
-    V = view(values, idx_test)
-    V .= φ[n]
-    @inbounds @fastmath for k in n-1:-1:1, i in eachindex(idx_test)
-        V[i] = φ[k] + Δ[idx_test[i], k] / V[i]
-    end
-    return V
-end
-
-# add multiple interpolation nodes, updating the matrix of node-test distances
-function add_nodes!(r::Thiele, Δ, τ, fτ, idx_test, new_σ, new_f)
-    for (σ, fσ) in zip(new_σ, new_f)
-        add_node!(r, σ, fσ)
-    end
-    σ = r.nodes
-    n = length(σ)
-    @inbounds @fastmath for i in idx_test
-        Δ[i, n] = τ[i] - σ[n]
-    end
-    return r
-end
-
 # update in-place the nodes and weights
 function add_node!(r::Thiele, new_σ, new_f)
     σ = r.nodes
-    n = length(σ)
-    φ = r.weights
-    push!(φ, new_f)
     push!(σ, new_σ)
     push!(r.values, new_f)
-    n += 1
+
+    # Compute the new weight
+    φ = r.weights
+    push!(φ, new_f)
+    n = length(σ)
     for k in 1:n-1
         d = φ[n] - φ[k]
-        if iszero(d)
-            error("Infinite inverse difference. Try breaking symmetry of the function.")
+        @inbounds if iszero(d)
+            φ[n] = Inf
+        else
+            φ[n] = (σ[n] - σ[k]) / d
         end
-        @inbounds @fastmath φ[n] = (σ[n] - σ[k]) / d
+        isnan(φ[n]) && @error "Inverse difference produced NaN." σ φ
     end
     return r
+end
+
+function approximate(f::Function, d::Union{ComplexPath,ComplexCurve};
+    method::Type{Thiele},
+    float_type::Type = promote_type(real_type(d), typeof(float(1))),
+    tol::Real = 1000*eps(float_type),
+    allowed::Union{Function,Bool} = z -> dist(z, d) > tol,
+    max_iter::Int = 150,
+    refinement::Int = 3,
+    stagnation::Int = 10
+    )
+
+    num_ref = 15    # initial number of test points between nodes; decreases to `refinement`
+    path = DiscretizedPath(d, [0, 1]; refinement=num_ref, maxpoints=max_iter * refinement)
+    σ = [point(d, 0)]
+    fσ = f.(σ)         # f at nodes
+
+    # Arrays of test points have one row per node (except the last)
+    τ = path.points
+    idx_test = CartesianIndices((1:1, 2:num_ref+1))
+    idx_new_test = idx_test
+    fτ = Matrix{eltype(fσ)}(undef, size(τ))        # f at test points
+    fτ[idx_test] .= f.(τ[idx_test])
+    number_type = Complex{promote_type(eltype(τ), eltype(fτ))}
+    values = similar(complex(fτ))
+
+    err = float_type[]    # approximation errors
+
+    # Initialize rational approximation
+    r = Thiele(σ, fσ)
+    history = IterationRecord{typeof(r),float_type,number_type}[]
+
+    # Main iteration
+    n = 1       # iteration counter
+    while true
+        for i in idx_test
+            values[i] = r(τ[i])
+        end
+        test_values = view(values, idx_test)  # r at test points
+        test_actual = view(fτ, idx_test)      # f at test points
+        fmax = norm(test_actual, Inf)     # scale of f
+        err_max, idx_max = findmax(abs(test_actual[i] - test_values[i]) for i in eachindex(test_actual))
+        push!(err, err_max)
+        push!(history, IterationRecord(r, err_max, missing))
+
+        status = quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
+        if status > 0
+            @warn("Stopping at estimated error $(round(last(err), sigdigits=4)) after $n iterations")
+            r = history[status].interpolant
+        end
+        (status != 0) && break
+
+        ### Refinement
+        idx_new = idx_test[idx_max]      # location of worst test point
+        add_node!(r, τ[idx_new], fτ[idx_new])
+        n += 1
+
+        idx_new_test = add_node!(path, idx_new)
+        # In the initial phase, we throw out the old test points.
+        if num_ref > refinement    # initial phase
+            num_ref -= 3    # gradually decrease refinement level
+            s = first(collect(path))
+            path = DiscretizedPath(d, s; refinement=num_ref, maxpoints=max_iter * refinement)
+            τ = path.points
+            idx_test = CartesianIndices((1:n, 2:num_ref+1))
+            for i in idx_test
+                fτ[i] = f(τ[i])
+            end
+        else
+            # At new test points only, evaluate f.
+            for i in idx_new_test
+                fτ[i] = f(τ[i])
+            end
+            idx_test = CartesianIndices((1:n, 2:num_ref+1))
+        end
+
+    end
+    if allowed === true
+        allowed = z -> true
+    end
+    return Approximation(f, d, r, allowed, path, history)
+end
+
+
+function approximate(y::AbstractVector{T}, z::AbstractVector{S};
+    method::Type{Thiele},
+    float_type::Type = promote_type(real_type(eltype(z)), typeof(float(1))),
+    tol::AbstractFloat = 1000*eps(float_type),
+    allowed::Union{Function,Bool} = true,
+    max_iter::Int = 100,
+    stagnation::Int = 16,
+    ) where {T<:Number,S<:Number}
+
+    m = length(z)
+    n = 1    # iteration counter
+    fmax = norm(y, Inf)     # scale of f
+    number_type = promote_type(eltype(z), eltype(y))
+    err = float_type[]
+
+    _, idx_min = findmin(abs, y)
+    values = similar(y)
+
+    r = Thiele([z[idx_min]], [y[idx_min]])
+    history = IterationRecord{typeof(r),float_type,number_type}[]
+    idx_test = trues(m)
+    idx_test[idx_min] = false
+    while true
+        @. values[idx_test] = r(z[idx_test])  # r at test points
+        test_values = view(values, idx_test)  # r at test points
+        test_actual = view(y, idx_test)       # f at test points
+        err_max, idx_max = findmax(abs(test_actual[i] - test_values[i]) for i in eachindex(test_actual))
+        push!(err, err_max)
+        push!(history, IterationRecord(r, err_max, missing))
+
+        status = quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
+        if status > 0
+            @warn("Stopping at estimated error $(round(last(err), sigdigits=4)) after $n iterations")
+            r = history[n].interpolant
+        end
+        (status != 0) && break
+
+        # Add new node:
+        idx_new = findall(idx_test)[idx_max]
+        add_node!(r, z[idx_new], y[idx_new])
+        idx_test[idx_new] = false
+        n += 1
+    end
+    return r, history
 end
