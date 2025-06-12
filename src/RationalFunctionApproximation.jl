@@ -7,7 +7,7 @@ export unit_interval, unit_circle, unit_disk, DiscretizedPath
 include("utils.jl")
 
 export nodes, weights, degree, degrees, poles, Res, residues, roots
-include("abstract.jl")
+include("abstract-rational.jl")
 
 export ArnoldiBasis, ArnoldiPolynomial, PartialFractions
 include("parfrac.jl")
@@ -17,7 +17,7 @@ include("barycentric.jl")
 include("thiele.jl")
 
 export approximate, check, rewind, get_history, test_points
-include("approximate.jl")
+include("approximation.jl")
 
 # legacy implementation of AAA
 export aaa
