@@ -37,7 +37,7 @@ end
 end
 
 @testset "Discrete circle for $method" for method in (Barycentric, Thiele)
-    pts = cispi.(2 * (0:1000) / 1000)
+    pts = cispi.(2 * (0:999) / 1000)
     approx(f; kw...) = approximate(f, pts; method, kw...)
     f = z -> sin(10z) * exp(-z^2); @test pass(f, approx(f), pts, rtol=2e-11)
     f = z -> sin(1/(1.1 - z)); @test pass(f, approx(f), pts, rtol=2e-13)

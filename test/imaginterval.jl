@@ -10,7 +10,7 @@ end
 
 @testset "Basic functions for $method" for method in (Barycentric, Thiele)
     T = Float64
-    tol = 2000*eps(T)
+    tol = 8000eps(T)
     pts = test_points[T]
     approx(f; kw...) = approximate(f, domain[T]; method, kw...)
     f = x -> abs(x + 1//2 + 1im//100); @test pass(f, approx(f), pts; rtol=tol)

@@ -60,12 +60,10 @@ function test_points(r::Approximation; with_parameters=false)
 end
 
 #####
-##### IMPLEMENTATION
+##### Documentation strings
 #####
 
-##### Interpolation on a continuous domain
-
-"""
+@doc """
     approximate(f, domain)
 
 Adaptively compute a rational interpolant on a continuous or discrete domain.
@@ -109,197 +107,9 @@ julia> check(r);   # accuracy over the domain
 [ Info: Max error is 1.58e-13
 ```
 """
-function approximate(f::Function, R::ComplexRegions.AbstractRegion; kw...)
-    # ::Function, ::AbstractRegion
-    # Given a region as domain, we interpret poles as not being allowed in that region.
-    r = approximate(f, R.boundary; allowed=z->!in(z,R), kw...)
-    return Approximation(f, R, r.fun, r.allowed, r.path, r.history)
-end
+approximate
 
-# All continuum methods end up here:
-# ::Function, ::ComplexPath
-# function approximate(f::Function, d::Union{ComplexPath,ComplexCurve};
-#     method = Barycentric,
-#     float_type = promote_type(real_type(d), typeof(float(1))),
-#     tol = 1000*eps(float_type),
-#     allowed::Union{Function,Bool} = z -> dist(z, d) > tol,
-#     max_iter = 150,
-#     refinement = 3,
-#     stagnation = 20
-#     )
-
-#     num_ref = 15    # initial number of test points between nodes; decreases to `refinement`
-#     if allowed==true
-#         allowed = z -> true
-#     end
-
-#     path = DiscretizedPath(d, [0, 1]; refinement=num_ref, maxpoints=max_iter+2)
-#     (_, σ) = collect(path, :nodes)            # vector of nodes
-#     if isclosed(d)
-#         pop!(σ)
-#     end
-#     if isreal(d)
-#         # Enforce reality for a real domain:
-#         σ = real(σ)
-#     end
-#     fσ = f.(σ)         # f at nodes
-
-#     # Arrays of test points have one row per node (except the last)
-#     τ = path.points
-#     idx_test = CartesianIndices((1:1, 2:num_ref+1))
-#     idx_new_test = idx_test
-#     fτ = Matrix{eltype(fσ)}(undef, size(τ))        # f at test points
-#     fτ[idx_test] .= f.(τ[idx_test])
-#     number_type = promote_type(eltype(τ), eltype(fτ))
-#     values = similar(complex(fτ))
-
-#     # Arrays to track iteration data and progress
-#     err = float_type[]    # approximation errors
-#     all_weights = Matrix{number_type}(undef, max_iter+2, max_iter+2)
-#     lengths = Vector{Int}(undef, max_iter)
-
-#     # Initialize test points, data matrices, rational approximation
-#     data = update_test_values!(method, number_type, num_ref, max_iter)
-#     r = method(number_type[], number_type[], number_type[])
-
-#     # Add first node
-#     @views add_nodes!(r, data, τ, fτ, idx_test, σ, fσ)
-
-#     # Main iteration
-#     n, n_max = 1, 1       # iteration counter, all-time max
-#     stagnant = false      # hold until n >= stagnation
-#     while true
-#         test_values = update_test_values!(values, r, data, τ, fτ, idx_test, idx_new_test)
-#         test_actual = view(fτ, idx_test)
-#         fmax = norm(test_actual, Inf)     # scale of f
-#         if any(isnan, test_actual)
-#             throw(ArgumentError("Function has NaN value at a test point"))
-#         end
-#         err_max, idx_max = findmax(abs(test_actual[i] - test_values[i]) for i in eachindex(test_actual))
-#         push!(err, err_max)
-#         lengths[n] = L = length(nodes(r))
-#         all_weights[1:L, L] .= weights(r)
-
-#         # Have we succeeded?
-#         if (last(err) <= tol*fmax) && all(allowed, poles(r))
-#             break
-#         end
-
-#         # Do we quit?
-#         if n >= stagnation
-#             plateau = exp(median(log(x) for x in view(err, n-stagnation+1:n)))
-#             stagnant = all(plateau < e < 1e-2*fmax for e in last(err, max(1, stagnation ÷ 3)))
-#         end
-#         if (n == max_iter) || stagnant
-#             @warn("May not have converged to desired tolerance")
-#             # Backtrack to last acceptable approximation:
-#             n += 1
-#             accepted = false
-#             while !accepted
-#                 n -= 1
-#                 if n == 0
-#                     @warn "No acceptable approximation found"
-#                     n = n_max
-#                     break
-#                 end
-#                 L = lengths[n]
-#                 r = method(σ[1:L], fσ[1:L], all_weights[1:L, L])
-#                 accepted = all(allowed, poles(r))
-#             end
-#             break
-#         end
-
-#         # Add new node:
-#         idx_new = idx_test[idx_max]      # location of worst test point
-#         push!(σ, τ[idx_new])
-#         push!(fσ, fτ[idx_new])
-#         n_max = n += 1
-
-#         # Update the path discretization:
-#         idx_new_test = add_node!(path, idx_new)
-
-#         # Update test points and matrices:
-#         if num_ref > refinement    # initial phase
-#             num_ref -= 3    # gradually decrease refinement level
-#             # Wipe out the old test points and start over:
-#             s = first(collect(path))
-#             path = DiscretizedPath(d, s; refinement=num_ref, maxpoints=max_iter+2)
-#             τ = path.points
-#             idx_test = CartesianIndices((1:n, 2:num_ref+1))
-#             idx_new_test = idx_test
-#             fτ[idx_test] .= f.(τ[idx_test])
-#             r = method(number_type[], number_type[], number_type[])
-#             @views add_nodes!(r, data, τ, fτ, idx_test, σ, fσ)
-#         else    # steady-state refinement level
-#             # Replace one column and add a new column of test points:
-#             @views add_nodes!(r, data, τ, fτ, idx_test, [σ[end]], [fσ[end]])
-#             idx_new_test = view(idx_new_test, :, 2:size(idx_new_test, 2))
-#             idx_test = CartesianIndices((1:n, 2:num_ref+1))
-#             fτ[idx_new_test] .= f.(τ[idx_new_test])
-#         end
-#     end
-
-#     history = RFIVector{typeof(r)}(σ, fσ, all_weights, lengths[1:n_max], n)
-#     return Approximation(f, d, r, allowed, path, history)
-# end
-
-##### Interpolation on a discrete domain
-
-# ::Function, ::AbstractVector
-function approximate(
-    f::Function, z::AbstractVector;
-    allowed = z -> true,
-    kw...
-    )
-    r, history, test = approximate(f.(z), z; history=true, kw...)
-    return Approximation(f, z, r, allowed, DiscretizedPath(), history)
-end
-
-# ::AbstractVector, ::AbstractVector
-
-##### Least-squares approximation at prescribed poles
-
-function approximate(
-    y::AbstractVector, z::AbstractVector, ζ::AbstractVector;
-    degree = max(1, div(length(ζ), 2)),
-    )
-    return PartialFractions(z, y, ζ, degree)
-end
-
-function approximate(
-    f::Function, z::AbstractVector, ζ::AbstractVector;
-    allowed = z -> true,
-    kw...
-    )
-    r = approximate(f.(z), z, ζ; kw...)
-    return Approximation(f, z, r, allowed, DiscretizedPath(), nothing)
-end
-
-function refine_by_singularity(d::ComplexCurveOrPath, ζ::AbstractVector;
-    init=100,
-    refinement::Int=2,
-    maxpoints::Int=20_000
-    )
-    # Iteratively refine a discretization of a curve/path such that the distance between adjacent points is no more than 1/2 the distance to any singularity.
-    path = DiscretizedPath(d, range(0, length(d), init+1); refinement, maxpoints)
-    isempty(ζ) && return path
-    z = [1.]
-    while length(z) < 19_000
-        Δ = spacing(path)
-        m, n = size(Δ)
-        z = path.points[1:m, 2:n]
-        s = [minimum(abs(z - w) for w in ζ) for z in z]
-        ρ, idx = findmax(Δ[:, 2:n] ./ s)
-        if ρ <= 0.5
-            return path
-        end
-        add_node!(path, (idx[1], idx[2]+1))
-    end
-    @warn "Refinement was not successful"
-    return path
-end
-
-"""
+@doc """
     approximate(f, domain, poles)
 
 Computes a linear least-squares approximation with prescribed poles.
@@ -339,21 +149,68 @@ julia> check(r);   # accuracy over the domain
 [ Info: Max error is 2.75e-12
 ```
 """
-function approximate(
-    f::Function, d::ComplexCurveOrPath, ζ::AbstractVector;
-    degree = max(1, div(length(ζ), 2)),
-    init =  max(400, length(d) * 100),
-    refinement = 3,
-    )
+approximate
 
-    path = refine_by_singularity(d, ζ; refinement, init)
-    _, σ = collect(path, :nodes)
-    fσ = f.(σ)
-    r = PartialFractions(σ, fσ, ζ, degree)
-    return Approximation(f, d, r, z -> true, path, nothing)
+#####
+##### Dispatch
+#####
+
+# Each rational type implements methods based on dispatch of Type for the first argument.
+# Here, we can call those based on a method= keyword argument instead, giving a default.
+function approximate(f::Function, domain::ComplexCurveOrPath; method::Type=Barycentric, kw...)
+     approximate(method, f, domain; kw...)
 end
 
-##### Helper functions
+function approximate(y::AbstractVector, z::AbstractVector; method::Type=Barycentric, kw...)
+     approximate(method, y, z; kw...)
+end
+
+function approximate(
+    f::Function, domain::ComplexCurveOrPath, ζ::AbstractVector;
+    method::Type=PartialFractions,
+    kw...
+    )
+    approximate(method, f, domain, ζ; kw...)
+end
+
+# Each rational type recognizes two signatures:
+# - f::Function, domain::ComplexCurveOrPath, [poles::AbstractVector]
+# - values::AbstractVector, test_points::AbstractVector, [poles::AbstractVector]
+
+# We fill in other convenience cases here.
+
+# ::Function, ::AbstractRegion
+# Given a region as domain, we interpret poles as not being allowed in that region.
+function approximate(f::Function, R::ComplexRegions.AbstractRegion; kw...)
+    r = approximate(f, R.boundary; allowed=z->!in(z,R), kw...)
+    return Approximation(f, R, r.fun, r.allowed, r.path, r.history)
+end
+
+# ::Function, ::AbstractVector
+# Evaluate the function to call a fully discrete approximation.
+function approximate(
+    f::Function, z::AbstractVector;
+    allowed = z -> true,
+    kw...
+    )
+    r, history = approximate(f.(z), z; kw...)
+    return Approximation(f, z, r, allowed, DiscretizedPath(), history)
+end
+
+# ::Function,::AbstractVector, ::AbstractVector
+function approximate(
+    f::Function, z::AbstractVector, ζ::AbstractVector;
+    allowed = z -> true,
+    method = PartialFractions,
+    kw...
+    )
+    r = approximate(method, f.(z), z, ζ; kw...)
+    return Approximation(f, z, r, allowed, DiscretizedPath(), nothing)
+end
+
+#####
+##### Support functions
+#####
 
 """
     rewind(r, index)
@@ -459,11 +316,8 @@ function get_history(r::Approximation{T,S}) where {T,S}
     hist = r.history
     deg = Int[]
     zp = Vector{complex(S)}[]
-    err = T[]
+    err = Float64[]
     allowed = BitVector[]
-    # τ, _ = check(r; refinement=:test, quiet=true)
-    # fτ = r.original.(τ)
-    # scale = maximum(abs, fτ)
     best = 0
     for (idx, record) in enumerate(hist)
         fun = record.interpolant
@@ -488,6 +342,7 @@ function quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
     n = length(history)
     err = [h.error for h in history]
     status = 0
+    stagnant = false
     if (err[end] <= tol*fmax)
         if (allowed === true)
             status = -1
@@ -496,23 +351,24 @@ function quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
             status = all(allowed, zp) ? -1 : 0
         end
     else
-        stagnant = false
-        if n >= stagnation
-            plateau = exp(median(log(x) for x in view(err, n-stagnation+1:n)))
-            stagnant = all(plateau < e < fmax/100 for e in last(err, max(1, stagnation ÷ 2)))
+        if n >= stagnation + 5
+            old = n-stagnation-4:n-stagnation
+            plateau = exp(median(log(err[i]) for i in old))
+            stagnant = all(plateau < e < fmax/100 for e in last(err, stagnation))
         end
-        if (n == max_iter) || stagnant
-            if !(allowed === true)
-                # Backtrack to last acceptable approximation:
-                accepted = false
-                while !accepted && n > 0
-                    n -= 1
-                    zp = history[n].poles = poles(history[n].interpolant)
-                    accepted = all(allowed, zp)
+    end
+    if (n == max_iter) || stagnant
+        if !(allowed === true)
+            # Backtrack to the best acceptable approximation:
+            for k in sortperm(err)
+                zp = history[n].poles = poles(history[k].interpolant)
+                if all(allowed, zp)
+                    n = k
+                    break
                 end
             end
-            status = n
         end
+        status = n
     end
     return status
 end

@@ -72,6 +72,15 @@ function Barycentric(
     return Barycentric{T}(node, value, weight, wf)
 end
 
+# construct from Loewner matrix
+function Barycentric(node::AbstractVector, value::AbstractVector, L::AbstractMatrix)
+    _, _, V = svd(L)
+    return Barycentric(node, value, V[:, end])
+end
+
+Base.copy(r::Barycentric) =
+    Barycentric(copy(r.nodes), copy(r.values), copy(r.weights), copy(r.w_times_f))
+
 # convenience accessors and overloads
 nodes(r::Barycentric) = r.nodes
 Base.values(r::Barycentric) = r.values
@@ -85,7 +94,6 @@ degree(r::Barycentric) = length(r.nodes) - 1
 
 Evaluate the rational function at `z`.
 """
-
 (r::Barycentric)(z) = evaluate(r, z)
 
 function evaluate(r::Barycentric, z::Number)
@@ -99,6 +107,15 @@ function evaluate(r::Barycentric, z::Number)
     else                    # interpolation at node
         return r.values[k]
     end
+end
+
+# Evaluate when given Cauchy matrix
+function evaluate!(u::AbstractArray, r::Barycentric, C::AbstractMatrix)
+    n = length(r.nodes)
+    for (i, idx) in enumerate(eachindex(u))
+        u[idx] = sum(C[i, j] * r.w_times_f[j] for j in 1:n) / sum(C[i, j] * r.weights[j] for j in 1:n)
+    end
+    return nothing
 end
 
 """
@@ -158,53 +175,26 @@ function roots(r::Barycentric)
 end
 
 # add new nodes to an existing Barycentric function
-function add_nodes!(r::Barycentric, data, τ, fτ, idx_test, new_σ, new_f)
-    C, L = data
-    σ, fσ = r.nodes, r.values
-    n, n_new = length(σ), length(new_σ)
-    append!(σ, new_σ)
-    append!(fσ, new_f)
-    append!(r.weights, similar(new_f))
-    append!(r.w_times_f, similar(new_f))
-
-    # compute data for all the test points for the new nodes
-    @inbounds @fastmath for i in idx_test, j in n+1:n+n_new
-        Δ = τ[i] - σ[j]
-        C[i, j] = iszero(Δ) ? 1 / eps() : 1 / Δ
-        L[i, j] = (fτ[i] - fσ[j]) * C[i, j]
-    end
-    # don't recompute the weights yet, since there are still updates needed
-    # at new nodes
-    return r
-end
-
-# initial call to allocate space for work matrices
-function update_test_values!(
-    ::Type{Barycentric},
-    numeric_type::Type,
-    num_refine::Integer,
-    max_iter::Integer,
-    max_test::Integer=max_iter+1
-    )
-    C = Array{numeric_type}(undef, max_test, num_refine+1, max_iter+2)
-    L = Array{numeric_type}(undef, max_test, num_refine+1, max_iter+2)
-    return C, L
-end
-
-# Update data at all new test points for all nodes, then recompute weights and evaluate at all the test points.
-function update_test_values!(vals, r::Barycentric, data, τ, fτ, idx_test, idx_new_test)
-    C, L = data
-    σ, fσ = nodes(r), values(r)
+function add_node(r::Barycentric, C, L, new_σ, new_fσ, τ, fτ, idx_test, idx_new_test)
+    σ =  [r.nodes;   new_σ]
+    fσ = [r.values; new_fσ]
     n = length(σ)
 
-    # update matrices at new test points for all nodes
+    # update matrices for all the test points for the new node
+    @inbounds @fastmath for i in idx_test
+        Δ = τ[i] - σ[n]
+        C[i, n] = iszero(Δ) ? 1 / eps() : 1 / Δ
+        L[i, n] = (fτ[i] - fσ[n]) * C[i, n]
+    end
+
+    # update matrices for new test points for all nodes
     @inbounds @fastmath for i in idx_new_test, j in eachindex(σ)
         Δ = τ[i] - σ[j]
         C[i, j] = iszero(Δ) ? 1 / eps() : 1 / Δ
         L[i, j] = (fτ[i] - fσ[j]) * C[i, j]
     end
 
-    # update the weights
+    # collect the columns of the Loewner matrix
     if isa(idx_test, CartesianIndices)
         A = reshape(view(L, idx_test, 1:n), :, n)
     else
@@ -212,16 +202,138 @@ function update_test_values!(vals, r::Barycentric, data, τ, fτ, idx_test, idx_
         I = [CartesianIndex((idx, k)) for idx in idx_test, k in 1:n]
         A = reshape(view(L, I), :, n)
     end
-    _, _, V = svd(A)
-    w = V[:, end]
-    @. r.weights = w
-    @. r.w_times_f = w * fσ
 
-    # evaluate at test points
-    for i in idx_test
-        numer = sum(r.w_times_f[j] * C[i, j] for j in 1:n)
-        denom = sum(r.weights[j] * C[i, j] for j in 1:n)
-        vals[i] = numer / denom
+    return Barycentric(σ, fσ, A)
+end
+
+function _initialize(f, num_ref, max_iter, σ, fσ, path, idx_test)
+    τ = path.points
+    fτ = Matrix{eltype(fσ)}(undef, size(τ))        # f at test points
+    @. fτ[idx_test] = f(τ[idx_test])
+    rτ = complex(similar(fτ))    # rational function at test points
+    value_type = promote_type(eltype(σ), eltype(fτ))
+    C = Array{value_type}(undef, max_iter + 1, num_ref + 1, max_iter + 1)
+    L = Array{value_type}(undef, max_iter + 1, num_ref + 1, max_iter + 1)
+    @inbounds @fastmath for i in idx_test
+        Δ = τ[i] - σ[1]
+        C[i, 1] = iszero(Δ) ? 1 / eps() : 1 / Δ
+        L[i, 1] = (fτ[i] - fσ[1]) * C[i, 1]
     end
-    return view(vals, idx_test)
+    return τ, fτ, rτ, C, L
+end
+
+function approximate(method::Type{Barycentric},
+    f::Function, d::ComplexCurveOrPath;
+    float_type::Type = promote_type(real_type(d), typeof(float(1))),
+    tol::Real = 1000*eps(float_type),
+    allowed::Union{Function,Bool} = z -> dist(z, d) > tol,
+    max_iter::Int = 150,
+    refinement::Int = 3,
+    stagnation::Int = 10
+    )
+
+    num_ref = 15    # initial number of test points between nodes; decreases to `refinement`
+    path = DiscretizedPath(d, [0, 1]; refinement=num_ref, maxpoints=max_iter * refinement)
+    σ = [point(d, 0)]
+    fσ = f.(σ)         # f at nodes
+
+    # Arrays of test points have one row per node (except the last)
+    idx_test = CartesianIndices((1:1, 2:num_ref+1))
+    τ, fτ, rτ, C, L = _initialize(f, num_ref, max_iter, σ, fσ, path, idx_test)
+    fmax = maximum(abs, view(fτ, idx_test))        # scale of f
+
+    # Initialize rational approximation
+    r = Barycentric(σ, fσ, reshape(view(L, idx_test, 1:1), :, 1))
+    history = [IterationRecord(r, NaN, missing)]
+
+    # Main iteration
+    n = 1       # iteration counter
+    while true
+        Cmatrix = reshape(view(C, idx_test, 1:n), :, n)
+        evaluate!(view(rτ, idx_test), r, Cmatrix)    # r at test points
+        err = @. abs(fτ[idx_test] - rτ[idx_test])
+        err_max, idx_max = findmax(err)
+        history[end].error = err_max
+
+        status = quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
+        if status > 0
+            @warn("Stopping at estimated error $(round(err_max, sigdigits=4)) after $n iterations")
+            r = history[status].interpolant
+        end
+        (status != 0) && break
+
+        ### Refinement
+        idx_new = idx_test[idx_max]      # location of worst test point
+        new_σ, new_fσ = τ[idx_new], fτ[idx_new]
+        # In the initial phase, we throw out the old test points.
+        idx_new_test = add_node!(path, idx_new)
+        if num_ref > refinement    # initial phase
+            num_ref -= 3    # gradually decrease refinement level
+            s, _ = collect(path, :nodes)
+            path = DiscretizedPath(d, s; refinement=num_ref, maxpoints=max_iter * refinement)
+            idx_new_test = idx_test = CartesianIndices((1:n+1, 2:num_ref+1))
+            τ, fτ, rτ, C, L = _initialize(f, num_ref, max_iter, σ, fσ, path, idx_test)
+            fmax = maximum(abs, view(fτ, idx_test))        # scale of f
+        else
+            idx_test = CartesianIndices((1:n+1, 2:num_ref+1))
+            @. fτ[idx_new_test] = f(τ[idx_new_test])
+        end
+        r = add_node(r, C, L, new_σ, new_fσ, τ, fτ, idx_test, idx_new_test)
+        push!(history, IterationRecord(r, NaN, missing))
+        n += 1
+    end
+    if allowed === true
+        allowed = z -> true
+    end
+    return Approximation(f, d, r, allowed, path, history)
+end
+
+function approximate(method::Type{Barycentric},
+    y::AbstractVector{T}, z::AbstractVector{S};
+    float_type::Type = promote_type(real_type(eltype(z)), typeof(float(1))),
+    tol::AbstractFloat = 1000*eps(float_type),
+    allowed::Union{Function,Bool} = true,
+    max_iter::Int = 100,
+    stagnation::Int = 10,
+    ) where {T<:Number,S<:Number}
+
+    m = length(z)
+    fmax = maximum(abs, y)     # scale of f
+    values = similar(y)
+
+    _, i₀ = findmin(abs, y)
+    idx_test = trues(m)
+    idx_test[i₀] = false
+
+    number_type = promote_type(eltype(z), eltype(y))
+    C = Array{number_type}(undef, m, max_iter+1)
+    L = Array{number_type}(undef, m, max_iter+1)
+    @inbounds for i in 1:m
+        C[i, 1] = 1 / (z[i] - z[i₀])
+        L[i, 1] = (y[i] - y[i₀]) * C[i, 1]
+    end
+    r = Barycentric([z[i₀]], [y[i₀]], view(L, idx_test, 1:1))
+    history = [IterationRecord(r, NaN, missing)]
+    n = 1    # iteration counter
+    while count(idx_test) > 0
+        evaluate!(view(values, idx_test), r, view(C, idx_test, 1:n))    # r at test points
+        err = @. abs(y[idx_test] - values[idx_test])
+        err_max, idx_max = findmax(err)
+        history[n].error = err_max
+
+        status = quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
+        if status > 0
+            @warn("Stopping at estimated error $(round(err_max, sigdigits=4)) after $n iterations")
+            r = history[n].interpolant
+        end
+        (status != 0) && break
+
+        # Add new node:
+        idx_new = findall(idx_test)[idx_max]
+        idx_test[idx_new] = false
+        r = add_node(r, C, L, z[idx_new], y[idx_new], z, y, findall(idx_test), [])
+        push!(history, IterationRecord(r, NaN, missing))
+        n += 1
+    end
+    return r, history
 end
