@@ -9,15 +9,15 @@ include("utils.jl")
 export nodes, weights, degree, degrees, poles, Res, residues, roots
 include("abstract-rational.jl")
 
+export approximate, check, rewind, get_history, test_points
+include("approximation.jl")
+
 export ArnoldiBasis, ArnoldiPolynomial, PartialFractions
 include("parfrac.jl")
 
 export Barycentric, Thiele
 include("barycentric.jl")
 include("thiele.jl")
-
-export approximate, check, rewind, get_history, test_points
-include("approximation.jl")
 
 # legacy implementation of AAA
 export aaa
@@ -26,7 +26,7 @@ include("aaa.jl")
 export minimax
 include("lawson.jl")
 
-include("operations.jl")
+# include("operations.jl")
 
 # These are overloaded by plotting extensions.
 export convergenceplot, errorplot, animate, poleplot
