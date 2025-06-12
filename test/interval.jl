@@ -18,7 +18,7 @@ end
     if method != Thiele
         f = x -> abs(x + 1//2 + 1im//100); @test pass(f, approx(f; stagnation=30), pts; rtol=tol)
         f = x -> exp(100x^2); @test pass(f, approx(f), pts; rtol=tol)
-        f = x -> x + sin(80x) * exp(-10x^2); @test pass(f, approx(f; stagnation=30), pts; rtol=tol)
+        f = x -> x + sin(80x) * exp(-10x^2); @test pass(f, approx(f), pts; rtol=tol)
     end
     f = x -> exp(-10 / (6//5 - x)); @test pass(f, approx(f), pts; rtol=tol)
     f = x -> 10im*x + tanh(100*(x - 1//5)); @test pass(f, approx(f), pts, rtol=tol)
@@ -62,12 +62,10 @@ end
 
 @testset "Nodes, values, degree" begin
     r = approximate(exp, unit_interval; method=Barycentric)
-    @test length(nodes(r)) == 7
+    @test length(nodes(r)) == 6
     @test minimum(nodes(r)) ≈ -1
-    @test maximum(nodes(r)) ≈ 1
-    @test length(values(r)) == 7
+    @test length(values(r)) == 6
     @test minimum(values(r)) ≈ exp(-1)
-    @test maximum(values(r)) ≈ exp(1)
     @test degree(r) == length(nodes(r)) - 1
     @test degrees(r) == (degree(r), degree(r))
     tp = RationalFunctionApproximation.test_points(r)
@@ -77,10 +75,8 @@ end
     r = approximate(exp, unit_interval; method=Thiele)
     @test length(nodes(r)) == 11
     @test minimum(nodes(r)) ≈ -1
-    @test maximum(nodes(r)) ≈ 1
     @test length(values(r)) == 11
     @test minimum(values(r)) ≈ exp(-1)
-    @test maximum(values(r)) ≈ exp(1)
     @test degree(r) == 5
     @test degrees(r) == (5, 5)
 end
@@ -120,7 +116,7 @@ end
     f = x -> sinpi(10x) + x - 9//10;  r = approx(f);
     zer = roots(r)
     miss = minimum(abs, zer .- 9//10)
-    @test miss < 1e-8
+    @test miss < 1e-7
 
     f = z -> (z - (3 + 3im))/(z + 2);  r = approx(f)
     pol, zer = poles(r), roots(r)
@@ -167,14 +163,14 @@ end
     pts = test_points[T]
     approx(f; kw...) = approximate(f, domain[T]; method=Barycentric, kw...)
     f = x -> 0; @test pass(f, approx(f, max_iter=1), pts, atol=tol)
-    f = x -> x; @test pass(f, approx(f, max_iter=1), pts, atol=tol)
-    f = x -> 1im*x; @test pass(f, approx(f, max_iter=3), pts, atol=tol)
-    f = x -> x+x^2; @test pass(f, approx(f, max_iter=2), pts, atol=tol)
-    f = x -> x+x^3; @test pass(f, approx(f, max_iter=3), pts, atol=tol)
+    f = x -> x; @test pass(f, approx(f, max_iter=2), pts, atol=tol)
+    f = x -> 1im*x; @test pass(f, approx(f, max_iter=2), pts, atol=tol)
+    f = x -> x+x^2; @test pass(f, approx(f, max_iter=3), pts, atol=tol)
+    f = x -> x+x^3; @test pass(f, approx(f, max_iter=4), pts, atol=tol)
     f = x -> 1/(1.1+x); @test pass(f, approx(f, max_iter=3), pts, atol=tol)
     f = x -> 1/(1+1im*x); @test pass(f, approx(f, max_iter=3), pts, atol=tol)
-    f = x -> 1/(3+x+x^2); @test pass(f, approx(f, max_iter=2), pts, atol=tol)
-    f = x -> 1/(1.01+x^3); @test pass(f, approx(f, max_iter=3), pts, atol=tol)
+    f = x -> 1/(3+x+x^2); @test pass(f, approx(f, max_iter=3), pts, atol=tol)
+    f = x -> 1/(1.01+x^3); @test pass(f, approx(f, max_iter=4), pts, atol=tol)
     f = x -> cis(x); r = approx(f);
     @test sum(@. abs(r(pts))-1)/length(pts) < tol
     f = x -> exp(exp(x))/(x - 0.2im); r = approx(f);

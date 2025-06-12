@@ -121,8 +121,8 @@ function add_node!(r::Thiele, new_σ, new_f)
     return r
 end
 
-function approximate(f::Function, d::Union{ComplexPath,ComplexCurve};
-    method::Type{Thiele},
+function approximate(method::Type{Thiele},
+    f::Function, d::Union{ComplexPath,ComplexCurve};
     float_type::Type = promote_type(real_type(d), typeof(float(1))),
     tol::Real = 1000*eps(float_type),
     allowed::Union{Function,Bool} = z -> dist(z, d) > tol,
@@ -142,31 +142,23 @@ function approximate(f::Function, d::Union{ComplexPath,ComplexCurve};
     idx_new_test = idx_test
     fτ = Matrix{eltype(fσ)}(undef, size(τ))        # f at test points
     fτ[idx_test] .= f.(τ[idx_test])
-    number_type = Complex{promote_type(eltype(τ), eltype(fτ))}
-    values = similar(complex(fτ))
-
-    err = float_type[]    # approximation errors
+    fmax = maximum(abs, view(fτ, idx_test))        # scale of f
 
     # Initialize rational approximation
     r = Thiele(σ, fσ)
-    history = IterationRecord{typeof(r),float_type,number_type}[]
+    history = [IterationRecord(r, NaN, missing)]
 
     # Main iteration
     n = 1       # iteration counter
     while true
-        for i in idx_test
-            values[i] = r(τ[i])
-        end
-        test_values = view(values, idx_test)  # r at test points
-        test_actual = view(fτ, idx_test)      # f at test points
-        fmax = norm(test_actual, Inf)     # scale of f
-        err_max, idx_max = findmax(abs(test_actual[i] - test_values[i]) for i in eachindex(test_actual))
-        push!(err, err_max)
-        push!(history, IterationRecord(r, err_max, missing))
+        # test_actual = view(fτ, idx_test)      # f at test points
+        err = @. abs(fτ[idx_test] - r(τ[idx_test]))
+        err_max, idx_max = findmax(err)
+        history[end].error = err_max
 
         status = quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
         if status > 0
-            @warn("Stopping at estimated error $(round(last(err), sigdigits=4)) after $n iterations")
+            @warn("Stopping at estimated error $(round(err_max, sigdigits=4)) after $n iterations")
             r = history[status].interpolant
         end
         (status != 0) && break
@@ -174,6 +166,7 @@ function approximate(f::Function, d::Union{ComplexPath,ComplexCurve};
         ### Refinement
         idx_new = idx_test[idx_max]      # location of worst test point
         add_node!(r, τ[idx_new], fτ[idx_new])
+        push!(history, IterationRecord(r, NaN, missing))
         n += 1
 
         idx_new_test = add_node!(path, idx_new)
@@ -184,17 +177,13 @@ function approximate(f::Function, d::Union{ComplexPath,ComplexCurve};
             path = DiscretizedPath(d, s; refinement=num_ref, maxpoints=max_iter * refinement)
             τ = path.points
             idx_test = CartesianIndices((1:n, 2:num_ref+1))
-            for i in idx_test
-                fτ[i] = f(τ[i])
-            end
+            @. fτ[idx_test] = f(τ[idx_test])
+            fmax = maximum(abs, view(fτ, idx_test))
         else
             # At new test points only, evaluate f.
-            for i in idx_new_test
-                fτ[i] = f(τ[i])
-            end
+            @. fτ[idx_new_test] = f(τ[idx_new_test])
             idx_test = CartesianIndices((1:n, 2:num_ref+1))
         end
-
     end
     if allowed === true
         allowed = z -> true
@@ -202,9 +191,8 @@ function approximate(f::Function, d::Union{ComplexPath,ComplexCurve};
     return Approximation(f, d, r, allowed, path, history)
 end
 
-
-function approximate(y::AbstractVector{T}, z::AbstractVector{S};
-    method::Type{Thiele},
+function approximate(method::Type{Thiele},
+    y::AbstractVector{T}, z::AbstractVector{S};
     float_type::Type = promote_type(real_type(eltype(z)), typeof(float(1))),
     tol::AbstractFloat = 1000*eps(float_type),
     allowed::Union{Function,Bool} = true,
@@ -212,38 +200,32 @@ function approximate(y::AbstractVector{T}, z::AbstractVector{S};
     stagnation::Int = 16,
     ) where {T<:Number,S<:Number}
 
-    m = length(z)
-    n = 1    # iteration counter
-    fmax = norm(y, Inf)     # scale of f
-    number_type = promote_type(eltype(z), eltype(y))
-    err = float_type[]
-
+    y = copy(y)
+    z = collect(copy(z))
+    fmax = maximum(abs, y)     # scale of f
     _, idx_min = findmin(abs, y)
-    values = similar(y)
-
     r = Thiele([z[idx_min]], [y[idx_min]])
-    history = IterationRecord{typeof(r),float_type,number_type}[]
-    idx_test = trues(m)
-    idx_test[idx_min] = false
-    while true
-        @. values[idx_test] = r(z[idx_test])  # r at test points
-        test_values = view(values, idx_test)  # r at test points
-        test_actual = view(y, idx_test)       # f at test points
-        err_max, idx_max = findmax(abs(test_actual[i] - test_values[i]) for i in eachindex(test_actual))
-        push!(err, err_max)
-        push!(history, IterationRecord(r, err_max, missing))
+    deleteat!(y, idx_min)    # remove the minimum value
+    deleteat!(z, idx_min)    # remove the minimum value
+    history = [IterationRecord(r, NaN, missing)]
+    n = 1    # iteration counter
+    while length(z) > 0
+        err = @. abs(y - r(z))
+        err_max, idx_new = findmax(err)
+        history[n].error = err_max
 
         status = quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
         if status > 0
-            @warn("Stopping at estimated error $(round(last(err), sigdigits=4)) after $n iterations")
+            @warn("Stopping at estimated error $(round(err_max, sigdigits=4)) after $n iterations")
             r = history[n].interpolant
         end
         (status != 0) && break
 
         # Add new node:
-        idx_new = findall(idx_test)[idx_max]
         add_node!(r, z[idx_new], y[idx_new])
-        idx_test[idx_new] = false
+        deleteat!(y, idx_new)    # remove the minimum value
+        deleteat!(z, idx_new)    # remove the minimum value
+        push!(history, IterationRecord(r, NaN, missing))
         n += 1
     end
     return r, history
