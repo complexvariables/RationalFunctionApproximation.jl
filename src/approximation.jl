@@ -2,7 +2,22 @@
 ##### TYPES
 #####
 
-##### Approximation
+mutable struct IterationRecord{R,S,T}
+    interpolant::R
+    error::S
+    poles::Union{Missing, Vector{T}}
+
+    function IterationRecord(r::R, error, poles) where
+        {S<:AbstractFloat, R<:AbstractRationalInterpolant{S}}
+        return new{R,S,Complex{S}}(copy(r), error, poles)
+    end
+end
+
+# COV_EXCL_START
+function Base.show(io::IO, ::MIME"text/plain", h::IterationRecord)
+    print(IOContext(io, :compact=>true), "$(degrees(h.interpolant)) rational interpolant with error $(round(h.error, sigdigits=3))")
+end
+# COV_EXCL_STOP
 
 """
     Approximation (type)
@@ -58,23 +73,6 @@ function test_points(r::Approximation; with_parameters=false)
     s, z = collect(r.path, :all)
     return with_parameters ? (s, z) : z
 end
-
-mutable struct IterationRecord{R,S,T}
-    interpolant::R
-    error::S
-    poles::Union{Missing, Vector{T}}
-
-    function IterationRecord(r::R, error, poles) where
-        {S<:AbstractFloat, R<:AbstractRationalInterpolant{S}}
-        return new{R,S,Complex{S}}(copy(r), error, poles)
-    end
-end
-
-# COV_EXCL_START
-function Base.show(io::IO, ::MIME"text/plain", h::IterationRecord)
-    print(IOContext(io, :compact=>true), "$(degrees(h.interpolant)) rational interpolant with error $(round(h.error, sigdigits=3))")
-end
-# COV_EXCL_STOP
 
 #####
 ##### Documentation strings
