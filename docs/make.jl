@@ -1,4 +1,4 @@
-import Pkg; Pkg.update();
+# import Pkg; Pkg.update();
 using RationalFunctionApproximation
 using Documenter, DocumenterVitepress
 using DocumenterCitations
@@ -8,7 +8,7 @@ DocMeta.setdocmeta!(RationalFunctionApproximation, :DocTestSetup, :(using Ration
 
 makedocs(;
     modules=[RationalFunctionApproximation],
-    authors="Toby Driscoll <driscoll@udel.edu> and contributors",
+    authors="Toby Driscoll <driscoll@udel.edu>",
     repo=Remotes.GitHub("complexvariables", "RationalFunctionApproximation.jl"),
     sitename="RationalFunctionApproximation.jl",
     doctest=false,
