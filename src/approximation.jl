@@ -59,6 +59,23 @@ function test_points(r::Approximation; with_parameters=false)
     return with_parameters ? (s, z) : z
 end
 
+mutable struct IterationRecord{R,S,T}
+    interpolant::R
+    error::S
+    poles::Union{Missing, Vector{T}}
+
+    function IterationRecord(r::R, error, poles) where
+        {S<:AbstractFloat, R<:AbstractRationalInterpolant{S}}
+        return new{R,S,Complex{S}}(copy(r), error, poles)
+    end
+end
+
+# COV_EXCL_START
+function Base.show(io::IO, ::MIME"text/plain", h::IterationRecord)
+    print(IOContext(io, :compact=>true), "$(degrees(h.interpolant)) rational interpolant with error $(round(h.error, sigdigits=3))")
+end
+# COV_EXCL_STOP
+
 #####
 ##### Documentation strings
 #####
@@ -293,25 +310,6 @@ Parse the convergence history of a rational approximation.
 
 See also [`convergenceplot`](@ref).
 """
-# function get_history(r::Approximation{T,S}) where {T,S}
-#     hist = r.history
-#     deg = Int[]
-#     zp = Vector{complex(S)}[]
-#     err = T[]
-#     allowed = BitVector[]
-#     τ, _ = check(r; refinement=:test, quiet=true)
-#     fτ = r.original.(τ)
-#     scale = maximum(abs, fτ)
-#     for (idx, n) in enumerate(hist.len)
-#         rn = hist[idx]
-#         push!(deg, degree(rn))
-#         push!(zp, poles(rn))
-#         push!(allowed, r.allowed.(zp[end]))
-#         push!(err, maximum(abs, rn.(τ) - fτ) / scale)
-#     end
-#     return deg, err, zp, allowed, hist.best
-# end
-
 function get_history(r::Approximation{T,S}) where {T,S}
     hist = r.history
     deg = Int[]
@@ -335,14 +333,17 @@ function get_history(r::Approximation{T,S}) where {T,S}
     return deg, err, zp, allowed, best
 end
 
-# -1: success
-# 0: continue
-# n: iteration number to stop at
+# Return values for quitting_check:
+#  -1: success
+#   0: continue
+#   n: iteration number to stop at
 function quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
+    # If allowed === true, do not check for allowed poles.
     n = length(history)
     err = [h.error for h in history]
+
+    # Check for convergence
     status = 0
-    stagnant = false
     if (err[end] <= tol*fmax)
         if (allowed === true)
             status = -1
@@ -350,16 +351,20 @@ function quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
             zp = history[end].poles = poles(history[end].interpolant)
             status = all(allowed, zp) ? -1 : 0
         end
-    else
-        if n >= stagnation + 5
-            old = n-stagnation-4:n-stagnation
-            plateau = exp(median(log(err[i]) for i in old))
-            stagnant = all(plateau < e < fmax/100 for e in last(err, stagnation))
-        end
     end
+
+    # Check for stagnation
+    stagnant = false
+    if n >= stagnation + 5
+        old = n-stagnation-4:n-stagnation
+        plateau = exp(median(log(err[i]) for i in old))
+        stagnant = all(plateau < e < fmax/100 for e in last(err, stagnation))
+    end
+
+    # Decide on unsuccessful stopping
     if (n == max_iter) || stagnant
         if !(allowed === true)
-            # Backtrack to the best acceptable approximation:
+            # Look for the best acceptable approximation:
             for k in sortperm(err)
                 zp = history[n].poles = poles(history[k].interpolant)
                 if all(allowed, zp)
@@ -370,5 +375,6 @@ function quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
         end
         status = n
     end
+
     return status
 end
