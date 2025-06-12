@@ -91,14 +91,14 @@ lines!(r.domain, linewidth=3, color=:white)
 shg()
 ```
 
-We close with a function having a singularity that lies on the interval: $|x|$. A famous result of Newman in 1964 proved that the best rational approximation of degree $n$ has root-exponential convergence.
+We close this quick introduction with approximation of $|x|$, which has a singularity on the interval. A famous result of Newman in 1964 proved that the best rational approximation of degree $n$ has root-exponential convergence.
 
 ```@example interval
 r = approximate(abs, unit_interval; tol=1e-12)
 convergenceplot(r)
 ```
 
-(The errors increase for odd degrees above because they are being measured at the test points discovered at the end of the iteration, not the ones during the iteration.) We find that the nodes of the approximant are also distributed (nearly) root-exponentially around the singularity:
+We find that the nodes of the approximant are also distributed (nearly) root-exponentially around the singularity:
 
 ```@example interval
 z = filter(>(0), nodes(r))
