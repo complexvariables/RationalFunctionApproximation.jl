@@ -115,24 +115,22 @@ One possibility is to use a continued fraction representation of the rational ap
 To try greedy Thiele, use `method=Thiele` as an argument to `approximate`. 
 
 ```@example convergence
-f = x -> cos(11x - 5)
+f = x -> cos(41x - 5) * exp(-10x^2)
 r = approximate(f, unit_interval; method=Thiele)
 convergenceplot(r)
 ```
 
-Some common functions give an error due to a division by zero that is not mathematically important. Until a mechanism is implemented to handle this situation more gracefully, you can usually circumvent this problem by adding a term that breaks some symmetry.
+The $x$-axis of the convergence plot shows the degree of the denominator polynomial. Because the Thiele method alternates between interpolants of type $(n, n)$ and $(n+1, n)$, there are two dots above for each degree.
+
+The primary appeal of the greedy Thiele method is that adding a node to an interpolant of degree $n$ takes $O(n)$ time, compared to $O(n^3)$ for the AAA method. Some experiments suggest that the Thiele method is faster in practice, though a systematic comparison is still needed.
 
 ```@example convergence
-f = x -> cos(11x)
-try
-    r = approximate(f, unit_interval; method=Thiele)
-catch err
-    println("Caught the error '$(err.msg)'")
-end
+f = x -> abs(x-0.5)
+@elapsed r = approximate(f, unit_interval; method=Barycentric, max_iter=150, allowed=true)
+max_err(r);
 ```
 
 ```@example convergence
-f = x -> x + cos(11x)
-r = approximate(f, unit_interval; method=Thiele)
+@elapsed r = approximate(f, unit_interval; method=Thiele, max_iter=300, allowed=true)
 max_err(r);
 ```
