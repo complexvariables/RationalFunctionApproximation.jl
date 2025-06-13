@@ -1,4 +1,4 @@
-# import Pkg; Pkg.update();
+import Pkg; Pkg.update();
 using RationalFunctionApproximation
 using Documenter, DocumenterVitepress
 using DocumenterCitations
