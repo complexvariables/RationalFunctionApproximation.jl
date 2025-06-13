@@ -1,0 +1,15 @@
+title: "RationalFunctionApproximation: Rational Approximation On Discrete and Continuous Domains"
+keywords:
+  - Julia
+  - Approximation
+  - Complex variables
+  - Rational functions
+authors:
+  - name: Tobin A. Driscoll
+    orcid: 0000-0002-1490-2545
+    affiliation: 1
+affiliations:
+  - name: University of Delaware
+    index: 1
+date: 2 June 2025
+bibliography: ref.bib

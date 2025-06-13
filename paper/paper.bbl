@@ -1,0 +1,158 @@
+\begin{thebibliography}{10}
+
+\bibitem{antoulasInterpolatoryMethods2020}
+A.~C. Antoulas, C.~A. Beattie, and S.~G{\"u}{\u g}ercin.
+{\em Interpolatory Methods for Model Reduction}.
+{Society for Industrial and Applied Mathematics}, Philadelphia, PA, January 2020.
+\href{http://dx.doi.org/10.1137/1.9781611976083}{doi:10.1137/1.9781611976083}.
+
+\bibitem{berrutBarycentricLagrange2004}
+J.-P. Berrut and L.~N. Trefethen.
+Barycentric {{Lagrange}} interpolation.
+{\em SIAM Review}, 46(3):501--517, January 2004.
+\href{http://dx.doi.org/10.1137/S0036144502417715}{doi:10.1137/S0036144502417715}.
+
+\bibitem{BrubeckVandermondeArnoldi2021}
+P.~D. Brubeck, Y.~Nakatsukasa, and L.~N. Trefethen.
+Vandermonde with {{Arnoldi}}.
+{\em SIAM Review}, 63(2):405--415, January 2021.
+\href{http://dx.doi.org/10.1137/19M130100X}{doi:10.1137/19M130100X}.
+
+\bibitem{budisaRationalApproximation2022}
+A.~Budisa, X.~Hu, M.~Kuchta, K.-A. Mardal, and L.~Zikatanov.
+Rational approximation preconditioners for multiphysics problems.
+In I.~Georgiev, M.~Datcheva, K.~Georgiev, and G.~Nikolov, editors, {\em Numerical Methods and Applications}, pages 100--113. Springer Nature Switzerland, 2023.
+\href{http://dx.doi.org/10.1007/978-3-031-32412-3\_9}{doi:10.1007/978-3-031-32412-3\_9}.
+
+\bibitem{celisAdaptiveThiele2023}
+O.~S. Celis.
+Adaptive {{Thiele}} interpolation.
+{\em ACM Commun. Comput. Algebra}, 56(3):125--132, April 2023.
+\href{http://dx.doi.org/10.1145/3594252.3594254}{doi:10.1145/3594252.3594254}.
+
+\bibitem{celisNumericalContinued2024}
+O.~S. Celis.
+Numerical {{Continued Fraction Interpolation}}.
+{\em Ukrainian Mathematical Journal}, 76(4):635--648, September 2024.
+\href{http://dx.doi.org/10.1007/s11253-024-02344-5}{doi:10.1007/s11253-024-02344-5}.
+
+\bibitem{costaAAAleastSquares2023}
+S.~Costa and L.~N. Trefethen.
+{{AAA-least}} squares rational approximation and solution of {{Laplace}} problems.
+In A.~Hujdurovi{\'c}, K.~Kutnar, D.~Maru{\v s}i{\v c}, {\v S}~Miklavi{\v c}, T.~Pisanski, and P.~{\v S}parl, editors, {\em European {{Congress}} of {{Mathematics}}}, pages 511--534. EMS Press, 1 edition, July 2023.
+\href{http://dx.doi.org/10.4171/8ecm/16}{doi:10.4171/8ecm/16}.
+
+\bibitem{driscollChebfunGuide2014a}
+T.~A. Driscoll, N.~Hale, and L.~N. Trefethen.
+{\em Chebfun {{Guide}}}.
+Pafnuty Publications, 2014.
+
+\bibitem{driscollAAARational2024}
+T.~A. Driscoll, Y.~Nakatsukasa, and L.~N. Trefethen.
+{{AAA Rational Approximation}} on a {{Continuum}}.
+{\em SIAM Journal on Scientific Computing}, 46(2):A929--A952, April 2024.
+\href{http://dx.doi.org/10.1137/23M1570508}{doi:10.1137/23M1570508}.
+
+\bibitem{filipRationalMinimax2018}
+S.-I. Filip, Y.~Nakatsukasa, L.~N. Trefethen, and B.~Beckermann.
+Rational minimax approximation via adaptive barycentric representations.
+{\em SIAM Journal on Scientific Computing}, 40(4):A2427--A2455, January 2018.
+\href{http://dx.doi.org/10.1137/17M1132409}{doi:10.1137/17M1132409}.
+
+\bibitem{gopalRepresentationConformal2019}
+A.~Gopal and L.~N. Trefethen.
+Representation of conformal maps by rational functions.
+{\em Numerische Mathematik}, 142(2):359--382, June 2019.
+\href{http://dx.doi.org/10.1007/s00211-019-01023-z}{doi:10.1007/s00211-019-01023-z}.
+
+\bibitem{gopalSolvingLaplace2019}
+A.~Gopal and L.~N. Trefethen.
+Solving {{Laplace}} problems with corner singularities via rational functions.
+{\em SIAM Journal on Numerical Analysis}, 57(5):2074--2094, January 2019.
+\href{http://dx.doi.org/10.1137/19m125947x}{doi:10.1137/19m125947x}.
+
+\bibitem{hautSolvingBurgers2013}
+T.~Haut, G.~Beylkin, and L.~Monz{\'o}n.
+Solving {{Burgers}}' equation using optimal rational approximations.
+{\em Applied and Computational Harmonic Analysis}, 34(1):83--95, January 2013.
+\href{http://dx.doi.org/10.1016/j.acha.2012.03.004}{doi:10.1016/j.acha.2012.03.004}.
+
+\bibitem{herremansResolutionSingularities2023}
+A.~Herremans, D.~Huybrechs, and L.~N. Trefethen.
+Resolution of singularities by rational functions.
+{\em SIAM Journal on Numerical Analysis}, 61(6):2580--2600, December 2023.
+\href{http://dx.doi.org/10.1137/23M1551821}{doi:10.1137/23M1551821}.
+
+\bibitem{hochmanFastAAAFast2017}
+A.~Hochman.
+{{FastAAA}}: A fast rational-function fitter.
+In {\em 2017 {{IEEE}} 26th {{Conference}} on {{Electrical Performance}} of {{Electronic Packaging}} and {{Systems}} ({{EPEPS}})}, pages 1--3, October 2017.
+\href{http://dx.doi.org/10.1109/EPEPS.2017.8329756}{doi:10.1109/EPEPS.2017.8329756}.
+
+\bibitem{kittisopikulInterpolationsjl2025}
+M.~Kittisopikul, T.~E. Holy, and T.~Aschan.
+Interpolations.jl, 2025.
+
+\bibitem{lampertKernelInterpolationjlMultivariate2024}
+J.~Lampert.
+{{KernelInterpolation}}.jl: {{Multivariate}} (generalized) scattered data interpolation with symmetric (conditionally) positive definite kernel functions in arbitrary dimension, June 2024.
+
+\bibitem{lietaertAutomaticRational2022}
+P.~Lietaert, K.~Meerbergen, J.~P{\'e}rez, and B.~Vandereycken.
+Automatic rational approximation and linearization of nonlinear eigenvalue problems.
+{\em IMA Journal of Numerical Analysis}, 42(2):1087--1115, April 2022.
+\href{http://dx.doi.org/10.1093/imanum/draa098}{doi:10.1093/imanum/draa098}.
+
+\bibitem{milne-thompsonCalculusFinite1933}
+L.~{Milne-Thompson}.
+{\em The {{Calculus}} of {{Finite Differences}}}.
+{Macmillan and Company}, 1933.
+
+\bibitem{nakatsukasaAAAAlgorithm2018}
+Y.~Nakatsukasa, O.~S{\`e}te, and L.~N. Trefethen.
+The {{AAA}} algorithm for rational approximation.
+{\em SIAM Journal on Scientific Computing}, 40(3):A1494--A1522, January 2018.
+\href{http://dx.doi.org/10.1137/16m1106122}{doi:10.1137/16m1106122}.
+
+\bibitem{nakatsukasaAlgorithmReal2020}
+Y.~Nakatsukasa and L.~N. Trefethen.
+An algorithm for real and complex rational minimax approximation.
+{\em SIAM Journal on Scientific Computing}, 42(5):A3157--A3179, January 2020.
+\href{http://dx.doi.org/10.1137/19M1281897}{doi:10.1137/19M1281897}.
+
+\bibitem{newmanRationalApproximation1964}
+D.~J. Newman.
+Rational approximation to {\textbar}x{\textbar}.
+{\em Michigan Math Journal}, 11:11--14, 1964.
+\href{http://dx.doi.org/10.1307/mmj/1028999029}{doi:10.1307/mmj/1028999029}.
+
+\bibitem{olverPracticalFramework2014}
+S.~Olver and A.~Townsend.
+A practical framework for infinite-dimensional linear algebra.
+In {\em Proceedings of the 1st {{Workshop}} for {{High Performance Technical Computing}} in {{Dynamic Languages}} -- {{HPTCDL}} `14}, 2014.
+
+\bibitem{platteImpossibilityFast2011}
+R.~B. Platte, L.~N. Trefethen, and A.~B.~J. Kuijlaars.
+Impossibility of {{Fast Stable Approximation}} of {{Analytic Functions}} from {{Equispaced Samples}}.
+{\em SIAM Review}, 53(2):308--318, January 2011.
+\href{http://dx.doi.org/10.1137/090774707}{doi:10.1137/090774707}.
+
+\bibitem{schneiderNewAspects1986}
+C.~Schneider and W.~Werner.
+Some new aspects of rational interpolation.
+{\em Mathematics of Computation}, 47(175):285--299, 1986.
+\href{http://dx.doi.org/10.1090/S0025-5718-1986-0842136-8}{doi:10.1090/S0025-5718-1986-0842136-8}.
+
+\bibitem{trefethenNumericalConformal2020}
+L.~N. Trefethen.
+Numerical conformal mapping with rational functions.
+{\em Computational Methods and Function Theory}, 20(3):369--387, November 2020.
+\href{http://dx.doi.org/10.1007/s40315-020-00325-w}{doi:10.1007/s40315-020-00325-w}.
+
+\bibitem{wilberDatadrivenAlgorithms2022}
+H.~Wilber, A.~Damle, and A.~Townsend.
+Data-driven algorithms for signal processing with trigonometric rational functions.
+{\em SIAM Journal on Scientific Computing}, 44(3):C185--C209, June 2022.
+\href{http://dx.doi.org/10.1137/21M1420277}{doi:10.1137/21M1420277}.
+
+\end{thebibliography}
