@@ -364,8 +364,8 @@ function quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
         if !(allowed === true)
             # Look for the best acceptable approximation:
             for k in sortperm(err)
-                zp = history[n].poles = poles(history[k].interpolant)
-                if all(allowed, zp)
+                history[k].poles = @coalesce history[k].poles poles(history[k].interpolant)
+                if all(allowed, history[k].poles)
                     n = k
                     break
                 end
