@@ -98,7 +98,7 @@ Adaptively compute a rational interpolant on a continuous or discrete domain.
 - `tol::Real=1000*eps(float_type)`: relative tolerance for stopping
 - `allowed::Function`: function to determine if a pole is allowed²
 - `refinement::Integer=3`: number of test points between adjacent nodes (continuum only)
-- `stagnation::Integer=20`: number of iterations to determine stagnation
+- `stagnation::Integer=5`: number of iterations to determine stagnation
 
 ¹Default of `float_type` is the promotion of `float(1)` and the float type of the domain.
 ²Default is to disallow poles on the curve or in the interior of a continuous domain, or to accept all poles on a discrete domain. Use `allowed=true` to allow all poles.

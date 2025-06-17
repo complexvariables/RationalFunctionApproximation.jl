@@ -229,7 +229,7 @@ function approximate(method::Type{Barycentric},
     allowed::Union{Function,Bool} = z -> dist(z, d) > tol,
     max_iter::Int = 150,
     refinement::Int = 3,
-    stagnation::Int = 10
+    stagnation::Int = 5
     )
 
     num_ref = 15    # initial number of test points between nodes; decreases to `refinement`
@@ -294,7 +294,7 @@ function approximate(method::Type{Barycentric},
     tol::AbstractFloat = 1000*eps(float_type),
     allowed::Union{Function,Bool} = true,
     max_iter::Int = 100,
-    stagnation::Int = 10,
+    stagnation::Int = 5,
     ) where {T<:Number,S<:Number}
 
     m = length(z)
