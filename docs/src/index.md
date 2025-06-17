@@ -2,7 +2,7 @@
 
 *Documentation for [RationalFunctionApproximation.jl](https://github.com/complexvariables/RationalFunctionApproximation.jl).*
 
-This package computes rational approximations of a function or data given in the complex plane. For background reading, see [NakatsukasaAAAAlgorithm2018](@cite), [DriscollAAARational2024a](@cite) (or the related arXiv version [DriscollAAARational2023a](@cite)), [CostaAAAleastSquares2023](@cite), and [CelisNumericalContinued2024](@cite).
+This package computes rational approximations of a function or data given in the complex plane. For background reading, see [NakatsukasaAAAAlgorithm2018](@cite), [DriscollAAARational2024a](@cite) (or the related arXiv version [DriscollAAARational2023a](@cite)), [CostaAAAleastSquares2023](@cite), and [SalazarCelisNumericalContinued2024](@cite).
 
 A rational function is a ratio of two polynomials. Rational functions are capable of very high accuracy and, unlike polynomial interpolation, do not require the interpolation nodes to be distributed in a highly restricted way. They are a good choice for approximating functions with singularities or other complicated behavior. Also unlike polynomials, however, they do not depend linearly on the data, which has historically made them difficult to compute and work with.
 
