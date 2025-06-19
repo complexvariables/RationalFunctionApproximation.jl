@@ -142,6 +142,22 @@
   file = {/Users/driscoll/Dropbox/library/Journal Article/Alqahtani et al_2022_Solution of ill-posed problems with Chebfun.pdf}
 }
 
+@article{AnderssenNumericalDifferentiation1999,
+  title = {For Numerical Differentiation, Dimensionality Can Be a Blessing!},
+  author = {Anderssen, Robert and Hegland, Markus},
+  year = {1999},
+  journal = {Mathematics of Computation},
+  volume = {68},
+  number = {227},
+  pages = {1121--1141},
+  issn = {0025-5718, 1088-6842},
+  doi = {10.1090/S0025-5718-99-01033-9},
+  urldate = {2025-06-17},
+  langid = {english},
+  keywords = {Numerical differentiation},
+  file = {/Users/driscoll/Dropbox/library/Approximation/Anderssen and Hegland - 1999 - For numerical differentiation, dimensionality can be a blessing!.pdf}
+}
+
 @book{AntoulasInterpolatoryMethods2020,
   title = {Interpolatory Methods for Model Reduction},
   author = {Antoulas, A. C. and Beattie, C. A. and Güğercin, S.},
@@ -170,6 +186,21 @@
   abstract = {In 1988 the second author presented experimentally well-conditioned linear rational functions for global interpolation. We give here arrays of nodes for which one of these interpolants converges exponentially for analytic functions},
   langid = {english},
   file = {/Users/driscoll/Dropbox/library/Journal Article/Baltensperger et al_1999_Exponential convergence of a linear rational interpolant between transformed.pdf}
+}
+
+@misc{BanerjeeExponentialApproximations1997,
+  title = {Exponential {{Approximations Using Fourier Series Partial Sums}}},
+  author = {Banerjee, Nana S. and Geer, James F.},
+  year = {1997},
+  month = oct,
+  urldate = {2025-06-17},
+  abstract = {The problem of accurately reconstructing a piece-wise smooth, 2(pi)-periodic function f and its first few derivatives, given only a truncated Fourier series representation of f, is studied and solved. The reconstruction process is divided into two steps. In the first step, the first 2N + 1 Fourier coefficients of f are used to approximate the locations and magnitudes of the discontinuities in f and its first M derivatives. This is accomplished by first finding initial estimates of these quantities based on certain properties of Gibbs phenomenon, and then refining these estimates by fitting the asymptotic form of the Fourier coefficients to the given coefficients using a least-squares approach. It is conjectured that the locations of the singularities are approximated to within O(N(sup -M-2), and the associated jump of the k(sup th) derivative of f is approximated to within O(N(sup -M-l+k), as N approaches infinity, and the method is robust. These estimates are then used with a class of singular basis functions, which have certain 'built-in' singularities, to construct a new sequence of approximations to f. Each of these new approximations is the sum of a piecewise smooth function and a new Fourier series partial sum. When N is proportional to M, it is shown that these new approximations, and their derivatives, converge exponentially in the maximum norm to f, and its corresponding derivatives, except in the union of a finite number of small open intervals containing the points of singularity of f. The total measure of these intervals decreases exponentially to zero as M approaches infinity. The technique is illustrated with several examples.},
+  keywords = {Numerical Analysis},
+  annotation = {NTRS Author Affiliations: Advanta Corp., State Univ. of New York\\
+NTRS Report/Patent Number: ICASE-97-56\\
+NTRS Document ID: 19970041606\\
+NTRS Research Center: Langley Research Center (LaRC)},
+  file = {/Users/driscoll/Dropbox/library/Approximation/Banerjee and Geer - 1997 - Exponential Approximations Using Fourier Series Partial Sums.pdf;/Users/driscoll/Zotero/storage/5XL58DG4/19970041606.html}
 }
 
 @article{BarthelmannHighDimensional2000,
@@ -220,6 +251,42 @@
   urldate = {2022-08-01},
   langid = {english},
   file = {/Users/driscoll/Dropbox/library/Journal Article/Bayona et al-2019-On the role of polynomials in RBF-FD approximations.pdf}
+}
+
+@article{BeatsonFastFitting1999,
+  title = {Fast Fitting of Radial Basis Functions: {{Methods}} Based on Preconditioned {{GMRES}} Iteration},
+  shorttitle = {Fast Fitting of Radial Basis Functions},
+  author = {Beatson, R.K. and Cherrie, J.B. and Mouat, C.T.},
+  year = {1999},
+  month = nov,
+  journal = {Advances in Computational Mathematics},
+  volume = {11},
+  number = {2},
+  pages = {253--270},
+  issn = {1572-9044},
+  doi = {10.1023/A:1018932227617},
+  urldate = {2025-06-17},
+  abstract = {Solving large radial basis function (RBF) interpolation problems with non‐customised methods is computationally expensive and the matrices that occur are typically badly conditioned. For example, using the usual direct methods to fit an RBF with N centres requires O(N2) storage and O(N3) flops. Thus such an approach is not viable for large problems with N≥10,000.},
+  langid = {english},
+  keywords = {Cardinal Function,Computational Astrophysics,Computational Complexity,Computational Solid Mechanics,Interpolation Matrix,Interpolation Problem,Linear Algebra,Numerical Analysis,Optimization,Radial Basis Function,Setup Cost},
+  file = {/Users/driscoll/Dropbox/library/Approximation/Beatson et al. - 1999 - Fast fitting of radial basis functions Methods based on preconditioned GMRES iteration.pdf}
+}
+
+@article{BejancuLocalAccuracy1999,
+  title = {Local {{Accuracy}} for {{Radial Basis Function Interpolation}} on {{Finite Uniform Grids}}},
+  author = {Bejancu, Aurelian},
+  year = {1999},
+  month = aug,
+  journal = {Journal of Approximation Theory},
+  volume = {99},
+  number = {2},
+  pages = {242--257},
+  issn = {0021-9045},
+  doi = {10.1006/jath.1999.3332},
+  urldate = {2025-06-17},
+  abstract = {We consider interpolation on a finite uniform grid by means of one of the radial basis functions (RBF) φ(r)=rγ for γ{$>$}0, γ∉2N or φ(r)=rγlnr for γ∈2N+. For each positive integer N, let h=N−1 and let \{xi:i =1,~2,~…,~(N+1)d\} be the set of vertices of the uniform grid of mesh-size h on the unit d-dimensional cube [0,~1]d. Given f:[0,~1]d→R, let sh be its unique RBF interpolant at the grid vertices: sh(xi)=f(xi), i=1,~2,~…,~(N+1)d. For h→0, we show that the uniform norm of the error f−sh on a compact subset K of the interior of [0,~1]d enjoys the same rate of convergence to zero as the error of RBF interpolation on the infinite uniform grid hZd, provided that f is a data function whose partial derivatives in the interior of [0,~1]d up to a certain order can be extended to Lipschitz functions on [0,~1]d.},
+  keywords = {finite uniform grids,local error estimates,radial basis function interpolation},
+  file = {/Users/driscoll/Dropbox/library/Approximation/Bejancu - 1999 - Local Accuracy for Radial Basis Function Interpolation on Finite Uniform Grids.pdf;/Users/driscoll/Zotero/storage/86F5SW2B/S0021904599933324.html}
 }
 
 @article{BerrutBarycentricLagrange2004,
@@ -301,6 +368,24 @@
   file = {/Users/driscoll/Dropbox/library/Report/Blom_Verwer_1989_On the use of the arclength and curvature monitor in a moving-grid method which.pdf}
 }
 
+@article{BornemannAccuracyStability2011,
+  title = {Accuracy and {{Stability}} of {{Computing High-order Derivatives}} of {{Analytic Functions}} by {{Cauchy Integrals}}},
+  author = {Bornemann, Folkmar},
+  year = {2011},
+  month = feb,
+  journal = {Foundations of Computational Mathematics},
+  volume = {11},
+  number = {1},
+  pages = {1--63},
+  issn = {1615-3383},
+  doi = {10.1007/s10208-010-9075-z},
+  urldate = {2025-06-17},
+  abstract = {High-order derivatives of analytic functions are expressible as Cauchy integrals over circular contours, which can very effectively be approximated, e.g., by trapezoidal sums. Whereas analytically each radius r up to the radius of convergence is equal, numerical stability strongly depends on~r. We give a comprehensive study of this effect; in particular, we show that there is a unique radius that minimizes the loss of accuracy caused by round-off errors. For large classes of functions, though not for all, this radius actually gives about full accuracy; a remarkable fact that we explain by the theory of Hardy spaces, by the Wiman–Valiron and Levin–Pfluger theory of entire functions, and by the saddle-point method of asymptotic analysis. Many examples and nontrivial applications are discussed in detail.},
+  langid = {english},
+  keywords = {30D15,65D25,65E05,65G56,Accuracy,Analytic functions,Approximations and Expansions,Cauchy integral,Computational Mathematics and Numerical Analysis,Entire functions of perfectly and completely regular growth,Functions of a Complex Variable,Hardy spaces,Numerical Analysis,Numerical differentiation,Optimal radius,Real Functions,Several Complex Variables and Analytic Spaces,Stability},
+  file = {/Users/driscoll/Dropbox/library/Approximation/Bornemann - 2011 - Accuracy and Stability of Computing High-order Derivatives of Analytic Functions by Cauchy Integrals.pdf}
+}
+
 @article{BoydComparisonNumerical2002,
   title = {A {{Comparison}} of {{Numerical Algorithms}} for {{Fourier Extension}} of the {{First}}, {{Second}}, and {{Third Kinds}}},
   author = {Boyd, John P.},
@@ -315,6 +400,47 @@
   urldate = {2025-05-20},
   abstract = {The range of Fourier methods can be significantly increased by extending a nonperiodic function f(x) to a periodic function f̃ on a larger interval. When f(x) is analytically known on the extended interval, the extension is straightforward. When f(x) is unknown outside the physical interval, there is no standard recipe. Worse still, like a radarless aircraft groping through fog, the algorithm may wreck on the “mountain-in-fog” problem: a function f(x) which is perfectly well behaved on the physical interval may very well have singularities in the extended domain. In this article, we compare several algorithms for successfully extending a function f(x) into the “fog” even when the analytic extension is singular. The best third-kind extension requires singular value decomposition with iterative refinement but achieves accuracy close to machine precision.},
   file = {/Users/driscoll/Dropbox/library/Approximation/Boyd - 2002 - A Comparison of Numerical Algorithms for Fourier Extension of the First, Second, and Third Kinds.pdf;/Users/driscoll/Zotero/storage/M26FQF6V/S0021999102970233.html}
+}
+
+@article{BoydComparisonNumerical2002a,
+  title = {A {{Comparison}} of {{Numerical Algorithms}} for {{Fourier Extension}} of the {{First}}, {{Second}}, and {{Third Kinds}}},
+  author = {Boyd, John P.},
+  year = {2002},
+  month = may,
+  journal = {Journal of Computational Physics},
+  volume = {178},
+  number = {1},
+  pages = {118--160},
+  issn = {0021-9991},
+  doi = {10.1006/jcph.2002.7023},
+  urldate = {2025-06-17},
+  abstract = {The range of Fourier methods can be significantly increased by extending a nonperiodic function f(x) to a periodic function f̃ on a larger interval. When f(x) is analytically known on the extended interval, the extension is straightforward. When f(x) is unknown outside the physical interval, there is no standard recipe. Worse still, like a radarless aircraft groping through fog, the algorithm may wreck on the “mountain-in-fog” problem: a function f(x) which is perfectly well behaved on the physical interval may very well have singularities in the extended domain. In this article, we compare several algorithms for successfully extending a function f(x) into the “fog” even when the analytic extension is singular. The best third-kind extension requires singular value decomposition with iterative refinement but achieves accuracy close to machine precision.},
+  file = {/Users/driscoll/Dropbox/library/Approximation/Boyd - 2002 - A Comparison of Numerical Algorithms for Fourier Extension of the First, Second, and Third Kinds 1.pdf;/Users/driscoll/Zotero/storage/J8282YPA/S0021999102970233.html}
+}
+
+@article{BoydSVDAnalysis2009,
+  title = {An {{SVD}} Analysis of Equispaced Polynomial Interpolation},
+  author = {Boyd, John P. and Sousa, Alan M.},
+  year = {2009},
+  month = oct,
+  journal = {Applied Numerical Mathematics},
+  volume = {59},
+  number = {10},
+  pages = {2534--2547},
+  issn = {0168-9274},
+  doi = {10.1016/j.apnum.2009.05.012},
+  urldate = {2025-06-17},
+  abstract = {Runge showed more than a century ago that polynomial interpolation of degree N on a uniform, evenly-spaced grid may diverge as N→∞. Here, we present a new angle on polynomial interpolation and the Runge Phenomenon by performing an SVD analysis of the interpolation matrix. We prove that the observed exponential-with-N error growth of the Runge Phenomenon requires that at least the smallest singular value of the interpolation matrix must decay to zero exponentially fast with N, and the matrix condition number κ must grow exponentially with N. Experimentally, four-fifths of the singular values are O(1); the remaining one-fifth of singular values decay exponentially fast with increasing mode number j. The corresponding U modes of the SVD factorization are well approximated by Hermite functions. SVD filtering, which is a common strategy for coping with ill-conditioned matrices by omitting modes of tiny singular value, gave errors no smaller than 7\% for Runge's exemplary f(x). Any similar anti-Runge strategy that is based on treating the “good” modes (of O(1) singular values) differently from the “bad” modes of small singular value is likely to fail because these two groups of modes are strongly coupled. A better strategy for exploiting the SVD factorization remains elusive.},
+  keywords = {Interpolation,Polynomial interpolation,Runge Phenomenon,SVD analysis},
+  file = {/Users/driscoll/Zotero/storage/M4RG5AQK/S0168927409000944.html}
+}
+
+@phdthesis{BrookesQuadraticHermite1989,
+  title = {The {{Quadratic Hermite}}–{{Padé Approximation}}},
+  author = {Brookes, R. G.},
+  year = {1989},
+  school = {University of Canterbury},
+  file = {/Users/driscoll/Dropbox/library/Approximation/Brookes - 1989 - The Quadratic Hermite–Padé Approximation.pdf}
 }
 
 @misc{BrubeckVandermondeArnoldi2019,
@@ -401,6 +527,22 @@
   file = {/Users/driscoll/Dropbox/library/Journal Article/Carey_Dinh_1985_Grading Functions and Mesh Redistribution.pdf}
 }
 
+@article{CarlsonParameter$R^2$1991,
+  title = {The Parameter \${{R}}\textasciicircum 2\$ in Multiquadric Interpolation},
+  author = {Carlson, Ralph E. and Foley, Thomas A.},
+  year = {1991},
+  month = jan,
+  journal = {Computers \& Mathematics with Applications},
+  volume = {21},
+  number = {9},
+  pages = {29--42},
+  issn = {0898-1221},
+  doi = {10.1016/0898-1221(91)90123-L},
+  urldate = {2025-06-17},
+  abstract = {The multiquadric (MQ) method is an effective bivariate interpolant to three-dimensional data (xi, yi, zi), where the (xi, yi) are arbitrarily located in the plane. The accuracy of the MQ method is dependent on a user defined parameter R2, and most practitioners select R2 based upon the number of data points and the locations of the (xi, yi) in the plane. We observe that the optimal value of R2 is a strong function of the zi, and that it is essentially independent of both the number and the locationsof the (xi, yi) points. Contrary to some opinions, we observe that the MQ method can effectively interpolate to “track data”, that is, data sampled densely along tracks in the plane. Together with several other observations, we present an algorithm that generally yields an effective value for R2.},
+  file = {/Users/driscoll/Dropbox/library/Approximation/Carlson and Foley - 1991 - The parameter R2 in multiquadric interpolation.pdf;/Users/driscoll/Zotero/storage/5S57R768/089812219190123L.html}
+}
+
 @article{ChenErrorEquidistribution1994,
   title = {Error Equidistribution and Mesh Adaptation},
   author = {Chen, Ke},
@@ -416,6 +558,23 @@
   urldate = {2023-02-10},
   abstract = {In this paper we introduce a moving mesh method for solving PDEs in two dimensions. It can be viewed as a higher-dimensional generalization of the moving mesh PDE (MMPDE) strategy developed in our previous work for one-dimensional problems [W. Huang, Y. Ren, and R. D. Russell, SIAM J. Numer. Anal., 31 (1994), pp. 709--730]. The MMPDE is derived from a gradient flow equation which arises using a mesh adaptation functional in turn motivated from the theory of harmonic maps. Geometrical interpretations are given for the gradient equation and functional, and basic properties of this MMPDE are discussed. Numerical examples are presented where the method is used both for mesh generation and for solving time-dependent PDEs. The results demonstrate the potential of the mesh movement strategy to concentrate the mesh points so as to adapt to special problem features and to also preserve a suitable level of mesh orthogonality.},
   file = {/Users/driscoll/Dropbox/library/Journal Article/Chen_1994_Error Equidistribution and Mesh Adaptation.pdf}
+}
+
+@incollection{ChisholmGeneralisationsPade1981,
+  title = {Generalisations of {{Padé Approximation}} for {{Chebyshev}} and {{Fourier Series}}},
+  booktitle = {E. {{B}}. {{Christoffel}}: {{The Influence}} of {{His Work}} on {{Mathematics}} and the {{Physical Sciences}}},
+  author = {Chisholm, J. S. R. and Common, A. K.},
+  editor = {Butzer, P. L. and Fehér, F.},
+  year = {1981},
+  pages = {212--231},
+  publisher = {Birkhäuser},
+  address = {Basel},
+  doi = {10.1007/978-3-0348-5452-8_13},
+  urldate = {2025-06-17},
+  abstract = {The close relationship between Chebyshev, Fourier and Laurent series is defined. Approximants to real Chebyshev series are defined as real parts of Padé approximants. Using the doubly-complex ‘JI-numbers’, these definitions are extended to complex Chebyshev and complex Fourier series. It is shown that these approximants are all also defined by the generating function method. For m ≥ n, our Chebyshev series approximants are equal to the Clenshaw-Lord approximants, and our Fourier and Laurent series approximants are equal to the related approximants of Gragg and Johnson; for m {$<$} n, our approximants differ from the other approximants. For m {$<$} n, the properties of the two types of approximant are compared.},
+  isbn = {978-3-0348-5452-8},
+  langid = {english},
+  file = {/Users/driscoll/Dropbox/library/Approximation/Chisholm and Common - 1981 - Generalisations of Padé Approximation for Chebyshev and Fourier Series 1.pdf}
 }
 
 @incollection{CostaAAAleastSquares2023,
@@ -687,6 +846,40 @@
   file = {/Users/driscoll/Dropbox/library/Journal Article/Fornberg et al_2011_Stable Computations with Gaussian Radial Basis Functions.pdf}
 }
 
+@article{FrankeSolvingPartial1998,
+  title = {Solving Partial Differential Equations by Collocation Using Radial Basis Functions},
+  author = {Franke, C. and Schaback, R.},
+  year = {1998},
+  month = jul,
+  journal = {Applied Mathematics and Computation},
+  volume = {93},
+  number = {1},
+  pages = {73--82},
+  issn = {0096-3003},
+  doi = {10.1016/S0096-3003(97)10104-7},
+  urldate = {2025-06-17},
+  abstract = {After a series of application papers have proven the approach to be numerically effective, this paper gives the first theoretical foundation for methods solving partial differential equations by collocation with (possibly radial) basis functions.},
+  file = {/Users/driscoll/Dropbox/library/Approximation/Franke and Schaback - 1998 - Solving partial differential equations by collocation using radial basis functions.pdf;/Users/driscoll/Zotero/storage/YPND4D8W/S0096300397101047.html}
+}
+
+@article{GeerExponentiallyAccurate1997,
+  title = {Exponentially {{Accurate Approximations}} to {{Piece-Wise Smooth Periodic Functions}}},
+  author = {Geer, James and Banerjee, Nana Saheb},
+  year = {1997},
+  month = sep,
+  journal = {Journal of Scientific Computing},
+  volume = {12},
+  number = {3},
+  pages = {253--287},
+  issn = {1573-7691},
+  doi = {10.1023/A:1025649427614},
+  urldate = {2025-06-17},
+  abstract = {A family of simple, periodic basis functions with “built-in” discontinuities are introduced, and their properties are analyzed and discussed. Some of their potential usefulness is illustrated in conjunction with the Fourier series representation of functions with discontinuities. In particular, it is demonstrated how they can be used to construct a sequence of approximations which converges exponentially in the maximum norm to a piece-wise smooth function. The theory is illustrated with several examples and the results are discussed in the context of other sequences of functions which can be used to approximate discontinuous functions.},
+  langid = {english},
+  keywords = {Approximations and Expansions,Element cycles,exponentially accurate approximations,Fourier Analysis,Fourier series,Functional Analysis,piece-wise smooth functions,Real Functions,Special Functions},
+  file = {/Users/driscoll/Dropbox/library/Approximation/Geer and Banerjee - 1997 - Exponentially Accurate Approximations to Piece-Wise Smooth Periodic Functions.pdf}
+}
+
 @article{GopalRepresentationConformal2019,
   title = {Representation of Conformal Maps by Rational Functions},
   author = {Gopal, Abinand and Trefethen, Lloyd N.},
@@ -753,6 +946,24 @@
   archiveprefix = {arXiv},
   keywords = {15A69 (Primary) 65F10 65F15 (Secondary),Mathematics - Numerical Analysis,Quantum Physics},
   file = {/Users/driscoll/Dropbox/library/Preprint/Grasedyck et al-2013-A literature survey of low-rank tensor approximation techniques.pdf;/Users/driscoll/Zotero/storage/VIPDXGZM/1302.html}
+}
+
+@incollection{GuckenheimerSmoothMultivariate2012,
+  title = {A {{Smooth Multivariate Interpolation Algorithm}}},
+  booktitle = {Essays in {{Mathematics}} and Its {{Applications}}: {{In Honor}} of {{Stephen Smale}}´s 80th {{Birthday}}},
+  author = {Guckenheimer, John},
+  editor = {Pardalos, Panos M. and Rassias, Themistocles M.},
+  year = {2012},
+  pages = {231--239},
+  publisher = {Springer},
+  address = {Berlin, Heidelberg},
+  doi = {10.1007/978-3-642-28821-0_9},
+  urldate = {2025-06-17},
+  abstract = {This brief paper introduces an algorithm for smooth interpolation of a multivariate function. The input data for the algorithm consists of a set of function values and derivatives up to order r on a finite set of points E. The algorithm utilizes the Voronoi diagram of E to construct a partition of unity that isolates the points of E. Averaging locally defined functions with the partition of unity yields the interpolating function. There are no special cases; the algorithm treats all input data uniformly. The paper describes a test problem, the computation of a surface that is defined as the level set of a function of three variables. This test demonstrates that the algorithm produces approximations whose order corresponds to the degree of the derivatives in the input data.},
+  isbn = {978-3-642-28821-0},
+  langid = {english},
+  keywords = {Interpolation Problem,Mesh Point,Multivariate Function,Subdivision Scheme,Voronoi Diagram},
+  file = {/Users/driscoll/Dropbox/library/Approximation/Guckenheimer - 2012 - A Smooth Multivariate Interpolation Algorithm.pdf}
 }
 
 @article{HautSolvingBurgers2013,
@@ -929,6 +1140,23 @@
   urldate = {2022-03-13},
   langid = {english},
   file = {/Users/driscoll/Dropbox/library/Journal Article/Klein_Berrut_2012_Linear Rational Finite Differences from Derivatives of Barycentric Rational.pdf;/Users/driscoll/Zotero/storage/LHNJCXMU/Klein and Berrut - 2012 - Linear Rational Finite Differences from Derivative.pdf}
+}
+
+@article{KvernadzeApproximationSingularities2001,
+  title = {Approximation of the {{Singularities}} of a {{Bounded Function}} by the {{Partial Sums}} of {{Its Differentiated Fourier Series}}},
+  author = {Kvernadze, George},
+  year = {2001},
+  month = nov,
+  journal = {Applied and Computational Harmonic Analysis},
+  volume = {11},
+  number = {3},
+  pages = {439--454},
+  issn = {1063-5203},
+  doi = {10.1006/acha.2001.0362},
+  urldate = {2025-06-17},
+  abstract = {In our earlier work we developed an algorithm for approximating the locations of discontinuities and the magnitudes of jumps of a bounded function by means of its truncated Fourier series. The algorithm is based on some asymptotic expansion formulas. In the present paper we give proofs for those formulas.},
+  keywords = {approximation of singularities.,Fourier series},
+  file = {/Users/driscoll/Dropbox/library/Approximation/Kvernadze - 2001 - Approximation of the Singularities of a Bounded Function by the Partial Sums of Its Differentiated F.pdf;/Users/driscoll/Zotero/storage/QZEBDJUN/S1063520301903628.html}
 }
 
 @phdthesis{LawsonContributionsTheory1961,
@@ -1114,6 +1342,43 @@
   file = {/Users/driscoll/Dropbox/library/Preprint/Pradovera_2023_Toward a certified greedy Loewner framework with minimal sampling.pdf;/Users/driscoll/Zotero/storage/W6DE4NHA/2303.html}
 }
 
+@article{RiemenschneiderGaussianRadialbasis1999,
+  title = {Gaussian Radial‐basis Functions: {{Cardinal}} Interpolation of ℓp and Power‐growth Data},
+  shorttitle = {Gaussian Radial‐basis Functions},
+  author = {Riemenschneider, S.D. and Sivakumar, N.},
+  year = {1999},
+  month = nov,
+  journal = {Advances in Computational Mathematics},
+  volume = {11},
+  number = {2},
+  pages = {229--251},
+  issn = {1572-9044},
+  doi = {10.1023/A:1018980110778},
+  urldate = {2025-06-17},
+  abstract = {Suppose λ is a positive number. Basic theory of cardinal interpolation ensures the existence of the Gaussian cardinal function \$\$L\_\textbackslash lambda (x) = \textbackslash sum\textbackslash nolimits\_\{k \textbackslash in \textbackslash mathbb\{Z\}\} \{c\_k \textbackslash exp ( - \textbackslash lambda (x - k)\textasciicircum 2 ),x \textbackslash in \textbackslash mathbb\{R\}\} ,\$\$satisfying the interpolatory conditions \$\$L\_\textbackslash lambda (j) = \textbackslash delta \_\{0j\} ,j \textbackslash in \textbackslash mathbb\{Z\}.\$\$The paper considers the Gaussian cardinal interpolation operator \$\$(\textbackslash mathcal\{L\}\_\textbackslash lambda \{\textbackslash text\{y\}\})(x): = \textbackslash sum\textbackslash limits\_\{k \textbackslash in \textbackslash mathbb\{Z\}\} \{y\_k L\_\textbackslash lambda (x - k),\{\textbackslash text\{ y\}\} = (y\_k )\_\{k \textbackslash in \textbackslash mathbb\{Z\}\} ,\{\textbackslash text\{ \}\}x \textbackslash in \textbackslash mathbb\{R\}\} ,\$\$as a linear mapping from ℓp(ℤ) into Lp(ℝ), 1≤ p ∞, and in particular, its behaviour as λ→0+. It is shown that \$\$\textbackslash left\textbackslash | \{\textbackslash mathcal\{L\}\_\textbackslash lambda \} \textbackslash right\textbackslash |\_p \$\$is uniformly bounded (in λ) for 1 {$<$} p {$<$} ∞, and that \$\$\textbackslash left\textbackslash | \{\textbackslash mathcal\{L\}\_\textbackslash lambda \} \textbackslash right\textbackslash |\_1 \textbackslash asymp \textbackslash log (1/\textbackslash lambda )\$\$as λ→0+. The limiting behaviour is seen to be that of the classical Whittaker operator \$\$\textbackslash mathcal\{W\}:\{\textbackslash text\{y\}\} \textbackslash mapsto \textbackslash sum\textbackslash limits\_\{k \textbackslash in \textbackslash mathbb\{Z\}\} \{y\_k \textbackslash frac\{\{\textbackslash sin \textbackslash pi (x - k)\}\}\{\{\textbackslash pi (x - k)\}\}\} ,\$\$in that \$\$\textbackslash lim \_\{\textbackslash lambda \textbackslash to 0\textasciicircum{} + \} \textbackslash left\textbackslash | \{\textbackslash mathcal\{L\}\_\textbackslash lambda \{\textbackslash text\{y\}\} - \textbackslash mathcal\{W\}\{\textbackslash text\{y\}\}\} \textbackslash right\textbackslash |\_p = 0,\$\$for every \$\$\{\textbackslash text\{y\}\} \textbackslash in \textbackslash ell \textasciicircum p (\textbackslash mathbb\{Z\})\{\textbackslash text\{ and \}\}1 {$<$} p {$<$} \textbackslash infty .\$\$It is further shown that the Gaussian cardinal interpolants to a function f which is the Fourier transform of a tempered distribution supported in (-π,π) converge locally uniformly to f as λ→0+. Multidimensional extensions of these results are also discussed.},
+  langid = {english},
+  keywords = {Approximations and Expansions,Entire Function,Functional Analysis,Integral Transforms and Operational Calculus,Interpolation Operator,Lebesgue Constant,Multilinear Algebra,Nonnegative Integer,Operator Theory,Power Growth,Real Functions},
+  file = {/Users/driscoll/Dropbox/library/Approximation/Riemenschneider and Sivakumar - 1999 - Gaussian radial‐basis functions Cardinal interpolation of ℓp and power‐growth data.pdf}
+}
+
+@article{RippaAlgorithmSelecting1999,
+  title = {An Algorithm for Selecting a Good Value for the Parameter c in Radial Basis Function Interpolation},
+  author = {Rippa, Shmuel},
+  year = {1999},
+  month = nov,
+  journal = {Advances in Computational Mathematics},
+  volume = {11},
+  number = {2},
+  pages = {193--210},
+  issn = {1572-9044},
+  doi = {10.1023/A:1018975909870},
+  urldate = {2025-06-17},
+  abstract = {The accuracy of many schemes for interpolating scattered data with radial basis functions depends on a shape parameter c of the radial basis function. In this paper we study the effect of c on the quality of fit of the multiquadric, inverse multiquadric and Gaussian interpolants. We show, numerically, that the value of the optimal c (the value of c that minimizes the interpolation error) depends on the number and distribution of data points, on the data vector, and on the precision of the computation. We present an algorithm for selecting a good value for c that implicitly takes all the above considerations into account. The algorithm selects c by minimizing a cost function that imitates the error between the radial interpolant and the (unknown) function from which the data vector was sampled. The cost function is defined by taking some norm of the error vector E = (E1, ... , EN)T where Ek = Ek = fk - Sk xk) and Sk is the interpolant to a reduced data set obtained by removing the point xk and the corresponding data value fk from the original data set. The cost function can be defined for any radial basis function and any dimension. We present the results of many numerical experiments involving interpolation of two dimensional data sets by the multiquadric, inverse multiquadric and Gaussian interpolants and we show that our algorithm consistently produces good values for the parameter c.},
+  langid = {english},
+  keywords = {Algorithms,Breakdown Point,Calculus of Variations and Optimization,Computational Complexity,Data Vector,Double Precision,Fourier Analysis,Interpolation Problem,Linear Algebra,Optimization,Radial Basis Function},
+  file = {/Users/driscoll/Dropbox/library/Approximation/Rippa - 1999 - An algorithm for selecting a good value for the parameter c in radial basis function interpolation.pdf}
+}
+
 @article{RodriguezPAAAAlgorithm2023,
   title = {The P-{{AAA Algorithm}} for {{Data-Driven Modeling}} of {{Parametric Dynamical Systems}}},
   author = {Rodriguez, Andrea Carracedo and Balicki, Linus and Gugercin, Serkan},
@@ -1197,6 +1462,39 @@
   file = {/Users/driscoll/Dropbox/library/Approximation/Celis - 2024 - Numerical Continued Fraction Interpolation.pdf}
 }
 
+@article{SchabackLimitProblems2008,
+  title = {Limit Problems for Interpolation by Analytic Radial Basis Functions},
+  author = {Schaback, Robert},
+  year = {2008},
+  month = mar,
+  journal = {Journal of Computational and Applied Mathematics},
+  volume = {212},
+  number = {2},
+  pages = {127--149},
+  issn = {0377-0427},
+  doi = {10.1016/j.cam.2006.11.023},
+  urldate = {2025-06-17},
+  abstract = {Interpolation problems for analytic radial basis functions like the Gaussian and inverse multiquadrics can degenerate in two ways: the radial basis functions can be scaled to become increasingly flat, or the data points coalesce in the limit while the radial basis functions stay fixed. Both cases call for a careful regularization, which, if carried out explicitly, yields a preconditioning technique for the degenerating linear systems behind these interpolation problems. This paper deals with both cases. For the increasingly flat limit, we recover results by Larsson and Fornberg together with Lee, Yoon, and Yoon concerning convergence of interpolants towards polynomials. With slight modifications, the same technique can also handle scenarios with coalescing data points for fixed radial basis functions. The results show that the degenerating local Lagrange interpolation problems converge towards certain Hermite–Birkhoff problems. This is an important prerequisite for dealing with approximation by radial basis functions adaptively, using freely varying data sites.},
+  keywords = {Hermite interpolation,Moment conditions,Polynomial interpolation,Preconditioning,Radial basis functions},
+  file = {/Users/driscoll/Dropbox/library/Approximation/Schaback - 2008 - Limit problems for interpolation by analytic radial basis functions.pdf;/Users/driscoll/Zotero/storage/UP2E8KX7/S0377042706007151.html}
+}
+
+@inproceedings{SchabackRadialBasis1997,
+  title = {Radial {{Basis Functions Viewed From Cubic Splines}}},
+  booktitle = {Multivariate {{Approximation}} and {{Splines}}},
+  author = {Schaback, Robert},
+  editor = {Nürnberger, Günther and Schmidt, Jochen W. and Walz, Guido},
+  year = {1997},
+  pages = {245--258},
+  publisher = {Birkhäuser},
+  address = {Basel},
+  doi = {10.1007/978-3-0348-8871-4_20},
+  abstract = {In the context of radial basis function interpolation, the construction of native spaces and the techniques for proving error bounds deserve some further clarification and improvement. This can be described by applying the general theory to the special case of cubic splines. It shows the prevailing gaps in the general theory and yields a simple approach to local error bounds for cubic spline interpolation.},
+  isbn = {978-3-0348-8871-4},
+  langid = {english},
+  file = {/Users/driscoll/Dropbox/library/Approximation/Schaback - 1997 - Radial Basis Functions Viewed From Cubic Splines.pdf}
+}
+
 @article{SchneiderNewAspects1986,
   title = {Some New Aspects of Rational Interpolation},
   author = {Schneider, Claus and Werner, Wilhelm},
@@ -1247,6 +1545,22 @@
   file = {/Users/driscoll/Zotero/storage/HRCPFZAL/Shensa - 1992 - The discrete wavelet transform wedding the a trou.pdf;/Users/driscoll/Zotero/storage/7UZ93JDH/157290.html}
 }
 
+@article{SMALLContinuousDiscrete1988,
+  title = {Continuous and {{Discrete Nonlinear Approximations Based}} on {{Fourier Series}}},
+  author = {SMALL, R. D. and CHARRON, R. J.},
+  year = {1988},
+  month = jul,
+  journal = {IMA Journal of Numerical Analysis},
+  volume = {8},
+  number = {3},
+  pages = {281--293},
+  issn = {0272-4979},
+  doi = {10.1093/imanum/8.3.281},
+  urldate = {2025-06-17},
+  abstract = {Continuous and discrete nonlinear extensions of Fourier series are derived by the method of generating functions, and examples of their use are presented. Gibbs' phenomenon of the continuous nonlinear approximation is investigated.},
+  file = {/Users/driscoll/Dropbox/library/Approximation/SMALL and CHARRON - 1988 - Continuous and Discrete Nonlinear Approximations Based on Fourier Series.pdf;/Users/driscoll/Zotero/storage/NIU5TXZH/8.3.html}
+}
+
 @article{townsendContinuousAnaloguesMatrix2015,
   title = {Continuous Analogues of Matrix Factorizations},
   author = {Townsend, Alex and Trefethen, Lloyd N.},
@@ -1282,7 +1596,7 @@
   pmcid = {PMC7776296},
   pmid = {33424036},
   keywords = {41A20,65D32,65N35},
-  file = {/Users/driscoll/Dropbox/library/Journal Article/Trefethen et al_2021_Exponential node clustering at singularities for rational approximation,.pdf;/Users/driscoll/Dropbox/library/papers/juliacon2025/Trefethen et al. - 2021 - Exponential node clustering at singularities for rational approximation, quadrature, and PDEs.pdf}
+  file = {/Users/driscoll/Dropbox/library/papers/juliacon2025/Trefethen et al. - 2021 - Exponential node clustering at singularities for rational approximation, quadrature, and PDEs.pdf}
 }
 
 @article{TrefethenNearcircularityError1981,
@@ -1336,6 +1650,22 @@
   keywords = {analytic continuation,Laplace problem,polynomial approximation,potential theory,rational approximation,Schwarz function}
 }
 
+@article{WendlandErrorEstimates1998,
+  title = {Error {{Estimates}} for {{Interpolation}} by {{Compactly Supported Radial Basis Functions}} of {{Minimal Degree}}},
+  author = {Wendland, Holger},
+  year = {1998},
+  month = may,
+  journal = {Journal of Approximation Theory},
+  volume = {93},
+  number = {2},
+  pages = {258--272},
+  issn = {0021-9045},
+  doi = {10.1006/jath.1997.3137},
+  urldate = {2025-06-17},
+  abstract = {We consider error estimates for interpolation by a special class of compactly supported radial basis functions. These functions consist of a univariate polynomial within their support and are of minimal degree depending on space dimension and smoothness. Their associated “native” Hilbert spaces are shown to be norm-equivalent to Sobolev spaces. Thus we can derive approximation orders for functions from Sobolev spaces which are comparable to those of thin-plate-spline interpolation. Finally, we investigate the numerical stability of the interpolation process.},
+  file = {/Users/driscoll/Dropbox/library/Approximation/Wendland - 1998 - Error Estimates for Interpolation by Compactly Supported Radial Basis Functions of Minimal Degree.pdf;/Users/driscoll/Zotero/storage/XMIU499R/S0021904597931373.html}
+}
+
 @article{WilberDatadrivenAlgorithms2022,
   title = {Data-Driven Algorithms for Signal Processing with Trigonometric Rational Functions},
   author = {Wilber, Heather and Damle, Anil and Townsend, Alex},
@@ -1351,4 +1681,39 @@
   urldate = {2023-04-12},
   abstract = {We introduce a new algorithm for approximation by rational functions on a real or complex set of points, implementable in 40 lines of MATLAB and requiring no user input parameters.  Even on a disk or interval the algorithm may outperform existing methods, and on more complicated domains it is especially competitive.  The core ideas are (1) representation of the rational approximant in barycentric form with interpolation at certain support points and (2) greedy selection of the support points to avoid exponential instabilities.  The name AAA stands for “adaptive Antoulas--Anderson” in honor of the authors who introduced a scheme based on (1).  We present the core algorithm with a MATLAB code and nine applications and describe variants targeted at problems of different kinds. Comparisons are made with vector fitting, RKFIT, and other existing methods for rational approximation.},
   file = {/Users/driscoll/Dropbox/library/Journal Article/Wilber et al_2022_Data-Driven Algorithms for Signal Processing with Trigonometric Rational.pdf}
+}
+
+@article{YoonNonstationaryApproximation2003,
+  title = {A Non-Stationary Approximation Scheme on Scattered Centers in {{Rd}}{$<$}math{$><$}mtext{$>$}{{R}}{$<$}/Mtext{$><$}msup{$><$}mi{$><$}/Mi{$><$}mn{$>$}d{$<$}/Mn{$><$}/Msup{$><$}/Math{$>$} by Radial Basis Functions},
+  author = {Yoon, Jungho},
+  year = {2003},
+  month = jun,
+  journal = {Journal of Computational and Applied Mathematics},
+  series = {Approximation {{Theory}}, {{Wavelets}}, and {{Numerical Analysis}}},
+  volume = {155},
+  number = {1},
+  pages = {163--175},
+  issn = {0377-0427},
+  doi = {10.1016/S0377-0427(02)00898-1},
+  urldate = {2025-06-17},
+  abstract = {A nonstationary approximation scheme on Rd using scattered translates of a smooth radial basis function (e.g., Gaussian) is developed. The scheme is nonstationary and shown to provide spectral approximation orders, i.e., approximation orders that depend only on the smoothness of the approximands.},
+  keywords = {Approximation order,Fourier transform,Multivariate approximation,Radial basis function,Scattered centers},
+  file = {/Users/driscoll/Dropbox/library/Approximation/Yoon - 2003 - A non-stationary approximation scheme on scattered centers in RdRmi.pdf;/Users/driscoll/Zotero/storage/ZYLJTHTX/S0377042702008981.html}
+}
+
+@article{YoonSpectralApproximation2001,
+  title = {Spectral {{Approximation Orders}} of {{Radial Basis Function Interpolation}} on the {{Sobolev Space}}},
+  author = {Yoon, Jungho},
+  year = {2001},
+  month = jan,
+  journal = {SIAM Journal on Mathematical Analysis},
+  volume = {33},
+  number = {4},
+  pages = {946--958},
+  publisher = {{Society for Industrial and Applied Mathematics}},
+  issn = {0036-1410},
+  doi = {10.1137/S0036141000373811},
+  urldate = {2025-06-17},
+  abstract = {Radial basis function (RBF) approximation is an extremely powerful tool for representing smooth functions in nontrivial geometries since the method is mesh-free and can be spectrally accurate. A perceived practical obstacle is that the interpolation matrix becomes increasingly ill-conditioned as the RBF shape parameter becomes small, corresponding to flat RBFs. Two stable approaches that overcome this problem exist: the Contour-Padé method and the RBF-QR method. However, the former is limited to small node sets, and the latter has until now been formulated only for the surface of the sphere. This paper focuses on an RBF-QR formulation for node sets in one, two, and three dimensions. The algorithm is stable for arbitrarily small shape parameters. It can be used for thousands of node points in two dimensions and still more in three dimensions. A sample MATLAB code for the two-dimensional case is provided.},
+  file = {/Users/driscoll/Dropbox/library/Approximation/Yoon - 2001 - Spectral Approximation Orders of Radial Basis Function Interpolation on the Sobolev Space.pdf}
 }
