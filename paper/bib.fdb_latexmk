@@ -1,0 +1,19 @@
+# Fdb version 4
+["bibtex bib"] 1750100975.70459 "bib.aux" "bib.bbl" "bib" 1750100979.23866 2
+  "bib.aux" 1750100972.41675 32 3985256e7290058c681f74d7a3565a19 "pdflatex"
+  (generated)
+  "bib.bbl"
+  "bib.blg"
+  (rewritten before read)
+["pdflatex"] 1750100975.82575 "bib.tex" "bib.pdf" "bib" 1750100979.23873 2
+  "/usr/local/texlive/2025/texmf-dist/web2c/texmf.cnf" 1739380943 42148 61becc7c670cd061bb319c643c27fdd4 ""
+  "/usr/local/texlive/2025/texmf-var/web2c/pdftex/pdflatex.fmt" 1741450574 3345740 46b66fdb0378f7bf5921b5eabf1762b8 ""
+  "/usr/local/texlive/2025/texmf.cnf" 1741450484 577 418a7058ec8e006d8704f60ecd22c938 ""
+  "bib.aux" 1750100972.41675 32 3985256e7290058c681f74d7a3565a19 "pdflatex"
+  "bib.bbl" 1750100975.82438 0 d41d8cd98f00b204e9800998ecf8427e "bibtex bib"
+  "bib.tex" 1750100972.4149 111 fb8dcbd9d4481bde59a06a28ec8a83ca ""
+  (generated)
+  "bib.aux"
+  "bib.log"
+  "bib.pdf"
+  (rewritten before read)

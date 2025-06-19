@@ -1,0 +1,7 @@
+[deps]
+CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
+ComplexRegions = "c64915e2-6c82-11e9-38e9-1f159a780463"
+DoubleFloats = "497a8b3b-efae-58df-a0af-a86822472b78"
+LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
+RationalFunctionApproximation = "c92886a3-cb30-4e18-b84f-372dde475ecc"
+SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"

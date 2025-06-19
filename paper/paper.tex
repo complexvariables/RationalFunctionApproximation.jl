@@ -4,6 +4,7 @@
 \setcounter{page}{1}
 \usepackage{amsmath}
 \usepackage{bm}
+\usepackage{url}
 \usepackage{algpseudocode}
 \hypersetup{
     colorlinks=true,
@@ -26,11 +27,11 @@ Unlike polynomials, rational functions can represent functions having poles or b
 
 Approximation of functions is a foundational technology for scientific computing. As of this writing, the Julia ecosystem has excellent options for approximation in packages such as \textsf{Interpolations} \cite{kittisopikulInterpolationsjl2025} for piecewise polynomials, \textsf{ApproxFun}~\cite{olverPracticalFramework2014} for global polynomials, \textsf{KernelInterpolation}~\cite{lampertKernelInterpolationjlMultivariate2024} for radial basis functions, and many others.
 
-A long-studied class of approximating functions are the rational functions, which are ratios of polynomials. Unlike polynomials, they can represent functions having poles or branch cuts with root-exponential convergence~\cite{newmanRationalApproximation1964, herremansResolutionSingularities2023} and no Runge requirement for crowding interpolation nodes near boundaries~\cite{platteImpossibilityFast2011}. Rational functions have been used in applications such as nonlinear eigenvalue problems, reduced-order modeling, and the solution of PDEs~\cite{antoulasInterpolatoryMethods2020,budisaRationalApproximation2022,gopalSolvingLaplace2019,hautSolvingBurgers2013,lietaertAutomaticRational2022,rodriguezPAAAAlgorithm2022,trefethenNumericalConformal2020}.
+A long-studied class of approximating functions are the rational functions, which are ratios of polynomials. Unlike polynomials, they can represent functions having branch cuts with root-exponential convergence~\cite{newmanRationalApproximation1964, herremansResolutionSingularities2023} and have no Runge requirement for crowding interpolation nodes near boundaries~\cite{platteImpossibilityFast2011}. Rational functions have been used in applications such as nonlinear eigenvalue problems, reduced-order modeling, and the solution of PDEs~\cite{antoulasInterpolatoryMethods2020,budisaRationalApproximation2022,gopalSolvingLaplace2019,hautSolvingBurgers2013,lietaertAutomaticRational2022,rodriguezPAAAAlgorithm2022,trefethenNumericalConformal2020}.
 
 An important connection between rational and polynomial interpolants is their common representation in the barycentric formula~\cite{berrutBarycentricLagrange2004,schneiderNewAspects1986}, which allows for fast, stable evaluation. A major recent development in computational rational approximation is the AAA algorithm~\cite{nakatsukasaAAAAlgorithm2018}. This approach chooses the barycentric weights to minimize least-squares error over a test set and uses an iterative greedy selection of new interpolation nodes. The method has inspired many extensions and variations~\cite{filipRationalMinimax2018,hochmanFastAAAFast2017,nakatsukasaAlgorithmReal2020,wilberDatadrivenAlgorithms2022}. Of particular interest to this work is the extension of AAA to adaptive node selection in continuous domains in order to avert under-resolution near singularities~\cite{driscollAAARational2024}.
 
-Rational functions have an alternative classical representation in terms of continued fractions, a fact used by Thiele at least 100 years ago to derive an interpolation scheme via divided differences~\cite{milne-thompsonCalculusFinite1933}. Because of the connection to divided differences, Thiele's method has long been known to be vulnerable to numerical instability, depending strongly on the selection and ordering of interpolation nodes. But Celis~\cite{celisAdaptiveThiele2023,celisNumericalContinued2024} has recently shown that a greedy iterative approach to selecting nodes can yield stable Thiele approximations. Adding a single node to a Thiele interpolant on $n$ nodes requires just $O(n)$ work, compared to $O(n^3)$ for AAA; the possibility of a faster method is intriguing, although the stability situation is not yet fully understood.
+Rational functions have an alternative classical representation in terms of continued fractions, a fact used by Thiele at least 100 years ago to derive an interpolation scheme via inverse differences~\cite{milne-thompsonCalculusFinite1933}. Because of the connection to divided differences, Thiele's method has long been known to be vulnerable to numerical instability, depending strongly on the selection and ordering of interpolation nodes. But Salazar~\cite{celisAdaptiveThiele2023,celisNumericalContinued2024} has recently shown that a greedy iterative approach to selecting nodes can yield stable Thiele approximations. Adding a single node to a Thiele interpolant on $n$ nodes requires just $O(n)$ work, compared to $O(n^3)$ for AAA; the possibility of a faster method is intriguing, although the stability situation is not yet fully understood.
 
 The \textsf{RationalFunctionApproximation} package implements three rational approximation methods: the AAA algorithm, the greedy Thiele algorithm, and linear least-squares approximation using prescribed poles. It builds on the \textsf{ComplexRegions} package to provide a convenient interface for approximating functions on complex domains, such as the unit disk or the exterior of a polygon. The package is compatible with extended-precision arithmetic as provided, e.g., by \textsf{BigFloat} or \textsf{MultiFloats}. The package is intended for use both as a library for applications or for research into rational approximation methods.
 
@@ -52,12 +53,12 @@ where $z_1, \ldots, z_n$ are distinct interpolation nodes, $y_1, \ldots, y_n$ ar
 We define the linearized residual
 \begin{equation}
     \label{eq:residual}
-    d(z) = \sum_{j=1}^n \frac{y_j\, w_j}{z - z_j} - f(z) \sum_{j=1}^n \frac{w_j}{z - z_j}.
+    \delta(z) = \sum_{j=1}^n \frac{y_j\, w_j}{z - z_j} - f(z) \sum_{j=1}^n \frac{w_j}{z - z_j}.
 \end{equation}
 Given test points $t_1, \ldots, t_m$ in the domain of $f$, we can express the evaluation of $d$ at those points as
 \begin{equation}
     \label{eq:residuals}
-    \begin{bmatrix} d(t_1) \\ d(t_2) \\ \vdots \\ d(t_m) \end{bmatrix} = \bm{L} \begin{bmatrix} w_1 \\ w_2 \\ \vdots \\ w_n \end{bmatrix},
+    \begin{bmatrix} \delta(t_1) \\ \delta(t_2) \\ \vdots \\ \delta(t_m) \end{bmatrix} = \bm{L} \begin{bmatrix} w_1 \\ w_2 \\ \vdots \\ w_n \end{bmatrix},
 \end{equation}
 where $\bm{L}$ is the $m \times n$ \emph{Loewner matrix} with entries
 \begin{equation}
@@ -65,7 +66,7 @@ where $\bm{L}$ is the $m \times n$ \emph{Loewner matrix} with entries
     L_{ij} = - \frac{f(t_i) - y_j}{t_i - z_j}.
 \end{equation}
 
-Since the barycentric formula (\ref{eq:barycentric}) is unaffected by a scaling of the weight vector, we can recognize the least-squares minimization of $\bm{d}$ as equivalent to finding the least-significant right singular vector of $\bm{L}$. Once the weights are determined, the true residual $f(z) - r(z)$ be evaluated at the test points. The AAA algorithm selects the test point with the largest magnitude of this residual as the next interpolation node.
+Since the barycentric formula (\ref{eq:barycentric}) is unaffected by a scaling of the weight vector, we can recognize the least-squares minimization of the vector $\bm{\delta}$ as equivalent to finding the least-significant right singular vector of $\bm{L}$. Once the weights are determined, the true residual $f(z) - r(z)$ be evaluated at the test points. The AAA algorithm selects the test point with the largest magnitude of this residual as the next interpolation node.
 
 In the original discrete AAA algorithm~\cite{nakatsukasaAAAAlgorithm2018}, the test points are selected prior to the iteration. In the continuum version~\cite{driscollAAARational2024}, a small initial set of test points is selected to discretize the boundary of the domain, and with each transfer of a test point to the node set, a few additional test points are added along the boundary to either side of the new node. This adaptivity becomes important when $f$ has a singularity very close to or on the boundary of the domain.
 
@@ -82,12 +83,12 @@ where, given nodes $z_1,\ldots , z_n$ and inductively $d_1,\ldots,d_{n-1}$, the 
     \label{eq:thiele-weight}
     \begin{split}
         u_1 &= f(z_n), \\
-        u_{k+1} &= d_k + \frac{z_n - z_k}{u_k - d_k} \quad \text{for } k=1,\ldots,n-1.
+        u_{k+1} &= \frac{z_n - z_k}{u_k - d_k} \quad \text{for } k=1,\ldots,n-1.
     \end{split}
 \end{equation}
 Generically, $r$ interpolates the values $(z_j,f(z_j))$ for $j=1,\ldots, n$ and is a rational function of type $(m,m)$ if $n=2m-1$ or type $(m+1,m)$ if $n=2m$. 
 
-The Thiele representation has had modest computational use due to the inverse divided difference appearing in~(\ref{eq:thiele-weight}), which is numerically unstable for many node distributions/orderings. However, Celis~\cite{celisAdaptiveThiele2023,celisNumericalContinued2024} observed that if one follows the structure of AAA by evaluating a candidate $r$ at test points and greedily selecting the worst test point as a new node, the method is often stable. A key potential advantage of Celis' method is that it requires only $O(n)$ work to add a new node, comparing favorably to $O(mn^2)$ for AAA with $n$ nodes and $m$ test points.
+The Thiele representation has had modest computational use due to the inverse difference appearing in~(\ref{eq:thiele-weight}), which is numerically unstable for many node distributions/orderings. However, Salazar~\cite{celisAdaptiveThiele2023,celisNumericalContinued2024} observed that if one follows the structure of AAA by evaluating a candidate $r$ at test points and greedily selecting the worst test point as a new node, the method is often stable. A key attraction of Salazar's method is that it requires only $O(n)$ work to add a new node, comparing favorably to $O(mn^2)$ for AAA with $n$ nodes and $m$ test points.
 
 \subsection{Prescribed poles}
 \label{sec:parfrac}
@@ -206,7 +207,7 @@ The \textsf{Approximation} type is the primary type that a user interacts with d
     \item[\texttt{approximate(y,z)}] for vectors \verb|y| and \verb|z| uses the entries of \verb|y| as the values to be taken at the entries of \verb|z|. This method returns a subtype of \textsf{AbstractRationalInterpolant}, as there is presumed to be no information about an originating function.
 \end{description}
 
-Because both the AAA and Celis iterations rely on pairwise differences between nodes, test points, and function values in various combinations, care was taken to reuse such information between iterations. The representation-specific references in the iteration are the representation constructor and the methods \verb|add_nodes!| and \verb|update_test_values!|, which the representations must implement. A first call to \verb|update_test_values!| allocates working space. Subsequent calls update the working arrays at any new test points, updates the weights of the rational interpolant (in the barycentric case only), and evaluates the interpolant at all test points. Once a new node is chosen, a call to \verb|add_nodes!| updates the node and value properties of the interpolant (which, in the Thiele case, also updates the weights), allocates space for new weights, and updates differencing information between the new node(s) and the existing test points. 
+Because both the AAA and Salazar iterations rely on pairwise differences between nodes, test points, and function values in various combinations, care was taken to reuse such information between iterations. The representation-specific references in the iteration are the representation constructor and the methods \verb|add_nodes!| and \verb|update_test_values!|, which the representations must implement. A first call to \verb|update_test_values!| allocates working space. Subsequent calls update the working arrays at any new test points, updates the weights of the rational interpolant (in the barycentric case only), and evaluates the interpolant at all test points. Once a new node is chosen, a call to \verb|add_nodes!| updates the node and value properties of the interpolant (which, in the Thiele case, also updates the weights), allocates space for new weights, and updates differencing information between the new node(s) and the existing test points. 
 
 \textbf{Least squares.} For a least-squares approximation with prescribed poles using the partial fraction representation, a \texttt{degree} keyword to \texttt{approximate} can be used to specify the degree of the polynomial part. The following signatures are available:
 \begin{description}
@@ -219,11 +220,12 @@ Because both the AAA and Celis iterations rely on pairwise differences between n
 
 The package defines \verb|unit_interval| as a \textsf{Segment} from $-1$ to $1$. We can approximate the function $f(z) = \log(1 + i + 5iz)$ on this interval as follows:
 \begin{lstlisting}[language = Julia, caption={Continuum AAA on the unit interval.}, label={lst:log}]
-using RationalFunctionApproximation
+using RationalFunctionApproximation, CairoMakie
 f = z -> log(1 + 1im + 5im*z)
 r = approximate(f, unit_interval)
+poleplot(r)
 \end{lstlisting}
-The result is a \textsf{Barycentric} interpolant of type $(12,12)$. The poles of this interpolant cluster near the branch point of $f$ at $(i-1)/5$, as revealed by \verb|poleplot(r)| (after importing the \textsf{CairoMakie} package) and shown in \autoref{fig:poleplot1}. We can check the size of the error via \verb|check(r)|, which returns vectors of test points and error values and prints a message with the maximum error; here, that maximum is about $1.6\times 10^{-13}$. 
+The result is a \textsf{Barycentric} interpolant of type $(12,12)$ and the plot in \autoref{fig:poleplot1}. The poles of this interpolant cluster near the branch point of $f$ at $(i-1)/5$. We can check the size of the error via \verb|check(r)|, which returns vectors of test points and error values and prints a message with the maximum error; here, that maximum is about $1.6\times 10^{-13}$. 
 
 \begin{figure}
 \centering
@@ -234,15 +236,15 @@ The result is a \textsf{Barycentric} interpolant of type $(12,12)$. The poles of
 
 The usefulness of the continuum methods is apparent when singularities of $f$ creep close to the domain. If, for instance, we approximate $\sqrt{x + 10^{-6}i}$ on equally spaced points in $[1,1]$, we will miss important details at the origin:
 \begin{lstlisting}[language = Julia, caption={Discrete AAA for $\sqrt{x + 10^{-6}i}$.}]
-f = z -> sqrt(z + 10e-6im)
-x = range(0, 1, 1001)
+f = z -> sqrt(z + 1e-6im)
+x = range(-1, 1, 1001)
 r = approximate(f, x)
-lines(-0.01..0.01, x->real(f(x) - r(x)))
+lines(-0.001..0.001, x->real(f(x) - r(x)))
 \end{lstlisting}
 Although the discrete iteration finishes successfully, with a reported maximum error of $4.5\times 10^{-14}$ at the entries of \verb|x|, we see in \autoref{fig:continuum} that the error near the origin exceeds $10^{-3}$ at other locations. With advance knowledge of the singularity structure, a discretization could be chosen manually that would properly resolve the singularity. But the continuum approach offers this resolution automatically:
 \begin{lstlisting}[language = Julia, caption={Continuum AAA for $\sqrt{x + 10^{-6}i}$.}]
 r = approximate(f, unit_interval)
-lines(-0.01..0.01, x->real(f(x) - r(x)))
+lines(-0.001..0.001, x->real(f(x) - r(x)))
 \end{lstlisting}
 Now, as confirmed in \autoref{fig:continuum}, the error is less than $10^{-13}$ everywhere on the interval. 
 
@@ -253,35 +255,47 @@ Now, as confirmed in \autoref{fig:continuum}, the error is less than $10^{-13}$ 
 \label{fig:continuum}
 \end{figure}
 
-The convergence of AAA for Newman's example of $f(x)=|x|$ is interesting. In order to continue past the limits of double precision, we use extended precision supplied by the \textsf{DoubleFloats} package.
+The convergence of AAA for Newman's example of $f(x)=|x|$ is interesting:
 \begin{lstlisting}[language = Julia, caption={Continuum AAA for $|x|$.}, label={lst:abs}]
-using DoubleFloats
-ui64 = Segment{Double64}(-1, 1)
-r = approximate(abs, ui64; tol=1e-20, max_iter=240)
+r = approximate(abs, unit_interval)
 convergenceplot(r)
 \end{lstlisting}
-This computation took 68 seconds to compute on an Apple Mac Mini M4. The resulting plot, displayed in \autoref{fig:absconverge}, shows a clear root-exponential convergence of valid rational interpolants (blue dots) to the function $|x|$ over the interval $[-1,1]$. The plot of the positive node locations in \autoref{fig:absnodes} shows that they also cluster root-exponentially at the singularity, as Newman's theory predicts~\cite{newmanRationalApproximation1964}. 
+As seen in the upper plot of \autoref{fig:absconverge}, the iteration was halted when convergence stalled a bit short of machine roundoff. In order to continue past the plateau, we can use extended precision supplied by the \textsf{DoubleFloats} package. Since the eigenvalue computation needed to check for disallowed poles is much slower in extended precision, we distable the checks with the keyword \verb|allowed=true|. 
+\begin{lstlisting}[language = Julia, caption={Continuum AAA in extended precision.}, label={lst:absquad}]
+using DoubleFloats, ComplexRegions
+uiquad = Segment{Double64}(-1, 1)
+r = approximate(abs, uiquad; 
+        allowed=true, max_iter=200)
+\end{lstlisting}
+This computation took 30.5 seconds to compute on an Apple M4 Pro processor, compared to 0.23 seconds in \autoref{lst:abs}. The lower plot of \autoref{fig:absconverge} shows that the convergence continues smoothly at a root-exponential rate. \autoref{fig:absnodes} illustrates that the positive node locations cluster with a tapered exponential pattern at the singularity, much as the poles do~\cite{trefethenExponentialNode2021}. 
 
 \begin{figure}
 \centering
 \includegraphics[width=\columnwidth]{absconverge.pdf}
-\caption{Convergence of continuum AAA to the function $|x|$ over $[-1,1]$. Red dots indicate an interpolant having a pole in the interval, while blue dots indicate no disallowed poles. The gold halo shows the interpolant returned as the result.}
+\caption{Convergence of continuum AAA to the function $|x|$ over $[-1,1]$. Top: Red dots indicate an interpolant having a pole in the interval, while blue dots indicate no disallowed poles. The gold halo shows the interpolant returned as the result, chosen when the iteration stagnated. Bottom: Using extended precision, the iteration continues successfully (without pole checking); the square-root scale on the degree axis illustrates root-exponential convergence.}
 \label{fig:absconverge}
 \end{figure}
 
 \begin{figure}
 \centering
 \includegraphics[width=\columnwidth]{absnodes.pdf}
-\caption{Positive nodes selected by continuum AAA for the function $|x|$ over $[-1,1]$. Root-exponential clustering is evident near the singularity at $x=0$.}
+\caption{Positive nodes selected by continuum AAA for the function $|x|$ over $[-1,1]$. They cluster near the singualrity at $x=0$.}
 \label{fig:absnodes}
 \end{figure}
 
-Any of the above examples can be computed using the greedy Thiele iteration in place of AAA by adding \verb|method=Thiele| to the \verb|approximate| call. In order to exploit its speed for \autoref{lst:abs}, we use \verb|allowed=true| to disable pole checking and add \verb|stagnation=20| to make it persist through plateaus. We also double the number of iterations, since the degree is roughly half the number of nodes:
+Any of the above examples can be computed using the greedy Thiele iteration in place of AAA by adding \verb|method=Thiele| to the \verb|approximate| call. For example, we can use it in extended precision for $|x|$:In order to exploit its speed for \autoref{lst:abs}, we use \verb|allowed=true| to disable pole checking and add \verb|stagnation=20| to make it persist through plateaus. We also double the number of iterations, since the degree is roughly half the number of nodes:
 \begin{lstlisting}[language = Julia, caption={Continuum Thiele for $|x|$.}]
-approximate(abs, ui64; method=Thiele, tol=1e-20, 
-        max_iter=500, allowed=true, stagnation=20)
+approximate(abs, uiquad; allowed=true, 
+        method=Thiele, max_iter=400, stagnation=20)
 \end{lstlisting}
-The above code takes only 3.3 seconds to execute 500 iterations, reaching an accuracy of about $1.7\times10^{-16}$. This speedup is so dramatic because AAA relies on generic implementations of the SVD and eigenvalue decompositions in \textsf{DoubleFloats}, while Thiele requires no linear algebra at all if poles are not being checked.
+The above code takes just 1.69 seconds to reach a similar degree and accuracy as the AAA result. This speedup is dramatic because AAA relies on generic implementations of the SVD for \textsf{DoubleFloats}, while Thiele requires no linear algebra at all. However, as seen in \autoref{fig:absthiele}, the convergence of the Thiele iteration is far less smooth here, which is why \verb|stagnation=20| was used to make it continue past apparent plateaus.
+
+\begin{figure}
+\centering
+\includegraphics[width=\columnwidth]{absthiele.pdf}
+\caption{Convergence of continuum Thiele to the function $|x|$ over $[-1,1]$. The smallest errors are similar to those in \autoref{fig:absconverge} for AAA, but the convergence is far less smooth.}
+\label{fig:absthiele}
+\end{figure}
 
 An advantage of the AAA approach is that it can be modified to construct near-best approximations in the max-norm sense~\cite{nakatsukasaAlgorithmReal2020}, which classically is of greater interest than the 2-norm. For instance, the error for $f(x)=|x-0.5 + 0.05i|$ is rather nonuniform:
 \begin{lstlisting}[language = Julia, caption={Continuum AAA for $|x-0.5 + 0.05i|$.}]
@@ -291,8 +305,8 @@ lines(check(r)...)
 \end{lstlisting}
 As seen on the top of \autoref{fig:minimax}, the error is larger on the right end of the interval than on the left by orders of magnitude. The \verb|minimax| function uses iteratively weighted norms to place more emphasis where the error is largest, resulting in near-uniform error, as shown in the bottom of the figure.
 \begin{lstlisting}[language = Julia, caption={Minimax AAA for $|x-0.5 + 0.05i|$.}]
-rm = minimax(r, 20);
-lines(check(rm)...)
+r_inf = minimax(r, 20);
+lines(check(r_inf)...)
 \end{lstlisting}
 
 \begin{figure}
@@ -311,11 +325,11 @@ poleplot(r)
 \end{lstlisting}
 The poles of the resulting interpolant of degree 21 are shown in \autoref{fig:zetapoles}. The maximum error in the approximation on the circle is about $1.2\times 10^{-12}$. The \textsf{ComplexRegions} package defines a \textsf{Shapes} module with other predefined curves, as well as functions \verb|interior| and \verb|exterior| that can be used to create \textsf{SimplyConnectedRegion} objects.
 \begin{lstlisting}[language = Julia, caption={Approximation on an exterior domain.}]
-using ComplexRegions
 f = z -> coth(1/z^3)
 r = approximate(f, exterior(Shapes.squircle))
+poleplot(r)
 \end{lstlisting}
-The resulting \verb|poleplot(r)| is given in \autoref{fig:squircle}.
+The resulting plot is given in \autoref{fig:squircle}.
 
 \begin{figure}
 \centering
@@ -344,6 +358,9 @@ The resulting approximation reports an error of size $5.3\times{10}^{-10}$ at it
 \section{Future work}
 
 It should be possible to implement operations on the rational function types to enable basic arithmetic, composition, differentiation, and integration, in the style of Chebfun~\cite{driscollChebfunGuide2014a} and \textsf{ApproxFun}~\cite{olverPracticalFramework2014}. A systematic comparison of the AAA and Thiele methods is also needed, as well as a more complete understanding of the stability of the Thiele method. Least-squares approximations with prescribed poles have been fruitful in the solution of Laplace and related PDEs~\cite{costaAAAleastSquares2023,gopalSolvingLaplace2019,gopalRepresentationConformal2019}, which requires imposing conditions other than direct approximation of a known function.
+
+\section{Acknowledgments}
+I thank Nick Trefethen and Oliver Salazar Celis for their valuable feedback on a draft of this paper.
 
 \input{bib.tex}
 

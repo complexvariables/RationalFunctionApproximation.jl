@@ -24,18 +24,6 @@ Rational approximation preconditioners for multiphysics problems.
 In I.~Georgiev, M.~Datcheva, K.~Georgiev, and G.~Nikolov, editors, {\em Numerical Methods and Applications}, pages 100--113. Springer Nature Switzerland, 2023.
 \href{http://dx.doi.org/10.1007/978-3-031-32412-3\_9}{doi:10.1007/978-3-031-32412-3\_9}.
 
-\bibitem{celisAdaptiveThiele2023}
-O.~S. Celis.
-Adaptive {{Thiele}} interpolation.
-{\em ACM Commun. Comput. Algebra}, 56(3):125--132, April 2023.
-\href{http://dx.doi.org/10.1145/3594252.3594254}{doi:10.1145/3594252.3594254}.
-
-\bibitem{celisNumericalContinued2024}
-O.~S. Celis.
-Numerical {{Continued Fraction Interpolation}}.
-{\em Ukrainian Mathematical Journal}, 76(4):635--648, September 2024.
-\href{http://dx.doi.org/10.1007/s11253-024-02344-5}{doi:10.1007/s11253-024-02344-5}.
-
 \bibitem{costaAAAleastSquares2023}
 S.~Costa and L.~N. Trefethen.
 {{AAA-least}} squares rational approximation and solution of {{Laplace}} problems.
@@ -49,7 +37,7 @@ Pafnuty Publications, 2014.
 
 \bibitem{driscollAAARational2024}
 T.~A. Driscoll, Y.~Nakatsukasa, and L.~N. Trefethen.
-{{AAA Rational Approximation}} on a {{Continuum}}.
+{{AAA}} rational approximation on a continuum.
 {\em SIAM Journal on Scientific Computing}, 46(2):A929--A952, April 2024.
 \href{http://dx.doi.org/10.1137/23M1570508}{doi:10.1137/23M1570508}.
 
@@ -91,11 +79,13 @@ In {\em 2017 {{IEEE}} 26th {{Conference}} on {{Electrical Performance}} of {{Ele
 
 \bibitem{kittisopikulInterpolationsjl2025}
 M.~Kittisopikul, T.~E. Holy, and T.~Aschan.
-Interpolations.jl, 2025.
+Interpolations{{.jl}}.
+\url{https://github.com/JuliaMath/Interpolations.jl}, May 2025.
 
 \bibitem{lampertKernelInterpolationjlMultivariate2024}
 J.~Lampert.
-{{KernelInterpolation}}.jl: {{Multivariate}} (generalized) scattered data interpolation with symmetric (conditionally) positive definite kernel functions in arbitrary dimension, June 2024.
+Kernelinterpolation{{.jl}}: {{Multivariate}} (generalized) scattered data interpolation with symmetric (conditionally) positive definite kernel functions in arbitrary dimension.
+\url{https://dx.doi.org/10.5281/zenodo.12599880}, June 2024.
 
 \bibitem{lietaertAutomaticRational2022}
 P.~Lietaert, K.~Meerbergen, J.~P{\'e}rez, and B.~Vandereycken.
@@ -133,9 +123,28 @@ In {\em Proceedings of the 1st {{Workshop}} for {{High Performance Technical Com
 
 \bibitem{platteImpossibilityFast2011}
 R.~B. Platte, L.~N. Trefethen, and A.~B.~J. Kuijlaars.
-Impossibility of {{Fast Stable Approximation}} of {{Analytic Functions}} from {{Equispaced Samples}}.
+Impossibility of fast stable approximation of analytic functions from equispaced samples.
 {\em SIAM Review}, 53(2):308--318, January 2011.
 \href{http://dx.doi.org/10.1137/090774707}{doi:10.1137/090774707}.
+
+\bibitem{rodriguezPAAAAlgorithm2022}
+Andrea~Carracedo Rodriguez, Linus Balicki, and Serkan Gugercin.
+The p-{{AAA}} algorithm for data-driven modeling of parametric dynamical systems.
+{\em SIAM Journal on Scientific Computing}, 45(3):A1332--A1358, 2023.
+\href{http://dx.doi.org/10.1137/20M1322698}{doi:10.1137/20M1322698}.
+https://doi.org/10.1137/20M1322698.
+
+\bibitem{celisAdaptiveThiele2023}
+O.~{Salazar Celis}.
+Adaptive {{Thiele}} interpolation.
+{\em ACM Commun. Comput. Algebra}, 56(3):125--132, April 2023.
+\href{http://dx.doi.org/10.1145/3594252.3594254}{doi:10.1145/3594252.3594254}.
+
+\bibitem{celisNumericalContinued2024}
+O.~{Salazar Celis}.
+Numerical continued fraction interpolation.
+{\em Ukrainian Mathematical Journal}, 76(4):635--648, September 2024.
+\href{http://dx.doi.org/10.1007/s11253-024-02344-5}{doi:10.1007/s11253-024-02344-5}.
 
 \bibitem{schneiderNewAspects1986}
 C.~Schneider and W.~Werner.
@@ -148,6 +157,12 @@ L.~N. Trefethen.
 Numerical conformal mapping with rational functions.
 {\em Computational Methods and Function Theory}, 20(3):369--387, November 2020.
 \href{http://dx.doi.org/10.1007/s40315-020-00325-w}{doi:10.1007/s40315-020-00325-w}.
+
+\bibitem{trefethenExponentialNode2021}
+L.~N. Trefethen, Y.~Nakatsukasa, and J.~A.~C. Weideman.
+Exponential node clustering at singularities for rational approximation, quadrature, and {{PDEs}}.
+{\em Numerische Mathematik}, 147(1):227--254, January 2021.
+\href{http://dx.doi.org/10.1007/s00211-020-01168-2}{doi:10.1007/s00211-020-01168-2}.
 
 \bibitem{wilberDatadrivenAlgorithms2022}
 H.~Wilber, A.~Damle, and A.~Townsend.

@@ -68,7 +68,7 @@
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {\itshape 3.3.3}PartialFractions}{3}{subsubsection.3.3.3}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.4}Approximation}{3}{subsection.3.4}\protected@file@percent }
 \newlabel{sec:approximation}{{3.4}{3}{Approximation}{subsection.3.4}{}}
-\citation{newmanRationalApproximation1964}
+\citation{trefethenExponentialNode2021}
 \@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Pole plot of the AAA rational interpolant of $f(z) = \log (1 + i + 5iz)$ on the unit interval. The poles cluster near the branch point at $(i-1)/5$.}}{4}{figure.caption.5}\protected@file@percent }
 \newlabel{fig:poleplot1}{{1}{4}{Pole plot of the AAA rational interpolant of $f(z) = \log (1 + i + 5iz)$ on the unit interval. The poles cluster near the branch point at $(i-1)/5$}{figure.caption.5}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {4}Examples}{4}{section.4}\protected@file@percent }
@@ -80,18 +80,19 @@
 \newlabel{fig:continuum}{{2}{4}{Top: In the discrete AAA iteration, accuracy close to a singularity will suffer if the nodes have insufficient resolution. Bottom: Continuum AAA adaptively chooses nodes and test points in order to resolve the singularity}{figure.caption.6}{}}
 \newlabel{lst:abs}{{5}{4}{Continuum AAA for $|x|$}{lstlisting.5}{}}
 \@writefile{lol}{\contentsline {lstlisting}{\numberline {5}{\ignorespaces Continuum AAA for $|x|$.}}{4}{lstlisting.5}\protected@file@percent }
-\@writefile{lol}{\contentsline {lstlisting}{\numberline {6}{\ignorespaces Continuum Thiele for $|x|$.}}{4}{lstlisting.6}\protected@file@percent }
+\newlabel{lst:absquad}{{6}{4}{Continuum AAA in extended precision}{lstlisting.6}{}}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {6}{\ignorespaces Continuum AAA in extended precision.}}{4}{lstlisting.6}\protected@file@percent }
 \citation{nakatsukasaAlgorithmReal2020}
-\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Convergence of continuum AAA to the function $|x|$ over $[-1,1]$. Red dots indicate an interpolant having a pole in the interval, while blue dots indicate no disallowed poles. The gold halo shows the interpolant returned as the result.}}{5}{figure.caption.7}\protected@file@percent }
-\newlabel{fig:absconverge}{{3}{5}{Convergence of continuum AAA to the function $|x|$ over $[-1,1]$. Red dots indicate an interpolant having a pole in the interval, while blue dots indicate no disallowed poles. The gold halo shows the interpolant returned as the result}{figure.caption.7}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Positive nodes selected by continuum AAA for the function $|x|$ over $[-1,1]$. Root-exponential clustering is evident near the singularity at $x=0$.}}{5}{figure.caption.8}\protected@file@percent }
-\newlabel{fig:absnodes}{{4}{5}{Positive nodes selected by continuum AAA for the function $|x|$ over $[-1,1]$. Root-exponential clustering is evident near the singularity at $x=0$}{figure.caption.8}{}}
-\@writefile{lol}{\contentsline {lstlisting}{\numberline {7}{\ignorespaces Continuum AAA for $|x-0.5 + 0.05i|$.}}{5}{lstlisting.7}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Top: Nonuniform error is produced by the AAA iteration, which uses a least-squares criterion. Bottom: After Lawson-style iterations, the error can be made nearly uniform across the interval.}}{5}{figure.caption.9}\protected@file@percent }
-\newlabel{fig:minimax}{{5}{5}{Top: Nonuniform error is produced by the AAA iteration, which uses a least-squares criterion. Bottom: After Lawson-style iterations, the error can be made nearly uniform across the interval}{figure.caption.9}{}}
-\@writefile{lol}{\contentsline {lstlisting}{\numberline {8}{\ignorespaces Minimax AAA for $|x-0.5 + 0.05i|$.}}{5}{lstlisting.8}\protected@file@percent }
-\@writefile{lol}{\contentsline {lstlisting}{\numberline {9}{\ignorespaces Approximation on the unit circle.}}{5}{lstlisting.9}\protected@file@percent }
-\@writefile{lol}{\contentsline {lstlisting}{\numberline {10}{\ignorespaces Approximation on an exterior domain.}}{5}{lstlisting.10}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Convergence of continuum AAA to the function $|x|$ over $[-1,1]$. Top: Red dots indicate an interpolant having a pole in the interval, while blue dots indicate no disallowed poles. The gold halo shows the interpolant returned as the result, chosen when the iteration stagnated. Bottom: Using extended precision, the iteration continues successfully (without pole checking); the square-root scale on the degree axis illustrates root-exponential convergence.}}{5}{figure.caption.7}\protected@file@percent }
+\newlabel{fig:absconverge}{{3}{5}{Convergence of continuum AAA to the function $|x|$ over $[-1,1]$. Top: Red dots indicate an interpolant having a pole in the interval, while blue dots indicate no disallowed poles. The gold halo shows the interpolant returned as the result, chosen when the iteration stagnated. Bottom: Using extended precision, the iteration continues successfully (without pole checking); the square-root scale on the degree axis illustrates root-exponential convergence}{figure.caption.7}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Positive nodes selected by continuum AAA for the function $|x|$ over $[-1,1]$. They cluster near the singualrity at $x=0$.}}{5}{figure.caption.8}\protected@file@percent }
+\newlabel{fig:absnodes}{{4}{5}{Positive nodes selected by continuum AAA for the function $|x|$ over $[-1,1]$. They cluster near the singualrity at $x=0$}{figure.caption.8}{}}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {7}{\ignorespaces Continuum Thiele for $|x|$.}}{5}{lstlisting.7}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Convergence of continuum Thiele to the function $|x|$ over $[-1,1]$. The smallest errors are similar to those in \autoref {fig:absconverge} for AAA, but the convergence is far less smooth.}}{5}{figure.caption.9}\protected@file@percent }
+\newlabel{fig:absthiele}{{5}{5}{Convergence of continuum Thiele to the function $|x|$ over $[-1,1]$. The smallest errors are similar to those in \autoref {fig:absconverge} for AAA, but the convergence is far less smooth}{figure.caption.9}{}}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {8}{\ignorespaces Continuum AAA for $|x-0.5 + 0.05i|$.}}{5}{lstlisting.8}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9}{\ignorespaces Minimax AAA for $|x-0.5 + 0.05i|$.}}{5}{lstlisting.9}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {10}{\ignorespaces Approximation on the unit circle.}}{5}{lstlisting.10}\protected@file@percent }
 \citation{driscollChebfunGuide2014a}
 \citation{olverPracticalFramework2014}
 \citation{costaAAAleastSquares2023}
@@ -103,34 +104,40 @@
 \bibcite{berrutBarycentricLagrange2004}{2}
 \bibcite{BrubeckVandermondeArnoldi2021}{3}
 \bibcite{budisaRationalApproximation2022}{4}
-\bibcite{celisAdaptiveThiele2023}{5}
-\bibcite{celisNumericalContinued2024}{6}
-\bibcite{costaAAAleastSquares2023}{7}
-\bibcite{driscollChebfunGuide2014a}{8}
-\bibcite{driscollAAARational2024}{9}
-\bibcite{filipRationalMinimax2018}{10}
-\bibcite{gopalRepresentationConformal2019}{11}
-\bibcite{gopalSolvingLaplace2019}{12}
-\bibcite{hautSolvingBurgers2013}{13}
-\bibcite{herremansResolutionSingularities2023}{14}
-\bibcite{hochmanFastAAAFast2017}{15}
-\bibcite{kittisopikulInterpolationsjl2025}{16}
-\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Poles of a rational interpolant of $f(z) = 1/\zeta (11z)$ on the unit circle.}}{6}{figure.caption.10}\protected@file@percent }
-\newlabel{fig:zetapoles}{{6}{6}{Poles of a rational interpolant of $f(z) = 1/\zeta (11z)$ on the unit circle}{figure.caption.10}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces Poles of a rational approximation of $\coth (z^{-3})$ in the exterior of a squircle.}}{6}{figure.caption.11}\protected@file@percent }
-\newlabel{fig:squircle}{{7}{6}{Poles of a rational approximation of $\coth (z^{-3})$ in the exterior of a squircle}{figure.caption.11}{}}
-\@writefile{lol}{\contentsline {lstlisting}{\numberline {11}{\ignorespaces Partial fraction approximation of $\log (1 + i + 5iz)$.}}{6}{lstlisting.11}\protected@file@percent }
+\bibcite{costaAAAleastSquares2023}{5}
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Top: Nonuniform error is produced by the AAA iteration, which uses a least-squares criterion. Bottom: After Lawson-style iterations, the error can be made nearly uniform across the interval.}}{6}{figure.caption.10}\protected@file@percent }
+\newlabel{fig:minimax}{{6}{6}{Top: Nonuniform error is produced by the AAA iteration, which uses a least-squares criterion. Bottom: After Lawson-style iterations, the error can be made nearly uniform across the interval}{figure.caption.10}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces Poles of a rational interpolant of $f(z) = 1/\zeta (11z)$ on the unit circle.}}{6}{figure.caption.11}\protected@file@percent }
+\newlabel{fig:zetapoles}{{7}{6}{Poles of a rational interpolant of $f(z) = 1/\zeta (11z)$ on the unit circle}{figure.caption.11}{}}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {11}{\ignorespaces Approximation on an exterior domain.}}{6}{lstlisting.11}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {12}{\ignorespaces Partial fraction approximation of $\log (1 + i + 5iz)$.}}{6}{lstlisting.12}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces Poles of a rational approximation of $\coth (z^{-3})$ in the exterior of a squircle.}}{6}{figure.caption.12}\protected@file@percent }
+\newlabel{fig:squircle}{{8}{6}{Poles of a rational approximation of $\coth (z^{-3})$ in the exterior of a squircle}{figure.caption.12}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {5}Future work}{6}{section.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {6}References}{6}{section.6}\protected@file@percent }
-\bibcite{lampertKernelInterpolationjlMultivariate2024}{17}
-\bibcite{lietaertAutomaticRational2022}{18}
-\bibcite{milne-thompsonCalculusFinite1933}{19}
-\bibcite{nakatsukasaAAAAlgorithm2018}{20}
-\bibcite{nakatsukasaAlgorithmReal2020}{21}
-\bibcite{newmanRationalApproximation1964}{22}
-\bibcite{olverPracticalFramework2014}{23}
-\bibcite{platteImpossibilityFast2011}{24}
-\bibcite{schneiderNewAspects1986}{25}
-\bibcite{trefethenNumericalConformal2020}{26}
-\bibcite{wilberDatadrivenAlgorithms2022}{27}
+\@writefile{toc}{\contentsline {section}{\numberline {6}Acknowledgments}{6}{section.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {7}References}{6}{section.7}\protected@file@percent }
+\bibcite{driscollChebfunGuide2014a}{6}
+\bibcite{driscollAAARational2024}{7}
+\bibcite{filipRationalMinimax2018}{8}
+\bibcite{gopalRepresentationConformal2019}{9}
+\bibcite{gopalSolvingLaplace2019}{10}
+\bibcite{hautSolvingBurgers2013}{11}
+\bibcite{herremansResolutionSingularities2023}{12}
+\bibcite{hochmanFastAAAFast2017}{13}
+\bibcite{kittisopikulInterpolationsjl2025}{14}
+\bibcite{lampertKernelInterpolationjlMultivariate2024}{15}
+\bibcite{lietaertAutomaticRational2022}{16}
+\bibcite{milne-thompsonCalculusFinite1933}{17}
+\bibcite{nakatsukasaAAAAlgorithm2018}{18}
+\bibcite{nakatsukasaAlgorithmReal2020}{19}
+\bibcite{newmanRationalApproximation1964}{20}
+\bibcite{olverPracticalFramework2014}{21}
+\bibcite{platteImpossibilityFast2011}{22}
+\bibcite{rodriguezPAAAAlgorithm2022}{23}
+\bibcite{celisAdaptiveThiele2023}{24}
+\bibcite{celisNumericalContinued2024}{25}
+\bibcite{schneiderNewAspects1986}{26}
+\bibcite{trefethenNumericalConformal2020}{27}
+\bibcite{trefethenExponentialNode2021}{28}
+\bibcite{wilberDatadrivenAlgorithms2022}{29}
 \gdef \@abspage@last{7}

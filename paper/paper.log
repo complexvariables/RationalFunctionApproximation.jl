@@ -1,9 +1,10 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2025) (preloaded format=pdflatex 2025.3.8)  13 JUN 2025 10:50
+This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2025) (preloaded format=pdflatex 2025.3.8)  19 JUN 2025 08:43
 entering extended mode
  restricted \write18 enabled.
+ file:line:error style messages enabled.
  %&-line parsing enabled.
-**/Users/driscoll/Dropbox/julia/RationalFunctionApproximation.jl/paper/paper.tex
-(/Users/driscoll/Dropbox/julia/RationalFunctionApproximation.jl/paper/paper.tex
+**/Users/driscoll/Dropbox/papers/juliacon-proc/paper/paper.tex
+(/Users/driscoll/Dropbox/papers/juliacon-proc/paper/paper.tex
 LaTeX2e <2024-11-01> patch level 2
 L3 programming layer <2025-01-18>
 (./juliacon.cls (/usr/local/texlive/2025/texmf-dist/tex/latex/psnfss/helvet.sty
@@ -390,7 +391,7 @@ Document Style algorithmicx 1.2 - a greatly improved `algorithmic' style
 )
 Document Style - pseudocode environments for use with the `algorithmicx' style
 )
-Package hyperref Info: Option `colorlinks' set `true' on input line 13.
+Package hyperref Info: Option `colorlinks' set `true' on input line 14.
  (/usr/local/texlive/2025/texmf-dist/tex/latex/l3backend/l3backend-pdftex.def
 File: l3backend-pdftex.def 2024-05-08 L3 backend support: PDF output (pdfTeX)
 \l__color_backend_stack_int=\count322
@@ -398,24 +399,24 @@ File: l3backend-pdftex.def 2024-05-08 L3 backend support: PDF output (pdfTeX)
 ) (./paper.aux)
 \openout1 = `paper.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 15.
-LaTeX Font Info:    ... okay on input line 15.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 15.
-LaTeX Font Info:    ... okay on input line 15.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 15.
-LaTeX Font Info:    ... okay on input line 15.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 15.
-LaTeX Font Info:    ... okay on input line 15.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 15.
-LaTeX Font Info:    ... okay on input line 15.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 15.
-LaTeX Font Info:    ... okay on input line 15.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 15.
-LaTeX Font Info:    ... okay on input line 15.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 15.
-LaTeX Font Info:    ... okay on input line 15.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 15.
-LaTeX Font Info:    ... okay on input line 15.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 16.
+LaTeX Font Info:    ... okay on input line 16.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 16.
+LaTeX Font Info:    ... okay on input line 16.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 16.
+LaTeX Font Info:    ... okay on input line 16.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 16.
+LaTeX Font Info:    ... okay on input line 16.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 16.
+LaTeX Font Info:    ... okay on input line 16.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 16.
+LaTeX Font Info:    ... okay on input line 16.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 16.
+LaTeX Font Info:    ... okay on input line 16.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 16.
+LaTeX Font Info:    ... okay on input line 16.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 16.
+LaTeX Font Info:    ... okay on input line 16.
  (/usr/local/texlive/2025/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
 \scratchcounter=\count323
@@ -435,7 +436,7 @@ Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 48
  (/usr/local/texlive/2025/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg
 File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Live
 ))
-Package hyperref Info: Link coloring ON on input line 15.
+Package hyperref Info: Link coloring ON on input line 16.
  (./paper.out) (./paper.out)
 \@outlinefile=\write3
 \openout3 = `paper.out'.
@@ -444,43 +445,39 @@ Package hyperref Info: Link coloring ON on input line 15.
 Package caption Info: Begin \AtBeginDocument code.
 Package caption Info: End \AtBeginDocument code.
  (./header.tex)
-<logojuliacon.pdf, id=68, 430.91032pt x 145.96547pt>
+<logojuliacon.pdf, id=72, 430.91032pt x 145.96547pt>
 File: logojuliacon.pdf Graphic file (type pdf)
 <use logojuliacon.pdf>
-Package pdftex.def Info: logojuliacon.pdf  used on input line 19.
+Package pdftex.def Info: logojuliacon.pdf  used on input line 20.
 (pdftex.def)             Requested size: 72.26999pt x 24.4797pt.
-LaTeX Font Info:    Trying to load font information for U+lasy on input line 19.
+LaTeX Font Info:    Trying to load font information for U+lasy on input line 20.
  (/usr/local/texlive/2025/texmf-dist/tex/latex/base/ulasy.fd
 File: ulasy.fd 1998/08/17 v2.2e LaTeX symbol font definitions
 )
-LaTeX Font Info:    Trying to load font information for U+msa on input line 19.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 20.
  (/usr/local/texlive/2025/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 19.
+LaTeX Font Info:    Trying to load font information for U+msb on input line 20.
  (/usr/local/texlive/2025/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
 LaTeX Font Info:    Font shape `U/lasy/b/n' in size <8> not available
-(Font)              Font shape `U/lasy/m/n' tried instead on input line 19.
+(Font)              Font shape `U/lasy/m/n' tried instead on input line 20.
 LaTeX Font Info:    Font shape `U/lasy/b/n' in size <6> not available
-(Font)              Font shape `U/lasy/m/n' tried instead on input line 19.
-LaTeX Font Info:    Trying to load font information for T1+phv on input line 22.
+(Font)              Font shape `U/lasy/m/n' tried instead on input line 20.
+LaTeX Font Info:    Trying to load font information for T1+phv on input line 23.
  (/usr/local/texlive/2025/texmf-dist/tex/latex/psnfss/t1phv.fd
 File: t1phv.fd 2020/03/25 scalable font definitions for T1/phv.
 )
 LaTeX Font Info:    Font shape `T1/phv/m/n' will be
-(Font)              scaled to size 9.19998pt on input line 22.
+(Font)              scaled to size 9.19998pt on input line 23.
 LaTeX Font Info:    Font shape `T1/phv/m/n' will be
-(Font)              scaled to size 8.27998pt on input line 27.
-
-
-LaTeX Warning: Citation `rodriguezPAAAAlgorithm2022' on page 1 undefined on input line 29.
-
+(Font)              scaled to size 8.27998pt on input line 28.
 LaTeX Font Info:    Font shape `U/lasy/b/n' in size <9> not available
-(Font)              Font shape `U/lasy/m/n' tried instead on input line 33.
+(Font)              Font shape `U/lasy/m/n' tried instead on input line 34.
 LaTeX Font Info:    Font shape `U/lasy/b/n' in size <5> not available
-(Font)              Font shape `U/lasy/m/n' tried instead on input line 33.
+(Font)              Font shape `U/lasy/m/n' tried instead on input line 34.
 
 
 
@@ -496,18 +493,18 @@ Non-PDF special ignored!
 
 
  <./logojuliacon.pdf>]
-Underfull \hbox (badness 1082) in paragraph at lines 99--101
+Underfull \hbox (badness 1082) in paragraph at lines 100--102
 \T1/ptm/m/n/9 where $\OML/cmm/m/it/9 q$ \T1/ptm/m/n/9 is a poly-no-mial. Eval-u-a-tion of $\OML/cmm/m/it/9 r$ \T1/ptm/m/n/9 at the test points
  []
 
 
-Underfull \hbox (badness 1997) in paragraph at lines 102--104
+Underfull \hbox (badness 1997) in paragraph at lines 103--105
 []\T1/ptm/m/n/9 A po-ten-tial dif-fi-culty with this ap-proach is find-ing a well-
  []
 
 
 
-Package hyperref Info: bookmark level for unknown lstlisting defaults to 0 on input line 139.
+Package hyperref Info: bookmark level for unknown lstlisting defaults to 0 on input line 140.
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
@@ -522,7 +519,7 @@ Underfull \hbox (badness 10000) has occurred while \output is active
  []
 
 [2{/usr/local/texlive/2025/texmf-dist/fonts/enc/dvips/cm-super/cm-super-t1.enc}]
-Underfull \hbox (badness 10000) in paragraph at lines 153--167
+Underfull \hbox (badness 10000) in paragraph at lines 154--168
 [][]
  []
 
@@ -540,37 +537,29 @@ Underfull \hbox (badness 10000) has occurred while \output is active
 
 [3]
 LaTeX Font Info:    Font shape `T1/cmtt/bx/n' in size <7> not available
-(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 222.
-<poleplot1.pdf, id=184, 451.6875pt x 339.2675pt>
+(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 223.
+<poleplot1.pdf, id=190, 451.6875pt x 339.2675pt>
 File: poleplot1.pdf Graphic file (type pdf)
 <use poleplot1.pdf>
-Package pdftex.def Info: poleplot1.pdf  used on input line 230.
+Package pdftex.def Info: poleplot1.pdf  used on input line 232.
 (pdftex.def)             Requested size: 240.0pt x 180.27164pt.
 
 
-<continuum.pdf, id=187, 451.6875pt x 339.2675pt>
+<continuum.pdf, id=193, 451.6875pt x 339.2675pt>
 File: continuum.pdf Graphic file (type pdf)
 <use continuum.pdf>
-Package pdftex.def Info: continuum.pdf  used on input line 251.
+Package pdftex.def Info: continuum.pdf  used on input line 253.
 (pdftex.def)             Requested size: 240.0pt x 180.27164pt.
-
-Overfull \hbox (0.91617pt too wide) in paragraph at lines 260--261
-[][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][] 
- []
-
-<absconverge.pdf, id=191, 451.6875pt x 339.2675pt>
+<absconverge.pdf, id=199, 451.6875pt x 339.2675pt>
 File: absconverge.pdf Graphic file (type pdf)
 <use absconverge.pdf>
-Package pdftex.def Info: absconverge.pdf  used on input line 267.
+Package pdftex.def Info: absconverge.pdf  used on input line 274.
 (pdftex.def)             Requested size: 240.0pt x 180.27164pt.
-<absnodes.pdf, id=192, 451.6875pt x 339.2675pt>
+<absnodes.pdf, id=200, 451.6875pt x 339.2675pt>
 File: absnodes.pdf Graphic file (type pdf)
 <use absnodes.pdf>
-Package pdftex.def Info: absnodes.pdf  used on input line 274.
+Package pdftex.def Info: absnodes.pdf  used on input line 281.
 (pdftex.def)             Requested size: 240.0pt x 180.27164pt.
-
-Underfull \vbox (badness 2302) has occurred while \output is active []
-
 
 
 
@@ -585,24 +574,24 @@ Underfull \hbox (badness 10000) has occurred while \output is active
 
 pdfTeX warning: pdflatex (file ./continuum.pdf): PDF inclusion: multiple pdfs with page group included in a single page
 >]
-Underfull \vbox (badness 1694) has occurred while \output is active []
+Overfull \hbox (0.91617pt too wide) in paragraph at lines 289--290
+[][][][][][][][][][][][][][][][][][][][][][][][][][] 
+ []
+
+<absthiele.pdf, id=291, 451.6875pt x 339.2675pt>
+File: absthiele.pdf Graphic file (type pdf)
+<use absthiele.pdf>
+Package pdftex.def Info: absthiele.pdf  used on input line 295.
+(pdftex.def)             Requested size: 240.0pt x 180.27164pt.
+
+Underfull \vbox (badness 1019) has occurred while \output is active []
 
 
 
-<minimax.pdf, id=282, 451.6875pt x 339.2675pt>
+<minimax.pdf, id=296, 451.6875pt x 339.2675pt>
 File: minimax.pdf Graphic file (type pdf)
 <use minimax.pdf>
-Package pdftex.def Info: minimax.pdf  used on input line 300.
-(pdftex.def)             Requested size: 240.0pt x 180.27164pt.
-<zetapoles.pdf, id=285, 451.6875pt x 339.2675pt>
-File: zetapoles.pdf Graphic file (type pdf)
-<use zetapoles.pdf>
-Package pdftex.def Info: zetapoles.pdf  used on input line 322.
-(pdftex.def)             Requested size: 240.0pt x 180.27164pt.
-<squircle.pdf, id=286, 451.6875pt x 339.2675pt>
-File: squircle.pdf Graphic file (type pdf)
-<use squircle.pdf>
-Package pdftex.def Info: squircle.pdf  used on input line 329.
+Package pdftex.def Info: minimax.pdf  used on input line 314.
 (pdftex.def)             Requested size: 240.0pt x 180.27164pt.
 
 
@@ -617,15 +606,25 @@ Underfull \hbox (badness 10000) has occurred while \output is active
 [5 <./absconverge.pdf> <./absnodes.pdf
 
 pdfTeX warning: pdflatex (file ./absnodes.pdf): PDF inclusion: multiple pdfs with page group included in a single page
-> <./minimax.pdf
+> <./absthiele.pdf
 
-pdfTeX warning: pdflatex (file ./minimax.pdf): PDF inclusion: multiple pdfs with page group included in a single page
+pdfTeX warning: pdflatex (file ./absthiele.pdf): PDF inclusion: multiple pdfs with page group included in a single page
 >]
+<zetapoles.pdf, id=365, 451.6875pt x 339.2675pt>
+File: zetapoles.pdf Graphic file (type pdf)
+<use zetapoles.pdf>
+Package pdftex.def Info: zetapoles.pdf  used on input line 336.
+(pdftex.def)             Requested size: 240.0pt x 180.27164pt.
+<squircle.pdf, id=366, 451.6875pt x 339.2675pt>
+File: squircle.pdf Graphic file (type pdf)
+<use squircle.pdf>
+Package pdftex.def Info: squircle.pdf  used on input line 343.
+(pdftex.def)             Requested size: 240.0pt x 180.27164pt.
 LaTeX Font Info:    Font shape `U/lasy/b/n' in size <7> not available
-(Font)              Font shape `U/lasy/m/n' tried instead on input line 338.
- (./bib.tex (./paper.bbl
+(Font)              Font shape `U/lasy/m/n' tried instead on input line 352.
 
 
+(./bib.tex (./paper.bbl
 Underfull \hbox (badness 1194) in paragraph at lines 10--14
 \T1/ptm/m/n/9 ter-po-la-tion. \T1/ptm/m/it/9 SIAM Re-view\T1/ptm/m/n/9 , 46(3):501--517, Jan-uary 2004.
  []
@@ -641,38 +640,8 @@ Underfull \hbox (badness 5939) in paragraph at lines 22--26
  []
 
 
-Underfull \hbox (badness 1910) in paragraph at lines 28--32
-[]\T1/ptm/m/n/9 O. S. Celis. Adap-tive Thiele in-ter-po-la-tion. \T1/ptm/m/it/9 ACM Com-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 28--32
-\T1/ptm/m/it/9 mun. Com-put. Al-ge-bra\T1/ptm/m/n/9 , 56(3):125--132, April 2023.
- []
-
-
-Underfull \hbox (badness 1259) in paragraph at lines 40--44
+Underfull \hbox (badness 1259) in paragraph at lines 28--32
 \T1/ptm/m/n/9 j-durovi¢, K. Kut-nar, D. Maru²i£, ’ Miklavi£, T. Pisan-
- []
-
-
-Underfull \hbox (badness 1565) in paragraph at lines 51--55
-\T1/ptm/m/it/9 on Sci-en-tific Com-put-ing\T1/ptm/m/n/9 , 46(2):A929--A952, April 2024.
- []
-
-
-Underfull \hbox (badness 4353) in paragraph at lines 57--61
-\T1/ptm/m/n/9 er-mann. Ra-tio-nal min-i-max ap-prox-i-ma-tion via adap-tive
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 57--61
-\T1/ptm/m/n/9 barycen-tric rep-re-sen-ta-tions. \T1/ptm/m/it/9 SIAM Jour-nal on Sci-en-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 57--61
-\T1/ptm/m/it/9 tific Com-put-ing\T1/ptm/m/n/9 , 40(4):A2427--A2455, Jan-uary 2018.
  []
 
 
@@ -685,17 +654,90 @@ Underfull \hbox (badness 10000) has occurred while \output is active
   \T1/ptm/m/n/9 6
  []
 
-[6 <./zetapoles.pdf> <./squircle.pdf
+[6 <./minimax.pdf> <./zetapoles.pdf
+
+pdfTeX warning: pdflatex (file ./zetapoles.pdf): PDF inclusion: multiple pdfs with page group included in a single page
+> <./squircle.pdf
 
 pdfTeX warning: pdflatex (file ./squircle.pdf): PDF inclusion: multiple pdfs with page group included in a single page
 >]
-Underfull \hbox (badness 1968) in paragraph at lines 112--116
+Underfull \hbox (badness 3000) in paragraph at lines 39--43
+[]\T1/ptm/m/n/9 T. A. Driscoll, Y. Nakat-sukasa, and L. N. Tre-fethen.
+ []
+
+
+Underfull \hbox (badness 4353) in paragraph at lines 45--49
+\T1/ptm/m/n/9 er-mann. Ra-tio-nal min-i-max ap-prox-i-ma-tion via adap-tive
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 45--49
+\T1/ptm/m/n/9 barycen-tric rep-re-sen-ta-tions. \T1/ptm/m/it/9 SIAM Jour-nal on Sci-en-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 45--49
+\T1/ptm/m/it/9 tific Com-put-ing\T1/ptm/m/n/9 , 40(4):A2427--A2455, Jan-uary 2018.
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 81--84
+[][]$\T1/cmtt/m/n/9 https : / / github . com / JuliaMath / Interpolations . jl$[][]\T1/ptm/m/n/9 ,
+ []
+
+
+Underfull \hbox (badness 1112) in paragraph at lines 86--89
+\T1/ptm/m/n/9 pos-i-tive def-i-nite ker-nel func-tions in ar-bi-trary di-men-sion.
+ []
+
+
+Underfull \hbox (badness 1968) in paragraph at lines 102--106
 \T1/ptm/m/n/9 al-go-rithm for ra-tio-nal ap-prox-i-ma-tion. \T1/ptm/m/it/9 SIAM Jour-nal on
  []
 
+
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 131--136
+[]\T1/ptm/m/n/9 Andrea Car-racedo Ro-driguez, Li-nus Bal-icki, and
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 131--136
+\T1/ptm/m/n/9 Serkan Gugercin. The p-AAA al-go-rithm for data-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 131--136
+\T1/ptm/m/n/9 driven mod-el-ing of para-met-ric dy-nam-i-cal sys-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 131--136
+\T1/ptm/m/n/9 tems. \T1/ptm/m/it/9 SIAM Jour-nal on Sci-en-tific Com-put-ing\T1/ptm/m/n/9 ,
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 131--136
+\T1/ptm/m/n/9 45(3):A1332--A1358, 2023. [][]doi:10.1137/20M1322698[][].
+ []
+
+
+Underfull \hbox (badness 4254) in paragraph at lines 138--142
+[]\T1/ptm/m/n/9 O. Salazar Celis. Adap-tive Thiele in-ter-po-la-tion. \T1/ptm/m/it/9 ACM
+ []
+
+
+Underfull \hbox (badness 1769) in paragraph at lines 138--142
+\T1/ptm/m/it/9 Com-mun. Com-put. Al-ge-bra\T1/ptm/m/n/9 , 56(3):125--132, April 2023.
+ []
+
+
+Underfull \hbox (badness 1484) in paragraph at lines 162--166
+[]\T1/ptm/m/n/9 L. N. Tre-fethen, Y. Nakat-sukasa, and J. A. C. Wei-de-
+ []
+
 ))
-
-
 
 
 Overfull \vbox (2.39996pt too high) has occurred while \output is active []
@@ -705,33 +747,27 @@ Underfull \hbox (badness 10000) has occurred while \output is active
   \T1/ptm/m/n/9 7
  []
 
-[7
-
-] (./paper.aux)
+[7] (./paper.aux)
  ***********
 LaTeX2e <2024-11-01> patch level 2
 L3 programming layer <2025-01-18>
  ***********
-
-
-LaTeX Warning: There were undefined references.
-
 Package rerunfilecheck Info: File `paper.out' has not changed.
-(rerunfilecheck)             Checksum: 96350CB27A57FA815D2FC4903FAE607A;2200.
+(rerunfilecheck)             Checksum: 79A59C46548D31ECA04D457989837701;2319.
  ) 
 Here is how much of TeX's memory you used:
- 15685 strings out of 473190
- 237290 string characters out of 5715801
- 706081 words of memory out of 5000000
- 38586 multiletter control sequences out of 15000+600000
+ 15705 strings out of 473190
+ 237654 string characters out of 5715801
+ 709163 words of memory out of 5000000
+ 38598 multiletter control sequences out of 15000+600000
  614522 words of font info for 141 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 90i,17n,93p,1068b,1902s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 90i,17n,93p,1052b,1931s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cmextra/cmex9.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi6.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi9.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cmextra/cmmib9.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmr6.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmr9.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/latxfont/lcircle1.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/public/cm-super/sfit0900.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/public/cm-super/sftt0800.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/public/cm-super/sftt0900.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/urw/helvetic/uhvr8a.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/urw/times/utmb8a.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/urw/times/utmr8a.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/urw/times/utmri8a.pfb>
-Output written on paper.pdf (7 pages, 379978 bytes).
+Output written on paper.pdf (7 pages, 408204 bytes).
 PDF statistics:
- 564 PDF objects out of 1000 (max. 8388607)
- 462 compressed objects within 5 object streams
- 116 named destinations out of 1000 (max. 500000)
- 169 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 602 PDF objects out of 1000 (max. 8388607)
+ 494 compressed objects within 5 object streams
+ 124 named destinations out of 1000 (max. 500000)
+ 182 words of extra memory for PDF output out of 10000 (max. 10000000)
 

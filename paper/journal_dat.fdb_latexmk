@@ -1,0 +1,12 @@
+# Fdb version 4
+["pdflatex"] 1750100980.58048 "journal_dat.tex" "journal_dat.pdf" "journal_dat" 1750100981.50171 2
+  "/usr/local/texlive/2025/texmf-dist/web2c/texmf.cnf" 1739380943 42148 61becc7c670cd061bb319c643c27fdd4 ""
+  "/usr/local/texlive/2025/texmf-var/web2c/pdftex/pdflatex.fmt" 1741450574 3345740 46b66fdb0378f7bf5921b5eabf1762b8 ""
+  "/usr/local/texlive/2025/texmf.cnf" 1741450484 577 418a7058ec8e006d8704f60ecd22c938 ""
+  "journal_dat.aux" 1750100980.58 32 3985256e7290058c681f74d7a3565a19 "pdflatex"
+  "journal_dat.tex" 1750100972.41485 150 e8f5f0ce758e2580b918922de6715366 ""
+  (generated)
+  "journal_dat.aux"
+  "journal_dat.log"
+  "journal_dat.pdf"
+  (rewritten before read)
