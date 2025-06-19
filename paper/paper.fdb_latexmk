@@ -1,14 +1,14 @@
 # Fdb version 4
-["bibtex paper"] 1750337039.25409 "paper.aux" "paper.bbl" "paper" 1750337303.12685 0
+["bibtex paper"] 1750337039.25409 "paper.aux" "paper.bbl" "paper" 1750337485.21588 0
   "./juliacon.bst" 1749842027 20997 2eaa317b2b3889daf19a84ad3db6071a ""
   "./ref.bib" 1750337039.02592 35508 a950ca15dae50a314d0421b68a8dc835 ""
-  "paper.aux" 1750337302.87874 13007 b76d2c5279e1f48dd11aa81749602435 "pdflatex"
+  "paper.aux" 1750337484.97433 13007 b76d2c5279e1f48dd11aa81749602435 "pdflatex"
   (generated)
   "paper.bbl"
   "paper.blg"
   (rewritten before read)
-["pdflatex"] 1750337302.30957 "/Users/driscoll/Dropbox/papers/juliacon-proc/paper/paper.tex" "paper.pdf" "paper" 1750337303.12699 0
-  "/Users/driscoll/Dropbox/papers/juliacon-proc/paper/paper.tex" 1750337302.07655 31070 d4c94a351146ef4c06079ee7d4612cbf ""
+["pdflatex"] 1750337484.40334 "/Users/driscoll/Dropbox/papers/juliacon-proc/paper/paper.tex" "paper.pdf" "paper" 1750337485.216 0
+  "/Users/driscoll/Dropbox/papers/juliacon-proc/paper/paper.tex" 1750337484.18166 31070 2e12aacbe7cf6edeafe6de9639867385 ""
   "/usr/local/texlive/2025/texmf-dist/fonts/enc/dvips/base/8r.enc" 1165713224 4850 80dc9bab7f31fb78a000ccfed0e27cab ""
   "/usr/local/texlive/2025/texmf-dist/fonts/enc/dvips/cm-super/cm-super-t1.enc" 1136849721 2971 def0b6c1f0b107b3b936def894055589 ""
   "/usr/local/texlive/2025/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
@@ -168,18 +168,18 @@
   "absconverge.pdf" 1750275832.1624 17759 831aded3c48364ba7daf29228bcb6575 ""
   "absnodes.pdf" 1750275841.47804 10281 3510d082402e095905d897d2cc1bd313 ""
   "absthiele.pdf" 1750274535.61344 19038 a57d18baba6ae25161cdd98125a97665 ""
-  "bib.tex" 1750337302.29851 111 fb8dcbd9d4481bde59a06a28ec8a83ca ""
+  "bib.tex" 1750337484.39291 111 fb8dcbd9d4481bde59a06a28ec8a83ca ""
   "continuum.pdf" 1750100252.20109 31865 2194421ca6abb702866999cdbb506945 ""
-  "header.tex" 1750337302.29832 571 ca483ba1cf3fe45c5736bea1b50ef07f ""
+  "header.tex" 1750337484.3928 571 ca483ba1cf3fe45c5736bea1b50ef07f ""
   "jlcode.sty" 1749842027 18247 c7ed2bfdf5b1011566e15a16b8dc985b ""
-  "journal_dat.tex" 1750337302.29843 150 e8f5f0ce758e2580b918922de6715366 ""
+  "journal_dat.tex" 1750337484.39286 150 e8f5f0ce758e2580b918922de6715366 ""
   "juliacon.cls" 1749842027 30597 785899b4e284a01edd6bca4c84b3467c ""
   "logojuliacon.pdf" 1749842027 4937 0cb75c4e65b0cf72a69c7716f140efe5 ""
   "minimax.pdf" 1750336351.63872 23635 899f6d5ac181ae4622cc083fc8457a93 ""
-  "paper.aux" 1750337302.87874 13007 b76d2c5279e1f48dd11aa81749602435 "pdflatex"
+  "paper.aux" 1750337484.97433 13007 b76d2c5279e1f48dd11aa81749602435 "pdflatex"
   "paper.bbl" 1750337039.34351 8296 7f512d936d94d7c172c433ebd532a446 "bibtex paper"
-  "paper.out" 1750337302.87976 2319 79a59c46548d31eca04d457989837701 "pdflatex"
-  "paper.tex" 1750337302.07655 31070 d4c94a351146ef4c06079ee7d4612cbf ""
+  "paper.out" 1750337484.97535 2319 79a59c46548d31eca04d457989837701 "pdflatex"
+  "paper.tex" 1750337484.18166 31070 2e12aacbe7cf6edeafe6de9639867385 ""
   "poleplot1.pdf" 1749842027 5393 c3a1298fa3c661a7ff099ecef27bc44d ""
   "squircle.pdf" 1749842027 8090 28dbf8b58b3416c9f77a94e09bc8b43c ""
   "zetapoles.pdf" 1750336625.63395 7460 bdfbd85584f0821b29a29da5d65f217f ""
