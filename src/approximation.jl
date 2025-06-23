@@ -122,7 +122,7 @@ julia> check(r);   # accuracy over the domain
 [ Info: Max error is 1.58e-13
 ```
 """
-approximate
+approximate(f::Function, domain)
 
 @doc """
     approximate(f, domain, poles)
@@ -164,7 +164,7 @@ julia> check(r);   # accuracy over the domain
 [ Info: Max error is 2.75e-12
 ```
 """
-approximate
+approximate(f::Function, domain, ζ::AbstractVector)
 
 #####
 ##### Dispatch
