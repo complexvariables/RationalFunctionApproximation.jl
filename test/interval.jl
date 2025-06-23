@@ -26,6 +26,7 @@ end
     f = x -> exp(x); @test pass(f, approx(f), pts, rtol=tol)
     f = x -> cis(x); r = approx(f)
     @test pass(f, r, pts, rtol=tol)
+    @test isapprox(r, f; rtol=tol)
     _, err = check(r; quiet=true)
     @test maximum(abs, err) < tol
 end

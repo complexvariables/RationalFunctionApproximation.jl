@@ -227,6 +227,23 @@ end
 ##### Support functions
 #####
 
+function Base.isapprox(r::Approximation, s::Approximation; kwargs...)
+    return if isapprox(r.domain, s.domain)
+        all( isapprox(r.fun(z), s.fun(z); kwargs...) for z in test_points(r) )
+    else
+        false
+    end
+end
+
+function Base.isapprox(r::Approximation, f::Function; kwargs...)
+    return all(isapprox(r.fun(z), f(z); kwargs...) for z in test_points(r))
+end
+
+function Base.isapprox(r::Approximation, z::Number; kwargs...)
+    return all(isapprox(r.fun(x), z; kwargs...) for x in test_points(r))
+end
+
+
 """
     rewind(r, index)
 
