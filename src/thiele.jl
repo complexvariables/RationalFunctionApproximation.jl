@@ -121,7 +121,10 @@ function add_node!(r::Thiele, new_σ, new_f)
     return r
 end
 
-function approximate(method::Type{Thiele},
+# TODO: This should probably enforce parameters S and T
+approximate(::Type{Thiele{S,T}}, args...; kw...) where {S,T} = approximate(Thiele, args...; kw...)
+
+function approximate(::Type{Thiele},
     f::Function, d::Union{ComplexPath,ComplexCurve};
     float_type::Type = promote_type(real_type(d), typeof(float(1))),
     tol::Real = 1000*eps(float_type),
@@ -191,7 +194,7 @@ function approximate(method::Type{Thiele},
     return Approximation(f, d, r, allowed, path, history)
 end
 
-function approximate(method::Type{Thiele},
+function approximate(::Type{Thiele},
     y::AbstractVector{T}, z::AbstractVector{S};
     float_type::Type = promote_type(real_type(eltype(z)), typeof(float(1))),
     tol::AbstractFloat = 1000*eps(float_type),

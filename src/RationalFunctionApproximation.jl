@@ -1,6 +1,6 @@
 module RationalFunctionApproximation
 
-using LinearAlgebra, Statistics, GenericLinearAlgebra, ComplexRegions, GenericSchur
+using LinearAlgebra, Statistics, GenericLinearAlgebra, ComplexRegions, GenericSchur, Zygote
 using PyFormattedStrings
 
 export unit_interval, unit_circle, unit_disk, DiscretizedPath
@@ -15,7 +15,7 @@ include("approximation.jl")
 export ArnoldiBasis, ArnoldiPolynomial, PartialFractions
 include("parfrac.jl")
 
-export Barycentric, Thiele
+export Barycentric, Thiele, derivative, evaluate
 include("barycentric.jl")
 include("thiele.jl")
 

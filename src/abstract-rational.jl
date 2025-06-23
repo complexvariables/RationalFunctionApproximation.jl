@@ -53,6 +53,13 @@ function Res(f::Function, z::Number; radius=100eps(abs(z)), n=200)
     return radius * trap / n
 end
 
+function derivative(f::AbstractRationalFunction)
+    return function(z::Number)
+        ζ = complex(z)
+        return something(conj(gradient(real ∘ f, ζ)[1]), zero(ζ))
+    end
+end
+
 # parameters are T = float type, S = value type (T or Complex{T})
 abstract type AbstractRationalInterpolant{T,S} <: AbstractRationalFunction{S} end
 

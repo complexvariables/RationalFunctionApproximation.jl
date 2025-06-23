@@ -243,6 +243,19 @@ function Base.isapprox(r::Approximation, z::Number; kwargs...)
     return all(isapprox(r.fun(x), z; kwargs...) for x in test_points(r))
 end
 
+"""
+    derivative(r::Approximation)
+
+Create an approximation of the derivative of `r` on the same domain.
+"""
+function derivative(r::Approximation; kwargs...)
+    # TODO: This ought to be handled by dispatch on a type parameter.
+    return if isa(r.fun, AbstractRationalInterpolant)
+        approximate(derivative(r.fun), r.domain; method=typeof(r.fun), kwargs...)
+    else
+        @error("Not supported. Take the derivative of the `.fun` field.")
+    end
+end
 
 """
     rewind(r, index)

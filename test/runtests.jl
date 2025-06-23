@@ -36,3 +36,7 @@ end
 @testset "Prescribed poles" verbose=true begin
     include("parfrac.jl")
 end
+
+@testset "Operations" verbose=true begin
+    include("operations.jl")
+end

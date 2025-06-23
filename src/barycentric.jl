@@ -118,6 +118,34 @@ function evaluate!(u::AbstractArray, r::Barycentric, C::AbstractMatrix)
     return nothing
 end
 
+# Schneider & Werner formulas for the derivative
+function _derivative(w, y, z, ζ, rζ)
+    n = length(z)
+   return if isinf(ζ)
+        zero(complex(ζ))
+    else
+        δ = ζ .- z
+        k = findfirst(abs(δ) < eps(real(ζ)) for δ in δ)
+        if isnothing(k)         # not at a node
+            num, den = 0, 0
+            for i in 1:n
+                D = w[i] / δ[i]
+                num += D * (rζ - y[i]) / δ[i]
+                den += D
+            end
+            num / den
+        else
+            -sum(w[i] * (y[k] - y[i]) / (z[k] - z[i]) for i in 1:n if i != k) / w[k]
+        end
+    end
+end
+
+derivative(r::Barycentric, ζ::Number) = derivative(r)(ζ)
+function derivative(r::Barycentric)
+    w, y, z = weights(r), values(r), nodes(r)
+    return ζ -> _derivative(w, y, z, ζ, r(ζ))
+end
+
 """
     poles(r)
 
@@ -222,7 +250,10 @@ function _initialize(f, num_ref, max_iter, σ, fσ, path, idx_test)
     return τ, fτ, rτ, C, L
 end
 
-function approximate(method::Type{Barycentric},
+# TODO: This should probably enforce parameters S and T
+approximate(::Type{Barycentric{S,T}}, args...; kw...) where {S,T} = approximate(Barycentric, args...; kw...)
+
+function approximate(::Type{Barycentric},
     f::Function, d::ComplexCurveOrPath;
     float_type::Type = promote_type(real_type(d), typeof(float(1))),
     tol::Real = 1000*eps(float_type),
@@ -288,7 +319,7 @@ function approximate(method::Type{Barycentric},
     return Approximation(f, d, r, allowed, path, history)
 end
 
-function approximate(method::Type{Barycentric},
+function approximate(::Type{Barycentric},
     y::AbstractVector{T}, z::AbstractVector{S};
     float_type::Type = promote_type(real_type(eltype(z)), typeof(float(1))),
     tol::AbstractFloat = 1000*eps(float_type),
