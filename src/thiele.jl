@@ -127,8 +127,8 @@ function add_node!(r::Thiele, new_σ, new_f)
     return r
 end
 
-approximate(::Type{Thiele{S,T}}, args...; kwargs...) where {S,T} =
-    approximate(Thiele, args...; kwargs...)
+# TODO: This should probably enforce parameters S and T
+approximate(::Type{Thiele{S,T}}, args...; kw...) where {S,T} = approximate(Thiele, args...; kw...)
 
 function approximate(::Type{Thiele},
     f::Function, d::Union{ComplexPath,ComplexCurve};

@@ -204,6 +204,10 @@ function evaluate(r::PartialFractions, z::Number)
     return u
 end
 
+# Can't use gradient with mutation in ArnoldiPolynomial.
+# TODO: not working
+# derivative(r::PartialFractions) = z -> conj(Zygote.forwarddiff(real ∘ r, complex(z))[1])
+
 poles(r::PartialFractions) = r.poles
 residues(r::PartialFractions) = (r.poles, r.residues)
 
@@ -253,7 +257,7 @@ function refine_by_singularity(d::ComplexCurveOrPath, ζ::AbstractVector;
     return path
 end
 
-function approximate(method::Type{PartialFractions},
+function approximate(::Type{PartialFractions},
     f::Function, d::ComplexCurveOrPath, ζ::AbstractVector;
     degree = max(1, div(length(ζ), 2)),
     init =  max(400, length(d) * 100),
@@ -267,7 +271,7 @@ function approximate(method::Type{PartialFractions},
     return Approximation(f, d, r, z -> true, path, nothing)
 end
 
-function approximate(method::Type{PartialFractions},
+function approximate(::Type{PartialFractions},
     y::AbstractVector, z::AbstractVector, ζ::AbstractVector;
     degree = max(1, div(length(ζ), 2)),
     )
