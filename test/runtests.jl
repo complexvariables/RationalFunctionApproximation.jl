@@ -21,6 +21,10 @@ end
     include("interval.jl")
 end
 
+@testset "Operations on functions" verbose=true begin
+    include("operations.jl")
+end
+
 @testset "Imaginary interval" verbose=true begin
     include("imaginterval.jl")
 end

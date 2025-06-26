@@ -122,7 +122,7 @@ julia> check(r);   # accuracy over the domain
 [ Info: Max error is 1.58e-13
 ```
 """
-approximate
+approximate(f::Function, domain)
 
 @doc """
     approximate(f, domain, poles)
@@ -164,7 +164,7 @@ julia> check(r);   # accuracy over the domain
 [ Info: Max error is 2.75e-12
 ```
 """
-approximate
+approximate(f::Function, domain, ζ::AbstractVector)
 
 #####
 ##### Dispatch
@@ -226,6 +226,22 @@ end
 #####
 ##### Support functions
 #####
+
+function Base.isapprox(r::Approximation, s::Approximation; kwargs...)
+    return if isapprox(r.domain, s.domain)
+        all( isapprox(r.fun(z), s.fun(z); kwargs...) for z in test_points(r) )
+    else
+        false
+    end
+end
+
+function Base.isapprox(r::Approximation, f::Function; kwargs...)
+    return all(isapprox(r.fun(z), f(z); kwargs...) for z in test_points(r))
+end
+
+function Base.isapprox(r::Approximation, z::Number; kwargs...)
+    return all(isapprox(r.fun(x), z; kwargs...) for x in test_points(r))
+end
 
 """
     rewind(r, index)
@@ -376,3 +392,98 @@ function quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
 
     return status
 end
+
+#####
+##### Operations
+#####
+
+"""
+    derivative(r::Approximation)
+
+Create an approximation of the derivative of `r` on the same domain.
+"""
+function derivative(r::Approximation; kwargs...)
+    # TODO: This ought to be handled by dispatch on a type parameter.
+    return if isa(r.fun, AbstractRationalInterpolant)
+        approximate(derivative(r.fun), r.domain; method=typeof(r.fun), kwargs...)
+    else
+        @error("Not supported. Take the derivative of the `.fun` field.")
+    end
+end
+
+# Arithmetic Big 4
+
+function Base.:+(r::Approximation, s::Approximation)
+    if !(r.domain ≈ s.domain)
+        throw(DomainError("Approximation domains do not match"))
+    end
+    return r + s.fun
+end
+
+function Base.:+(r::Approximation, g::Function)
+    f(z) = r.fun(z) + g(z)
+    return approximate(f, r.domain; method=typeof(r.fun))
+end
+
+function Base.:+(r::Approximation, s::Number)
+    rs = r.fun + s
+    return Approximation(rs, r.domain, rs, r.allowed, r.path, r.history)
+end
+
+Base.:+(s::Union{Function,Number}, r::Approximation) = r + s
+
+Base.:-(r::Approximation, s::Approximation) = -s + r
+Base.:-(r::Approximation, s::Number) = -s + r
+Base.:-(r::Approximation, s::Function) = r + ∘(-, s)
+Base.:-(r::Union{Function,Number}, s::Approximation) = -s + r
+
+# unary -
+function Base.:-(r::Approximation)
+    rs = -r.fun
+    return Approximation(rs, r.domain, rs, r.allowed, r.path, r.history)
+end
+
+# * and / with 3 levels of generality
+function Base.:*(r::Approximation, s::Approximation)
+    if !(r.domain ≈ s.domain)
+        throw(DomainError("Approximation domains do not match"))
+    end
+    return r * s.fun
+end
+
+function Base.:*(r::Approximation, g::Function)
+    f(z) = r.fun(z) * g(z)
+    return approximate(f, r.domain; method=typeof(r.fun))
+end
+
+function Base.:*(r::Approximation, s::Number)
+    rs = r.fun * s
+    return Approximation(rs, r.domain, rs, r.allowed, r.path, r.history)
+end
+
+Base.:*(s::Union{Function,Number}, r::Approximation) = r * s
+
+function Base.:/(r::Approximation, s::Approximation)
+    if !(r.domain ≈ s.domain)
+        throw(DomainError("Approximation domains do not match"))
+    end
+    return r / s.fun
+end
+
+function Base.:/(r::Approximation, g::Function)
+    f(z) = r.fun(z) / g(z)
+    return approximate(f, r.domain; method=typeof(r.fun))
+end
+
+Base.:/(r::Approximation, s::Number) = r * (1 / s)
+function Base.:/(s::Number, r::Approximation)
+    f(z) = s / r.fun(z)
+    return approximate(f, r.domain; method=typeof(r.fun))
+end
+
+function Base.:/(r::Function, s::Approximation)
+    f(z) = r(z) / s.fun(z)
+    return approximate(f, s.domain; method=typeof(s.fun))
+end
+
+Base.:/(r::Number, s::Approximation) = (z -> r) / s

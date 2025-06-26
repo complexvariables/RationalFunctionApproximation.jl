@@ -53,6 +53,28 @@ function Res(f::Function, z::Number; radius=100eps(abs(z)), n=200)
     return radius * trap / n
 end
 
+function derivative(f::AbstractRationalFunction)
+    return function(z::Number)
+        ζ = complex(z)
+        return something(conj(gradient(real ∘ f, ζ)[1]), zero(ζ))
+    end
+end
+
+Base.:+(r::AbstractRationalFunction, ::Number) = error("`+` not implemented for $(typeof(r))")
+Base.:+(s::Number, r::AbstractRationalFunction) = r + s
+Base.:-(r::AbstractRationalFunction, s::Number) = r + (-s)
+Base.:-(s::Number, r::AbstractRationalFunction) = (-r) + s
+Base.:-(r::AbstractRationalFunction) = error("unary `-` not implemented for $(typeof(r))")
+Base.:*(r::AbstractRationalFunction, ::Number) = error("`*` not implemented for $(typeof(r))")
+Base.:*(s::Number, r::AbstractRationalFunction) = r * s
+Base.:/(r::AbstractRationalFunction, s::Number) = r * (1 / s)
+
+# # Promote to the widest numeric type:
+# Base.promote_rule(::Type{R{S}}, ::Type{R{T}}) where {R<:AbstractRationalFunction,T,S} = R{promote_type(S,T)}
+# Base.promote_rule(::Type{T}, ::Type{R{S}}) where {T<:Number,R<:AbstractRationalFunction,S} = R{promote_type(S,T)}
+
+##### AbstractRationalInterpolant interface
+
 # parameters are T = float type, S = value type (T or Complex{T})
 abstract type AbstractRationalInterpolant{T,S} <: AbstractRationalFunction{S} end
 

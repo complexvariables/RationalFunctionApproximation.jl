@@ -20,6 +20,12 @@ struct Thiele{T,S} <: AbstractRationalInterpolant{T,S}
     end
 end
 
+# Convert the numeric type:
+function Base.convert(::Type{Thiele{T}}, r::Thiele{S}) where {S,T}
+    return Thiele{T}( T.(nodes(r)), T.(values(r)), T.(weights(r)) )
+end
+
+# convenience accessors
 nodes(r::Thiele) = r.nodes
 Base.values(r::Thiele) = r.values
 weights(r::Thiele) = r.weights
@@ -121,7 +127,10 @@ function add_node!(r::Thiele, new_σ, new_f)
     return r
 end
 
-function approximate(method::Type{Thiele},
+approximate(::Type{Thiele{S,T}}, args...; kwargs...) where {S,T} =
+    approximate(Thiele, args...; kwargs...)
+
+function approximate(::Type{Thiele},
     f::Function, d::Union{ComplexPath,ComplexCurve};
     float_type::Type = promote_type(real_type(d), typeof(float(1))),
     tol::Real = 1000*eps(float_type),
@@ -191,7 +200,7 @@ function approximate(method::Type{Thiele},
     return Approximation(f, d, r, allowed, path, history)
 end
 
-function approximate(method::Type{Thiele},
+function approximate(::Type{Thiele},
     y::AbstractVector{T}, z::AbstractVector{S};
     float_type::Type = promote_type(real_type(eltype(z)), typeof(float(1))),
     tol::AbstractFloat = 1000*eps(float_type),
@@ -229,4 +238,28 @@ function approximate(method::Type{Thiele},
         n += 1
     end
     return r, history
+end
+
+# Operations with scalars that can be done quickly.
+
+function Base.:+(r::Thiele, s::Number)
+    w = copy(r.weights)
+    w = [w[1] + s; w[2:end]]
+    return Thiele(r.nodes, r.values .+ s, w)
+end
+
+function Base.:-(r::Thiele)
+    return Thiele(r.nodes, -r.values, -r.weights)
+end
+
+function Base.:*(r::Thiele, s::Number)
+    return if iszero(s)
+        Thiele(r.nodes[1], zero(r.values[1]), zero(r.values[1]))
+    else
+        y = s * r.values
+        w = Vector{eltype(y)}(undef, length(r.weights))
+        w[1:2:end] .= r.weights[1:2:end] * s
+        w[2:2:end] .= r.weights[2:2:end] / s
+        Thiele(r.nodes, y, w)
+    end
 end

@@ -81,6 +81,11 @@ end
 Base.copy(r::Barycentric) =
     Barycentric(copy(r.nodes), copy(r.values), copy(r.weights), copy(r.w_times_f))
 
+# Convert the numeric type:
+function Base.convert(::Type{Barycentric{T}}, r::Barycentric{S}) where {S,T}
+    return Barycentric{T}( T.(nodes(r)), T.(values(r)), T.(weights(r)), T.(r.w_times_f) )
+end
+
 # convenience accessors and overloads
 nodes(r::Barycentric) = r.nodes
 Base.values(r::Barycentric) = r.values
@@ -222,7 +227,10 @@ function _initialize(f, num_ref, max_iter, σ, fσ, path, idx_test)
     return τ, fτ, rτ, C, L
 end
 
-function approximate(method::Type{Barycentric},
+approximate(::Type{Barycentric{S,T}}, args...; kwargs...) where {S,T} =
+    approximate(Barycentric, args...; kwargs...)
+
+function approximate(::Type{Barycentric},
     f::Function, d::ComplexCurveOrPath;
     float_type::Type = promote_type(real_type(d), typeof(float(1))),
     tol::Real = 1000*eps(float_type),
@@ -288,7 +296,7 @@ function approximate(method::Type{Barycentric},
     return Approximation(f, d, r, allowed, path, history)
 end
 
-function approximate(method::Type{Barycentric},
+function approximate(::Type{Barycentric},
     y::AbstractVector{T}, z::AbstractVector{S};
     float_type::Type = promote_type(real_type(eltype(z)), typeof(float(1))),
     tol::AbstractFloat = 1000*eps(float_type),
@@ -336,4 +344,18 @@ function approximate(method::Type{Barycentric},
         n += 1
     end
     return r, history
+end
+
+# Operations with scalars that can be done quickly.
+
+function Base.:+(r::Barycentric, s::Number)
+    return Barycentric(r.nodes, r.values .+ s, r.weights)
+end
+
+function Base.:-(r::Barycentric)
+    return Barycentric(r.nodes, -r.values, r.weights, -r.w_times_f)
+end
+
+function Base.:*(r::Barycentric, s::Number)
+    return Barycentric(r.nodes, r.values .* s, r.weights, r.w_times_f .* s)
 end
