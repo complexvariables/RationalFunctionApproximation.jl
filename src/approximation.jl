@@ -475,15 +475,10 @@ function Base.:/(r::Approximation, g::Function)
     return approximate(f, r.domain; method=typeof(r.fun))
 end
 
-Base.:/(r::Approximation, s::Number) = r * (1 / s)
-function Base.:/(s::Number, r::Approximation)
-    f(z) = s / r.fun(z)
-    return approximate(f, r.domain; method=typeof(r.fun))
-end
-
 function Base.:/(r::Function, s::Approximation)
     f(z) = r(z) / s.fun(z)
     return approximate(f, s.domain; method=typeof(s.fun))
 end
 
+Base.:/(r::Approximation, s::Number) = r * (1 / s)
 Base.:/(r::Number, s::Approximation) = (z -> r) / s
