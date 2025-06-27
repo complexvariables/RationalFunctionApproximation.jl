@@ -4,16 +4,14 @@
     z = T(10) .^ range(T(-15), T(0), 500);
     pts = [-reverse(z); 0; z]
     approx(f; kw...) = approximate(f, pts; method, kw...)
-    f = x -> abs(x + 1//2 + 1im//100); @test pass(f, approx(f; stagnation=30), pts; rtol=tol)
+    f = x -> abs(x + 1//2 + 1im//100); @test pass(f, approx(f), pts; rtol=tol)
     f = x -> sin(1 / (21//20 - x)); @test pass(f, approx(f), pts; rtol=tol)
-    f = x -> 1im*x + exp(-1 / x^2); @test pass(f, approx(f; stagnation=30), pts; rtol=tol)
-    if method != Thiele
-        f = x -> exp(100x^2); @test pass(f, approx(f), pts; rtol=tol)
-        f = x -> x + sin(80x) * exp(-10x^2); @test pass(f, approx(f; stagnation=30), pts; rtol=tol)
-    end
+    f = x -> 1im*x + exp(-1 / x^2); @test pass(f, approx(f), pts; rtol=tol)
+    f = x -> exp(100x^2); @test pass(f, approx(f), pts; rtol=tol)
+    f = x -> x + sin(80x) * exp(-10x^2); @test pass(f, approx(f), pts; rtol=tol)
     f = x -> exp(-10 / (6//5 - x)); @test pass(f, approx(f), pts; rtol=tol)
     f = x -> 10im*x + tanh(100*(x - 1//5)); @test pass(f, approx(f), pts, rtol=tol)
-    f = x -> x + tanh(100x); @test pass(f, approx(f; stagnation=20), pts, rtol=tol)
+    f = x -> tanh(100x); @test pass(f, approx(f), pts, rtol=tol)
     f = x -> exp(x); @test pass(f, approx(f), pts, rtol=tol)
     f = x -> cis(x); @test pass(f, approx(f), pts, rtol=tol)
     # inspired by bug for julia 1.10 in deleteat! usage
@@ -41,13 +39,11 @@ end
     approx(f; kw...) = approximate(f, pts; method, kw...)
     f = z -> sin(10z) * exp(-z^2); @test pass(f, approx(f), pts, rtol=2e-11)
     f = z -> sin(1/(1.1 - z)); @test pass(f, approx(f), pts, rtol=2e-13)
-    f = sec; @test pass(f, approx(f, max_iter=15), pts, rtol=1e-6)
+    f = sec; @test pass(f, approx(f), pts, rtol=1e-6)
     f = z -> cos(sin(z)) + exp(z)/(z-1.1); @test pass(f, approx(f), pts, rtol=2e-13)
     f = x -> cis(x);  @test pass(f, approx(f), pts, atol=6e-13)
     f = z -> tan(π*z);  @test pass(f, approx(f), pts, rtol=2e-13)
-    if method != Thiele
-        f = z -> tanh(100z); @test pass(f, approx(f), pts, rtol=2e-13)
-    end
+    f = z -> tanh(100z); @test pass(f, approx(f), pts, rtol=2e-13)
 end
 
 @testset "Discrete interval, low accuracy" begin
@@ -104,7 +100,7 @@ end
     f = x -> 1/(1.01 + x^3); @test pass(f, approx(f), pts, atol=tol)
 end
 
-@testset "Specified degree" begin
+@testset "Limited degree" begin
     tol = 2000*eps(Float64)
     pts = range(-1, 1, 1001)
     approx(f; kw...) = approximate(f, pts; method=Barycentric, kw...)

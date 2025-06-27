@@ -13,18 +13,20 @@ end
     tol = 8000eps(T)
     pts = test_points[T]
     approx(f; kw...) = approximate(f, domain[T]; method, kw...)
-    f = x -> abs(x + 1//2 + 1im//100); @test pass(f, approx(f), pts; rtol=tol)
-    f = x -> sinh(1 / (21//20 - x)); @test pass(f, approx(f), pts; rtol=tol)
-    if method != Thiele
-        f = x -> x + exp(-1 / x^2); @test pass(f, approx(f; stagnation=30), pts; rtol=tol) skip=true
-        f = x -> x + tan(100x); @test pass(f, approx(f), pts, rtol=tol)
+    @testset "Function $iter" for (iter, f) in enumerate((
+        x -> abs(x - 1//2 + 1im//100),
+        x -> sinh(1 / (21//20 - x)),
+        x -> tan(100x),
+        x -> exp(100x^2),
+        x -> exp(-10 / (6//5 - x)),
+        x -> sinh(80x) * exp(10x^2),
+        x -> 10x + tan(100*(x - 1//5)),
+        exp,
+        cis,
+        ))
+        r = approx(f)
+        @test pass(f, r, pts, rtol=tol)
     end
-    f = x -> x + exp(100x^2); @test pass(f, approx(f), pts; rtol=tol)
-    f = x -> exp(-10 / (6//5 - x)); @test pass(f, approx(f), pts; rtol=tol)
-    f = x -> x + sinh(80x) * exp(10x^2); @test pass(f, approx(f; stagnation=30), pts; rtol=tol)
-    f = x -> 10x + tan(100*(x - 1//5)); @test pass(f, approx(f), pts, rtol=tol)
-    f = x -> exp(x); @test pass(f, approx(f), pts, rtol=tol)
-    f = x -> cis(x); @test pass(f, approx(f), pts, rtol=tol)
 end
 
 @testset "Double64 for $method" for method in (Barycentric, Thiele)
@@ -32,15 +34,20 @@ end
     pts = test_points[T]
     tol = 2000*eps(T)
     approx(f; kw...) = approximate(f, domain[T]; method, kw...)
-    f = x -> abs(x + 1//2 + 1im//100); @test pass(f, approx(f), pts; rtol=tol)
-    f = x -> sinh(1 / (21//20 - x)); @test pass(f, approx(f), pts; rtol=tol)
-    f = x -> exp(-100*(x + 1//4)^2); @test pass(f, approx(f), pts; rtol=tol)
-    f = x -> exp(-10 / (6//5 - x)); @test pass(f, approx(f), pts; rtol=tol)
-    f = x -> 1/(1 + exp(100*(x + 1//2))); @test pass(f, approx(f), pts; rtol=tol)
-    f = x -> x + sinh(50x) * exp(10x^2); @test pass(f, approx(f), pts; rtol=tol)
-    f = x -> x + tan(100*(x - 1//5)); @test pass(f, approx(f), pts, rtol=tol)
-    f = x -> exp(x); @test pass(f, approx(f), pts, rtol=tol)
-    f = x -> cis(x); @test pass(f, approx(f), pts, rtol=tol)
+    @testset "Function $iter" for (iter, f) in enumerate((
+        x -> abs(x - 1//2 + 1im//100),
+        x -> sinh(1 / (21//20 - x)),
+        x -> exp(-100*(x + 1//4)^2),
+        x -> exp(-10 / (6//5 - x)),
+        x -> 1/(1 + exp(100*(x + 1//2))),
+        x -> sinh(50x) * exp(10x^2),
+        x -> tan(100*(x - 1//5)),
+        x -> exp(x),
+        x -> cis(x),
+        ))
+        r = approx(f)
+        @test pass(f, r, pts, rtol=tol)
+    end
 end
 
 @testset "Low accuracy" begin

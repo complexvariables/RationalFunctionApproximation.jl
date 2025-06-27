@@ -18,15 +18,11 @@ end
 end
 
 @testset "Real interval" verbose=true begin
-    include("interval.jl")
-end
-
-@testset "Operations on functions" verbose=true begin
-    include("operations.jl")
+    include("real_interval.jl")
 end
 
 @testset "Imaginary interval" verbose=true begin
-    include("imaginterval.jl")
+    include("imag_interval.jl")
 end
 
 @testset "Circle and disk" verbose=true begin
@@ -35,6 +31,10 @@ end
 
 @testset "Custom curve" verbose=true begin
     include("custom.jl")
+end
+
+@testset "Operations on functions" verbose=true begin
+    include("operations.jl")
 end
 
 @testset "Prescribed poles" verbose=true begin
