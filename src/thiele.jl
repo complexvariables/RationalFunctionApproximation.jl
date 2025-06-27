@@ -254,7 +254,8 @@ end
 
 function Base.:*(r::Thiele, s::Number)
     return if iszero(s)
-        Thiele(r.nodes[1], zero(r.values[1]), zero(r.values[1]))
+        zer = zero(eltype(r.values))
+        Thiele(r.nodes[1:1], [zer], [zer])
     else
         y = s * r.values
         w = Vector{eltype(y)}(undef, length(r.weights))

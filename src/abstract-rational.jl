@@ -14,15 +14,15 @@ degrees(r::AbstractRationalFunction) = error("`degrees` not implemented for $(ty
 degree(r::AbstractRationalFunction) = error("`degree` not implemented for $(typeof(r))")
 
 "poles(r) returns the poles of the rational interpolant `r`."
-poles(::AbstractRationalFunction) = error("`poles` not implemented for $(typeof(r))")
+poles(r::AbstractRationalFunction) = error("`poles` not implemented for $(typeof(r))")
 
 "residues(r) returns two vectors of the poles and residues of the rational function `r`."
-residues(::AbstractRationalFunction) = error("`residues` not implemented for $(typeof(r))")
+residues(r::AbstractRationalFunction) = error("`residues` not implemented for $(typeof(r))")
 
 Base.isempty(r::AbstractRationalFunction) = degrees(r) == (0, 0)
 
 "roots(r) returns the roots of the rational function `r`."
-roots(::AbstractRationalFunction) = error("`roots` not implemented for $(typeof(r))")
+roots(r::AbstractRationalFunction) = error("`roots` not implemented for $(typeof(r))")
 
 function Base.show(io::IO, mimetype::MIME"text/plain", r::AbstractRationalFunction)
     ioc = IOContext(io, :compact=>get(io, :compact, true))
@@ -58,6 +58,11 @@ function derivative(f::AbstractRationalFunction)
         ζ = complex(z)
         return something(conj(gradient(real ∘ f, ζ)[1]), zero(ζ))
     end
+end
+
+function derivative(f::AbstractRationalFunction, z::Number)
+    ζ = complex(z)
+    return something(conj(gradient(real ∘ f, ζ)[1]), zero(ζ))
 end
 
 Base.:+(r::AbstractRationalFunction, ::Number) = error("`+` not implemented for $(typeof(r))")

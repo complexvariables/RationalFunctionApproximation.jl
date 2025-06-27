@@ -480,5 +480,5 @@ function Base.:/(r::Function, s::Approximation)
     return approximate(f, s.domain; method=typeof(s.fun))
 end
 
-Base.:/(r::Approximation, s::Number) = r * (1 / s)
+Base.:/(r::Approximation, s::Number) = iszero(s) ? throw(DomainError("Division by zero")) : r * (1 / s)
 Base.:/(r::Number, s::Approximation) = (z -> r) / s
