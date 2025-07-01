@@ -78,10 +78,14 @@ end
     @test minimum(values(r)) ≈ exp(-1)
     @test degree(r) == length(nodes(r)) - 1
     @test degrees(r) == (degree(r), degree(r))
-    tp = RationalFunctionApproximation.test_points(r)
-    @test pass(exp, r, tp, rtol=1000eps())
+    @test isapprox(r, exp)
     deg, err, zp, allowed, best = get_history(r)
     @test deg[end] == degree(r)
+    @test length(deg) == length(err) == length(allowed)
+    r = approximate(exp, unit_interval; method=Barycentric, allowed=true)
+    deg, err, zp, allowed, best = get_history(r)
+    @test deg[end] == degree(r)
+    @test length(deg) == length(err) == length(allowed)
 end
 
 @testset "Nodes, values, degree for Thiele" begin
@@ -93,10 +97,14 @@ end
     @test minimum(values(r)) ≈ exp(-1)
     @test degree(r) == 5
     @test degrees(r) == (5, 5)
-    tp = RationalFunctionApproximation.test_points(r)
-    @test pass(exp, r, tp, rtol=1000eps())
+    @test isapprox(r, exp)
     deg, err, zp, allowed, best = get_history(r)
     @test deg[end] == degree(r)
+    @test length(deg) == length(err) == length(allowed)
+    r = approximate(exp, unit_interval; method=Barycentric, allowed=true)
+    deg, err, zp, allowed, best = get_history(r)
+    @test deg[end] == degree(r)
+    @test length(deg) == length(err) == length(allowed)
 end
 
 @testset "Poles, zeros, residues in $T for Barycentric" for T in (Float64, Double64)

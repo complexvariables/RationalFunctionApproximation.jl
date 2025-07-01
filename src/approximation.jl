@@ -36,7 +36,7 @@ struct Approximation{T,S} <: Function
     original::Function
     domain::Domain{T}
     fun::Union{AbstractRationalInterpolant{T,S},AbstractRationalFunction{S}}
-    allowed::Function
+    allowed::Union{Bool,Function}
     path::DiscretizedPath
     history::Union{Vector{<:IterationRecord},Nothing}
 end
@@ -45,7 +45,7 @@ function Approximation(
     f::Function,
     domain::Domain,
     fun::AbstractRationalInterpolant,
-    allowed::Function,
+    allowed::Union{Bool,Function},
     path::DiscretizedPath
     )
     return Approximation(f, domain, fun, allowed, path, nothing)
@@ -205,7 +205,7 @@ end
 # Evaluate the function to call a fully discrete approximation.
 function approximate(
     f::Function, z::AbstractVector;
-    allowed = z -> true,
+    allowed = true,
     kw...
     )
     r, history = approximate(f.(z), z; kw...)
@@ -215,7 +215,7 @@ end
 # ::Function,::AbstractVector, ::AbstractVector
 function approximate(
     f::Function, z::AbstractVector, ζ::AbstractVector;
-    allowed = z -> true,
+    allowed = true,
     method = PartialFractions,
     kw...
     )
@@ -324,7 +324,7 @@ Parse the convergence history of a rational approximation.
 
 See also [`convergenceplot`](@ref).
 """
-function get_history(r::Approximation{T,S}) where {T,S}
+function get_history(r::Approximation{T,S}; get_poles=!(r.allowed == true)) where {T,S}
     hist = r.history
     deg = Int[]
     zp = Vector{complex(S)}[]
@@ -334,11 +334,15 @@ function get_history(r::Approximation{T,S}) where {T,S}
     for (idx, record) in enumerate(hist)
         fun = record.interpolant
         push!(deg, degree(fun))
-        if ismissing(record.poles)
+        if get_poles && ismissing(record.poles)
             record.poles = poles(fun)
         end
-        push!(zp, record.poles)
-        push!(allowed, r.allowed.(record.poles))
+        push!(zp, coalesce(record.poles, []))
+        if !(r.allowed == true)
+            push!(allowed, r.allowed.(zp[end]))
+        else
+            push!(allowed, fill(true, length(zp[end])))
+        end
         push!(err, record.error)
         if length(nodes(r)) == length(nodes(fun))
             best = idx
@@ -352,11 +356,11 @@ end
 #   0: continue
 #   n: iteration number to stop at
 function quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
-    # If allowed === true, do not check for allowed poles.
     n = length(history)
     err = [h.error for h in history]
 
     # Check for convergence
+    # If allowed === true, do not check for allowed poles
     status = 0
     if (err[end] <= tol*fmax)
         if (allowed === true)

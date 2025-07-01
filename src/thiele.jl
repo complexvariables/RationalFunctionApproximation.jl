@@ -194,9 +194,6 @@ function approximate(::Type{Thiele},
             idx_test = CartesianIndices((1:n, 2:num_ref+1))
         end
     end
-    if allowed === true
-        allowed = z -> true
-    end
     return Approximation(f, d, r, allowed, path, history)
 end
 

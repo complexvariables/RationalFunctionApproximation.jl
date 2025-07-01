@@ -318,9 +318,6 @@ function approximate(::Type{Barycentric},
         push!(history, IterationRecord(r, NaN, missing))
         n += 1
     end
-    if allowed === true
-        allowed = z -> true
-    end
     return Approximation(f, d, r, allowed, path, history)
 end
 

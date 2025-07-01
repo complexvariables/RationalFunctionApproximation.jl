@@ -268,7 +268,7 @@ function approximate(::Type{PartialFractions},
     _, σ = collect(path, :nodes)
     fσ = f.(σ)
     r = PartialFractions(σ, fσ, ζ, degree)
-    return Approximation(f, d, r, z -> true, path, nothing)
+    return Approximation(f, d, r, true, path, nothing)
 end
 
 function approximate(::Type{PartialFractions},
