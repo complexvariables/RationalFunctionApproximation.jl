@@ -486,3 +486,9 @@ end
 
 Base.:/(r::Approximation, s::Number) = iszero(s) ? throw(DomainError("Division by zero")) : r * (1 / s)
 Base.:/(r::Number, s::Approximation) = (z -> r) / s
+
+# composition
+function Base.:∘(f::Function, g::Approximation)
+    # No domain checking is attempted.
+    return approximate(f ∘ g.fun, g.domain; method=typeof(g.fun))
+end
