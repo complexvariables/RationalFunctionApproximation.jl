@@ -24,7 +24,7 @@ Here is how the approximation looks in the complex plane (using a black cross to
 
 ```@example shapes
 using ComplexRegions, ComplexPlots
-domaincolor(r, [-1.5, 1.5, -1.5, 1.5], abs=true)
+domaincolor(r, 1.5, abs=true)
 lines!(unit_circle, color=:white, linewidth=4)
 scatter!(poles(r), markersize=16, color=:black, marker=:xcross)
 limits!(-1.5, 1.5, -1.5, 1.5)
@@ -38,7 +38,7 @@ This next function has infinitely many poles and an essential singularity inside
 ```@example shapes
 f = z -> tan(1 / z^4)
 r = approximate(f, unit_circle)
-domaincolor(r, [-1.5, 1.5, -1.5, 1.5], abs=true)
+domaincolor(r, 1.5, abs=true)
 lines!(unit_circle, color=:white, linewidth=4)
 shg()
 ```
@@ -64,7 +64,7 @@ We are not limited to intervals and circles! There are other shapes available in
 ```@example shapes
 import ComplexRegions.Shapes
 r = approximate(z -> log(0.35 + 0.4im - z), interior(Shapes.cross))
-domaincolor(r, [-1.5, 1.5, -1.5, 1.5], abs=true)
+domaincolor(r, 1.5, abs=true)
 lines!(boundary(r.domain), color=:white, linewidth=4)
 shg()
 ```
@@ -72,7 +72,7 @@ shg()
 ```@example shapes
 c = Shapes.hypo(5)
 r = approximate(z -> (z+4)^(-3.5), interior(c))
-domaincolor(r, [-5, 5, -5, 5], abs=true)
+domaincolor(r, 5, abs=true)
 lines!(c, color=:white, linewidth=4)
 shg()
 ```
@@ -115,7 +115,7 @@ By composing $f$ with $\phi$, we can approximate within the disk while $f$ is ev
 
 ```@example shapes
 r = approximate(f ∘ φ, interior(unit_circle))
-domaincolor(r, [-2, 2, -2, 2], abs=true)
+domaincolor(r, 2, abs=true)
 lines!(unit_circle, color=:white, linewidth=4)
 scatter!(nodes(r.fun), color=:black, markersize=8)
 shg()
@@ -125,7 +125,7 @@ Above, the black markers show the nodes of the interpolant. We can view the same
 
 ```@example shapes
 φ⁻¹ = inv(φ)
-domaincolor(r ∘ φ⁻¹, [-8, 8, -8, 8], abs=true)
+domaincolor(r ∘ φ⁻¹, 8, abs=true)
 lines!([(0, 8), (0, -8)], color=:white, linewidth=4)
 scatter!(φ.(nodes(r.fun)), color=:black, markersize=8)
 limits!(-8, 8, -8, 8)

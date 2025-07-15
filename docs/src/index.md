@@ -76,7 +76,7 @@ We can use the [DomainColoring](https://eprovst.github.io/DomainColoring.jl/stab
 ```@example interval
 using DomainColoring
 
-domaincolor(r, [-6, 6, -6, 6]; abs=true)
+domaincolor(r, 6; abs=true)
 lines!(r.domain, linewidth=3, color=:white)
 shg()
 ```
@@ -86,7 +86,7 @@ A meromorphic function such as sech has only those isolated poles as singulariti
 ```@example interval
 f = x -> log(x + 0.05im)
 r = approximate(f, unit_interval)
-domaincolor(r, [-1.2, 1.2, -1.2, 1.2]; abs=true)
+domaincolor(r, 1.2; abs=true)
 lines!(r.domain, linewidth=3, color=:white)
 shg()
 ```
