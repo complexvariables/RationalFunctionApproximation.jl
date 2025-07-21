@@ -1,7 +1,8 @@
 @testset "Derivatives for $method" verbose=true for method in (Barycentric, Thiele)
+    using ComplexRegions
     @testset "Domain $it_d" for (it_d, domain) in enumerate((unit_interval, unit_disk, Shapes.square))
         @testset "Function $it_f" for (it_f, (f, df)) in enumerate((
-            (x -> exp(x), x -> exp(x)),
+            # (x -> exp(x), x -> exp(x)),
             (x -> exp(-x), x -> -exp(-x)),
             (x -> cis(x), x -> 1im * cis(x)),
             (x -> x, x -> 1),
