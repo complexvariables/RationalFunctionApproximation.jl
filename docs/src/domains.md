@@ -23,7 +23,7 @@ errorplot(r)
 Here is how the approximation looks in the complex plane (using a black cross to mark the pole):
 
 ```@example shapes
-using ComplexRegions, ComplexPlots
+using ComplexRegions
 domaincolor(r, 1.5, abs=true)
 lines!(unit_circle, color=:white, linewidth=4)
 scatter!(poles(r), markersize=16, color=:black, marker=:xcross)
