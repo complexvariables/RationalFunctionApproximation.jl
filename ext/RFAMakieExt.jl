@@ -1,6 +1,6 @@
 module RFAMakieExt
 
-using RationalFunctionApproximation, Makie, ComplexRegions, Logging, Printf
+using RationalFunctionApproximation, Makie, ComplexRegions, Printf
 RFA = RationalFunctionApproximation
 
 function RFA.convergenceplot(r::RFA.Approximation)
