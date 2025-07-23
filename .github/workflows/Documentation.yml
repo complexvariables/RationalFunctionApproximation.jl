@@ -9,9 +9,10 @@ on:
 
 # Add permissions for GitHub Pages deployment
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
+  statuses: write
 
 # Add concurrency group to prevent multiple deployments
 concurrency:
@@ -26,23 +27,43 @@ jobs:
       - uses: julia-actions/setup-julia@v2
         with:
           version: '1'
-      - uses: julia-actions/cache@v2
-      - name: Install dependencies
-        run: julia --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
-      - name: Build documentation
-        run: julia --project=docs/ docs/make.jl
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: docs/build
+      - name: Load Julia packages from cache
+        id: julia-cache
+        uses: julia-actions/cache@v2
+      - name: Build and deploy docs
+        uses: julia-actions/julia-docdeploy@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # For authentication with GitHub Actions token
+          DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }} # For authentication with SSH deploy key
+          GKSwstype: "100" # for Plots.jl plots (if you have them)
+          JULIA_DEBUG: "Documenter"
+          DATADEPS_ALWAYS_ACCEPT: true
+      - name: Save Julia depot cache on cancel or failure
+        id: julia-cache-save
+        if: cancelled() || failure()
+        uses: actions/cache/save@v4
+        with: 
+          path: |
+            ${{ steps.julia-cache.outputs.cache-paths }}
+          key: ${{ steps.julia-cache.outputs.cache-key }}
+          
+  #     - uses: julia-actions/cache@v2
+  #     - name: Install dependencies
+  #       run: julia --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
+  #     - name: Build documentation
+  #       run: julia --project=docs/ docs/make.jl
+  #     - name: Upload Pages artifact
+  #       uses: actions/upload-pages-artifact@v3
+  #       with:
+  #         path: docs/build
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+  # deploy:
+  #   needs: build
+  #   runs-on: ubuntu-latest
+  #   environment:
+  #     name: github-pages
+  #     url: ${{ steps.deployment.outputs.page_url }}
+  #   steps:
+  #     - name: Deploy to GitHub Pages
+  #       id: deployment
+  #       uses: actions/deploy-pages@v4
