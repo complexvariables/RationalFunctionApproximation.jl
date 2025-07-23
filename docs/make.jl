@@ -28,11 +28,10 @@ makedocs(;
     ],
 )
 
-# DocumenterVitepress.deploydocs is no longer needed - GitHub Actions handles deployment
-# DocumenterVitepress.deploydocs(;
-#     repo = "github.com/complexvariables/RationalFunctionApproximation.jl",
-#     target = joinpath(@__DIR__, "build"),
-#     branch = "gh-pages",
-#     devbranch = "main",
-#     push_preview = true,
-# )
+DocumenterVitepress.deploydocs(;
+    repo = "github.com/complexvariables/RationalFunctionApproximation.jl",
+    target = joinpath(@__DIR__, "build"),
+    branch = "gh-pages",
+    devbranch = "main",
+    push_preview = true,
+)
