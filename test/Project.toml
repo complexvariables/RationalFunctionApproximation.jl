@@ -2,4 +2,5 @@
 ComplexRegions = "c64915e2-6c82-11e9-38e9-1f159a780463"
 DoubleFloats = "497a8b3b-efae-58df-a0af-a86822472b78"
 Logging = "56ddb016-857b-54e1-b83d-db4d58db5568"
+ReTest = "e0db7c4e-2690-44b9-bad6-7687da720f89"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
