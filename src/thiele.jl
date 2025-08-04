@@ -41,20 +41,36 @@ function Base.copy(r::Thiele)
 end
 
 function evaluate(r::Thiele, z::Number)
+    return if isinf(z)
+         if isodd(n)
+            sum(r.weights[1:2:end])
+        else
+            Inf
+        end
+    elseif isnan(z)
+        NaN
+    else
+        numer, denom = _evaluate(r, z)
+        numer / denom
+    end
+end
+
+function _evaluate(r::Thiele, z::Number)
+    @assert isfinite(z)
     n = length(r.weights)
-    if n == 1
-        return r.weights[1]
+    return if n == 1
+        r.weights[1], 1
+    else
+        # use 3-term pair recurrence to avoid division until the end
+        a = r.weights[n]
+        b = z - r.nodes[n-1]
+        @fastmath for k in n-1:-1:2
+            t = r.weights[k] * a + b
+            b = a * (z - r.nodes[k-1])
+            a = t
+        end
+        r.weights[1] * a + b, a
     end
-    # use 3-term pair recurrence to avoid division until the end
-    a = r.weights[n]
-    b = z - r.nodes[n-1]
-    for k in n-1:-1:2
-        t = r.weights[k] * a + b
-        b = a * (z - r.nodes[k-1])
-        a = t
-    end
-    numer = r.weights[1] * a + b
-    return numer / a
 end
 
 function poles(r::Thiele{T,S}) where {T,S}
