@@ -41,12 +41,20 @@ function Base.copy(r::Thiele)
 end
 
 function evaluate(r::Thiele, z::Number)
-    n = length(r.nodes)
-    u = last(r.weights)
-    for k in n-1:-1:1
-        u = r.weights[k] + (z - r.nodes[k]) / u
+    n = length(r.weights)
+    if n == 1
+        return r.weights[1]
     end
-    return u
+    # use 3-term pair recurrence to avoid division until the end
+    a = r.weights[n]
+    b = z - r.nodes[n-1]
+    for k in n-1:-1:2
+        t = r.weights[k] * a + b
+        b = a * (z - r.nodes[k-1])
+        a = t
+    end
+    numer = r.weights[1] * a + b
+    return numer / a
 end
 
 function poles(r::Thiele{T,S}) where {T,S}
