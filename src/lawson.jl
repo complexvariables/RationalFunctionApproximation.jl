@@ -68,3 +68,42 @@ function minimax(r::Approximation, nsteps::Integer=20)
     r̂ = Barycentric(nodes(r.fun), ⍺ ./ β, β, ⍺)
     return Approximation(r.original, r.domain, r̂, r.allowed, r.path)
 end
+
+# just for some experimentation
+function brasil(r::Approximation{T}; tol=1000*eps(T), σmax=0.1, τ=0.1, max_iter=20) where T
+    t, z = collect(r.path, :nodes)
+    p = r.path.path
+    idx = 1:length(t)-1
+    if t[1] > 0
+        t = [0; t]
+        idx .+= 1
+    end
+    if t[end] < 1
+        t = [t; 1]
+    end
+    δ = [2, 1]
+    n = length(t)
+    fun = r.fun
+    err(t) = abs2(fun(p(t)) - r.original(p(t)))
+    iter = 0
+    while (maximum(δ) / minimum(δ) - 1 > tol) && (iter <= max_iter)
+        δ = zeros(n-1)
+        Threads.@threads for i in 1:n-1
+            s = golden_max(err, t[i], t[i+1]; tol)
+            δ[i] = sqrt(err(s))
+        end
+        δ̄ = sum(δ) / (n-1)
+        γ = δ .- δ̄
+        γ̄ = maximum(abs, γ)
+        γ ./= γ̄
+        σ = min(σmax, τ * γ̄ / δ̄)
+        c = @. (1 - σ) ^ γ
+        ℓ = c .* diff(t)
+        t = [0; cumsum(ℓ) / sum(ℓ)]
+        z = point(p, t[idx])
+        fun, _ = approximate(r.original.(z), z; method=Thiele, allowed=r.allowed)
+        @show maximum(δ) / minimum(δ) - 1, extrema(δ)
+        iter += 1
+    end
+    return Approximation(r.original, r.domain, fun, r.allowed, DiscretizedPath(r.path.path, t))
+end

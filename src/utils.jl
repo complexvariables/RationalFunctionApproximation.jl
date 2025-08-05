@@ -218,3 +218,27 @@ function refine(p::ComplexPath, t::AbstractVector, N::Integer=3, args...)
     end
     return tt, ττ
 end
+
+function golden_max(f::Function, a::Number, b::Number; tol=sqrt(eps(float(b-a))))
+    a, b, five = promote(float(a), float(b), 5)
+    φ = (sqrt(five) - 1) / 2
+    φʹ = 1 - φ
+    x1 = a + φʹ * (b - a)
+    x2 = a + φ * (b - a)
+    f1 = f(x1)
+    f2 = f(x2)
+    while b - a > 2tol
+        if f1 > f2
+            b = x2
+            x2, f2 = x1, f1
+            x1 = a + φʹ * (b - a)
+            f1 = f(x1)
+        else
+            a = x1
+            x1, f1 = x2, f2
+            x2 = a + φ * (b - a)
+            f2 = f(x2)
+        end
+    end
+    return (a + b) / 2
+end
