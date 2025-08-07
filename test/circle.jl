@@ -1,4 +1,4 @@
-@testset "Circles" begin
+@testset "Circles" verbose=true begin
     pts = cispi.(2 * (0:500) / 500)
     UD = unit_disk
     UC = unit_circle
@@ -28,22 +28,24 @@
         @test pass(f, approximate(f, UD, max_iter=12), pts, rtol=1e-6)
     end
 
-    @testset "Poles, zeros, residues" begin
-        f = z -> tan(π*z);  F = approximate(f, UC)
+    @testset "Poles, zeros, residues in $T for $method" for T in (Float64, Double64), method in (Barycentric, Thiele)
+        UC = Circle{T}(0, 1)
+        UD = interior(UC)
+        f = z -> tan(T(π)*z);  F = approximate(f, UC)
         pol = poles(F); @test sort(abs.(pol))[1:5] ≈ 0.5*[1;1;3;3;5] atol=1e-3
 
-        f = z -> exp(exp(z)) / (z - 0.2im); pol = poles(approximate(f, UC));
-        @test minimum(@. abs(pol - .2im)) < 1e-10
+        f = z -> exp(exp(z)) / (z - 1im // 5); pol = poles(approximate(f, UC));
+        @test minimum(@. abs(pol - 1im // 5)) < 1000eps(T)
 
         f = z -> (z+1) * (z+2) / ((z+3) * (z+4));  F = approximate(f, UC)
         pol = poles(F);  zer = roots(F);
-        @test isapprox(sum(pol+zer), -10, atol=1e-12)
+        @test isapprox(sum(pol+zer), -10, atol=1000eps(T))
 
-        f = z -> 2/(3+z) + 5/(z-2im);  F = approximate(f, UD)
-        @test isapprox( prod(residues(F)[2]), 10, atol=1e-8 )
+        f = z -> 2/(3+z) + 5im / (z-2im);  F = approximate(f, UD)
+        @test isapprox( prod(residues(F)[2]), 10im, atol=sqrt(eps(T)) )
 
         f = z -> (z-(3+3im))/(z+2);  F = approximate(f, UD)
-        pol, zer = poles(F), roots(F);  @test isapprox(pol[1]*zer[1], -6-6im, atol=1e-12)
+        pol, zer = poles(F), roots(F);  @test isapprox(pol[1]*zer[1], -6-6im, atol=1000eps(T))
     end
 
     @testset "Tolerance" begin

@@ -140,8 +140,8 @@
         zer = roots(r)
         @test isapprox(sum(pol + zer), -10, rtol=5000*eps())
 
-        f = x -> 2/(1.2 + x) + 3/(x - 1.25im);  r = approx(f)
-        @test isapprox(prod(residues(r)[2]), 6, rtol=0.01)
+        f = x -> 2im / (1.2 + x) + 3 / (x - 1.25im);  r = approx(f)
+        @test isapprox(prod(residues(r)[2]), 6im, rtol=1e-13)
 
         f = x -> sinpi(10x) + x - 9//10;  r = approx(f);
         zer = roots(r)
@@ -152,6 +152,9 @@
         pol, zer = poles(r), roots(r)
         @test isapprox(pol[1]*zer[1], -6-6im, rtol=5000*eps())
 
+    end
+
+    @testset "Thiele direct construction" begin
         f = x -> sinpi(x) + x - 9//10;
         x = range(-1, 1, 20);
         r = Thiele(x, f.(x))

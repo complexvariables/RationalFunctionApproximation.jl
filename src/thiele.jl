@@ -97,14 +97,20 @@ function roots(r::Thiele{S,T}) where {S,T}
 end
 
 function residues(r::Thiele)
-    # This is a low-accuracy version for speed.
     ζ = poles(r)
-    res = similar( complex(ζ) )
-    T = eltype(res)
-    circ = [cispi(T(2k // 9)) for k in 0:8]
-    for (i, z) in enumerate(ζ)
-        δ = minimum(abs, ζ[[1:i-1;i+1:end]] .- z) / 2
-        res[i] = (δ / 9) * sum(u * r(z + δ*u) for u in circ)
+    res = similar(complex(ζ))
+    T = real_type(eltype(ζ))
+    for i in eachindex(ζ)
+        # is it a simple pole?
+        numer, denom = _evaluate(r, ζ[i])
+        if abs(denom) < 100eps(T) * abs(numer)
+            # simple pole
+            denomʹ = conj(gradient(z -> real(_evaluate(r, z)[2]), ζ[i])[1])
+            res[i] = numer / denomʹ
+        else
+            # not a simple pole; use fallback contour integral
+            res[i] = Res(r, ζ[i]; avoid=ζ)
+        end
     end
     return ζ, res
 end

@@ -72,8 +72,8 @@
         zer = roots(r)
         @test isapprox(sum(pol+zer), -10, rtol=5000*eps(T))
 
-        f = x -> 2/(3 + x) + 5/(x - 2im);  r = approx(f)
-        @test isapprox(prod(residues(r)[2]), 10, rtol=sqrt(eps(T)))
+        f = x -> 2im / (6 // 5 + x) + 3 / (x - 5im // 4);  r = approx(f)
+        @test isapprox(prod(residues(r)[2]), 6im, rtol=sqrt(eps(T)))
 
         f = x -> sinh(10pi*x);  r = approx(f);
         zer = roots(r)
