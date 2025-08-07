@@ -60,22 +60,6 @@
         @test r.(1e-100x) ≈ sin.(10x) rtol=1e-13
     end
 
-    @testset "Low degree" begin
-        @testset "case $num" for (num, f) in enumerate((
-            x -> 0,
-            x -> x,
-            x -> 1im*x,
-            x -> x + x^2,
-            x -> x + x^3,
-            x -> 1/(1.1 + x),
-            x -> 1/(1 + 1im*x),
-            x -> 1/(3 + x + x^2),
-            x -> 1/(1.01 + x^3)
-            ))
-            @test pass(f, aaa(f; max_degree=150, tol=1e-13), pts, atol=2e-13)
-        end
-    end
-
     @testset "Specified " begin
         f = x -> 0; @test pass(f, approx(f, max_degree=0), pts, atol=2e-13)
         f = x -> x; @test pass(f, approx(f, max_degree=1), pts, atol=2e-13)

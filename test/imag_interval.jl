@@ -51,7 +51,7 @@
         end
     end
 
-    @testset "Low accuracy" begin
+    @testset "Tolerance" begin
         T = Float64
         method = Barycentric
         pts = test_points[T]
@@ -92,14 +92,7 @@
         f = x -> T(10)^(-50)*cosh(x); @test pass(f, approx(f), pts, rtol=2000*eps(T))
     end
 
-    # @testset "Lawson" begin
-    #     f = x -> exp(x); @test pass(f, aaax(f, max_iter=3, lawson=20), xx, atol=1e-3)
-    #     f = x -> cis(3x); @test pass(f, aaax(f, max_iter=3, lawson=20), xx, atol=1e-3)
-    #     f = z -> exp(z); r = @test pass(f, aaaz(f, max_iter=3, lawson=20), zz, atol=1e-3)
-    #     f = z -> cis(3z); @test pass(f, aaaz(f, max_iter=6, lawson=20), zz, atol=1e-3)
-    # end
-
-    @testset "Polynomials and reciprocals" begin
+    @testset "Low degree" begin
         T = Float64
         pts = test_points[T]
         tol = 2000*eps(T)

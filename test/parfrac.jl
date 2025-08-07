@@ -1,4 +1,6 @@
 @testset "Partial fractions" begin
+    domain = Dict()
+
     @testset "Accessor functions" begin
         f, ζ = (x -> 1im*tan(x), [-π/2, π/2, -3π/2, 3π/2]);
         r = approximate(f, Segment(-1, 1), ζ; degree=30)

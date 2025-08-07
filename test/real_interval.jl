@@ -1,10 +1,8 @@
 @testset "Real intervals" verbose=true begin
     domain = Dict()
-    for T in (Float64, Double64)
-        domain[T] = Segment{T}(-1, 1)
-    end
     test_points = Dict()
     for T in (Float64, Double64)
+        domain[T] = Segment{T}(-1, 1)
         z = T(10) .^ range(T(-15), T(0), 500);
         test_points[T] = [-reverse(z); 0; z]
     end
@@ -35,6 +33,8 @@
         r = approx(cis)
         @test isapprox(r, cis; rtol=tol)
         _, err = check(r; quiet=true); @test maximum(abs, err) < tol
+        @test sum(@. abs(r(pts))-1)/length(pts) < tol
+
     end
 
     @testset "Double64 for $method" for method in (Barycentric, Thiele)
@@ -57,7 +57,7 @@
         end
     end
 
-    @testset "Low accuracy" begin
+    @testset "Tolerance" begin
         T = Float64
         method = Barycentric
         pts = test_points[T]
@@ -126,7 +126,10 @@
 
         f = z -> (z - (3 + 3im))/(z + 2);  r = approx(f)
         pol,zer = poles(r), roots(r)
-        @test isapprox(pol[1]*zer[1], -6-6im, rtol=5000*eps(T))
+        @test isapprox(pol[1]*zer[1], -6-6im, rtol=5000eps(T))
+
+        f = x -> exp(exp(x))/(x - 1im // 5); r = approx(f);
+        @test minimum(abs.(poles(r) .- 1im // 5)) < 1000eps(T)
     end
 
     @testset "Poles, zeros, residues for Thiele" begin
@@ -160,31 +163,13 @@
         approx(f; kw...) = approximate(f, domain[T]; method=Barycentric, kw...)
         f = x -> T(10)^50 * sin(x); @test pass(f, approx(f), pts, rtol=2000*eps(T))
         f = x -> T(10)^(-50) * cos(x); @test pass(f, approx(f), pts, rtol=2000*eps(T))
+        # TODO: Horizontal scaling is broken, because pole computation uses 1
+        #s = T(10)^50
+        #f = x -> sin(s * x)
+        #@test pass(f, approximate(f, domain[T] / s), pts / s, rtol=2000*eps(T))
     end
 
-    # @testset "Lawson" begin
-    #     f = x -> exp(-10/(1.2-x)); @test pass(f, approx(f, =8, lawson=20), pts, rtol=1e-8)
-    #     f = x -> exp(x); @test pass(f, approx(f, =3, lawson=20), pts, atol=1e-3)
-    #     f = x -> cis(3x); @test pass(f, approx(f, =3, lawson=20), pts, atol=1e-3)
-    # end
-
-    @testset "Polynomials and reciprocals" begin
-        T = Float64
-        tol = 2000*eps(T)
-        pts = test_points[T]
-        approx(f; kw...) = approximate(f, domain[T]; method=Barycentric, kw...)
-        f = x -> 0; @test pass(f, approx(f), pts, atol=tol)
-        f = x -> x; @test pass(f, approx(f), pts, atol=tol)
-        f = x -> 1im*x; @test pass(f, approx(f), pts, atol=tol)
-        f = x -> x + x^3; @test pass(f, approx(f), pts, atol=tol)
-        f = x -> x + x^2; @test pass(f, approx(f), pts, atol=tol)
-        f = x -> 1/(1.1 + x); @test pass(f, approx(f), pts, atol=tol)
-        f = x -> 1/(1 + 1im*x); @test pass(f, approx(f), pts, atol=tol)
-        f = x -> 1/(3 + x + x^2); @test pass(f, approx(f), pts, atol=tol)
-        f = x -> 1/(1.01 + x^3); @test pass(f, approx(f), pts, atol=tol)
-    end
-
-    @testset "Specified degree" begin
+     @testset "Low degree" begin
         T = Float64
         tol = 2000*eps(T)
         pts = test_points[T]
@@ -198,10 +183,6 @@
         f = x -> 1/(1+1im*x); @test pass(f, approx(f, max_iter=3), pts, atol=tol)
         f = x -> 1/(3+x+x^2); @test pass(f, approx(f, max_iter=3), pts, atol=tol)
         f = x -> 1/(1.01+x^3); @test pass(f, approx(f, max_iter=4), pts, atol=tol)
-        f = x -> cis(x); r = approx(f);
-        @test sum(@. abs(r(pts))-1)/length(pts) < tol
-        f = x -> exp(exp(x))/(x - 0.2im); r = approx(f);
-        @test minimum(abs.(poles(r) .- .2im)) < 10tol
     end
 
     @testset "Interval [$a, $b]" for (a, b) in ((-2, 3), (0, 4), (-2e-4, 0), (-3e3, 5e6))

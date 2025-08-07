@@ -20,10 +20,12 @@
 
     @testset "Translate and scale for $method" for method in (Barycentric, Thiele)
         f = z -> sin(10z) * exp(-z^2)
-        for (a,c) in ( (2.5, 0), (1, -1im), (0.4, -2))
+        for (a, c) in ( (2.5, 0), (1, -1im), (0.4, -2))
             F = approximate(f, a*UC + c)
             @test pass(f, F, a*pts .+ c)
         end
+        f = z -> 1e100sin(z); @test pass(f, approximate(f, UD), pts, rtol=2e-13)
+        @test pass(f, approximate(f, UD, max_iter=12), pts, rtol=1e-6)
     end
 
     @testset "Poles, zeros, residues" begin
@@ -49,31 +51,9 @@
         f = z -> exp(3*z); @test pass(f, approximate(f, UD, tol=1e-10), pts, atol=1e-8)
     end
 
-    @testset "Vertical scaling" begin
-        f = z -> 1e100sin(z); @test pass(f, approximate(f, UD), pts, rtol=2e-13)
-        @test pass(f, approximate(f, UD, max_iter=12), pts, rtol=1e-6)
-        # f = z -> 1e-100cos(z); @test pass(f, approximate(f, UD), pts, rtol=2e-13)
-        # @test_broken pass(f, approximate(f, UD, =5), pts, rtol=1e-6)
-    end
-
-    # @testset "Lawson" begin
-    #     f = z -> exp(z); r = @test pass(f, approximate(f, UD, =3, lawson=20), pts, atol=1e-3)
-    #     f = z -> cis(3z); @test pass(f, approximate(f, UD, =6, lawson=20), pts, atol=1e-3)
-    # end
-
-    @testset "Polynomials and reciprocals" begin
-        for R in (UC, UD)
-            for f in (z->0, z->z, z->1im*z, z->z+z^2, z->z+z^3)
-                @test pass(f, approximate(f, R), pts, atol=2e-13)
-                @test pass(f, approximate(f, R, max_iter=8), pts, rtol=2e-13)
-            end
-        end
-        for f in (z->1/(1.1+z), z->1/(2+1im*z), z->1/(3+z+z^2), z->1/(1.01+z^3))
-            @test pass(f, approximate(f, UC), pts, rtol=2e-13)
-        end
-    end
-
-    @testset "Specified " begin
+    @testset "Low degree" begin
+        f = x -> 0; @test pass(f, approximate(f, max_iter=1, UD), pts, atol=2e-13)
+        f = x -> x; @test pass(f, approximate(f, max_iter=2, UD), pts, atol=2e-13)
         f = x -> x+x^2; @test pass(f, approximate(f, max_iter=3, UD), pts, atol=2e-13)
         f = x -> x+x^3; @test pass(f, approximate(f, max_iter=4, UD), pts, atol=2e-13)
         f = x -> x+x^3; @test !pass(f, approximate(f, max_iter=3, UD), pts, atol=2e-13)
