@@ -50,12 +50,18 @@ function evaluate(r::Thiele, z::Number)
     elseif isnan(z)
         NaN
     else
-        numer, denom = _evaluate(r, z)
-        numer / denom
+        _evaluate(r, z)
+        # numer, denom = _evaluate(r, z)
+        # return if iszero(denom)
+        #     @debug "Evaluation produced a division by zero at " z
+        #     _evaluate_slow(r, z)  # fallback to slow evaluation
+        # else
+        #     numer / denom
+        # end
     end
 end
 
-function _evaluate(r::Thiele, z::Number)
+function _evaluate_fast(r::Thiele, z::Number)
     @assert isfinite(z)
     n = length(r.weights)
     return if n == 1
@@ -72,6 +78,16 @@ function _evaluate(r::Thiele, z::Number)
         r.weights[1] * a + b, a
     end
 end
+
+function _evaluate(r::Thiele, z::Number)
+    n = length(r.nodes)
+    u = last(r.weights)
+    for k in n-1:-1:1
+        u = r.weights[k] + (z - r.nodes[k]) / u
+    end
+    return u
+end
+
 
 function poles(r::Thiele{T,S}) where {T,S}
     n = length(r.nodes)
@@ -197,7 +213,7 @@ function approximate(::Type{Thiele},
 
         status = quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
         if status > 0
-            @warn("Stopping at estimated error $(round(err_max, sigdigits=4)) after $n iterations")
+            @warn("Stopping with estimated error $(round(history[status].error, sigdigits=4)) after $n iterations")
             r = history[status].interpolant
         end
         (status != 0) && break
@@ -252,8 +268,8 @@ function approximate(::Type{Thiele},
 
         status = quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
         if status > 0
-            @warn("Stopping at estimated error $(round(err_max, sigdigits=4)) after $n iterations")
-            r = history[n].interpolant
+            @warn("Stopping with estimated error $(round(history[status].error, sigdigits=4)) after $n iterations")
+            r = history[status].interpolant
         end
         (status != 0) && break
 
