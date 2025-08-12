@@ -293,7 +293,7 @@ function approximate(::Type{Barycentric},
 
         status = quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
         if status > 0
-            @warn("Stopping at estimated error $(round(err_max, sigdigits=4)) after $n iterations")
+            @warn("Stopping with estimated error $(round(history[status].error, sigdigits=4)) after $n iterations")
             r = history[status].interpolant
         end
         (status != 0) && break
@@ -356,8 +356,8 @@ function approximate(::Type{Barycentric},
 
         status = quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
         if status > 0
-            @warn("Stopping at estimated error $(round(err_max, sigdigits=4)) after $n iterations")
-            r = history[n].interpolant
+            @warn("Stopping with estimated error $(round(history[status].error, sigdigits=4)) after $n iterations")
+            r = history[status].interpolant
         end
         (status != 0) && break
 
