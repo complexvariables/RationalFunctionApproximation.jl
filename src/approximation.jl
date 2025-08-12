@@ -373,16 +373,15 @@ function quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
 
     # Check for stagnation
     stagnant = false
-    if n >= stagnation + 5
-        old = n-stagnation-4:n-stagnation
-        plateau = exp(median(log(err[i]) for i in old))
-        stagnant = all(plateau < e < fmax/100 for e in last(err, stagnation))
+    if (n >= stagnation + 1) && any(<(fmax/1000), err)
+        # old = 1:n-stagnation
+        plateau = exp(quantile(log.(err), 0.2) - 0.25)
+        stagnant = all(plateau < e for e in last(err, stagnation))
     end
 
     # Decide on unsuccessful stopping
     if (n == max_iter) || stagnant
-        if !(allowed === true)
-            # Look for the best acceptable approximation:
+        # Look for the best acceptable approximation:
         if (allowed === true)
             n = argmin(err)
         else
@@ -396,7 +395,6 @@ function quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
         end
         status = n
     end
-
     return status
 end
 
