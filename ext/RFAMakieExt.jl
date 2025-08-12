@@ -12,8 +12,8 @@ function RFA.convergenceplot(r::RFA.Approximation)
     else
         [all(b) ? :darkblue : :red for b in allowed]
     end
-    scatter!(ax, deg, err; color, markersize=8)
-    scatter!(ax, deg[best], err[best],
+    scatterlines!(ax, deg, err; markercolor=color, markersize=8, color=RGBAf(0, 0, 0, 0.5))
+    scatterlines!(ax, deg[best], err[best],
         color=RGBAf(1,1,1,0), strokecolor=:gold, strokewidth=3, markersize=13 )
     return fig
 end
