@@ -304,7 +304,7 @@ function approximate(::Type{Barycentric},
         # In the initial phase, we throw out the old test points.
         idx_new_test = add_node!(path, idx_new)
         if num_ref > refinement    # initial phase
-            num_ref -= 3    # gradually decrease refinement level
+            num_ref = max(2, num_ref - 3)    # gradually decrease refinement level
             s, _ = collect(path, :nodes)
             path = DiscretizedPath(d, s; refinement=num_ref, maxpoints=max_iter * refinement)
             idx_new_test = idx_test = CartesianIndices((1:n+1, 2:num_ref+1))

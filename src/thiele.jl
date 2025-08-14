@@ -227,7 +227,7 @@ function approximate(::Type{Thiele},
         idx_new_test = add_node!(path, idx_new)
         # In the initial phase, we throw out the old test points.
         if num_ref > refinement    # initial phase
-            num_ref -= 3    # gradually decrease refinement level
+            num_ref = max(2, num_ref - 3)    # gradually decrease refinement level
             s = first(collect(path))
             path = DiscretizedPath(d, s; refinement=num_ref, maxpoints=max_iter * refinement)
             τ = path.points
