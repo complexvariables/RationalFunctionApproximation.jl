@@ -185,24 +185,21 @@ end
 
 # update in-place the nodes and weights
 function add_node!(r::Thiele, new_σ, new_f)
-    σ = r.nodes
-    push!(σ, new_σ)
+    push!(r.weights, _new_weight(r.nodes, r.weights, new_σ, new_f))
+    push!(r.nodes, new_σ)
     push!(r.values, new_f)
-
-    # Compute the new weight
-    φ = r.weights
-    push!(φ, new_f)
-    n = length(σ)
-    for k in 1:n-1
-        d = φ[n] - φ[k]
-        @inbounds if iszero(d)
-            φ[n] = Inf
-        else
-            φ[n] = (σ[n] - σ[k]) / d
-        end
-        isnan(φ[n]) && @error "Inverse difference produced NaN." σ φ
-    end
     return r
+end
+
+function _new_weight(z, w, z_new, y_new)
+    a = 1
+    b = y_new
+    @inbounds for k in eachindex(z)
+        t = -w[k] * a + b
+        b = a * (z_new - z[k])
+        a = t
+    end
+    return b / a
 end
 
 # TODO: This should probably enforce parameters S and T
