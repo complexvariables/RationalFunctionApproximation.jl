@@ -82,6 +82,28 @@ function _evaluate_numden(r::Thiele, z::Number)
     end
 end
 
+function _evaluate_numden_derivs(r::Thiele, z::Number)
+    n = length(r.weights)
+    return if n == 1
+        r.weights[1], 1, 0, 1
+    else
+        a = r.weights[n]
+        b = z - r.nodes[n-1]
+        aʹ = 0
+        bʹ = 1
+        @inbounds for k in n-1:-1:2
+            d = z - r.nodes[k-1]
+            t = r.weights[k] * aʹ + bʹ
+            bʹ = a + d * aʹ
+            aʹ = t
+            t = r.weights[k] * a + b
+            b = a * d
+            a = t
+        end
+        r.weights[1] * a + b, a, r.weights[1] * aʹ + bʹ, aʹ
+    end
+end
+
 function _evaluate_classic(r::Thiele, z::Number)
     n = length(r.nodes)
     u = last(r.weights)
@@ -90,6 +112,15 @@ function _evaluate_classic(r::Thiele, z::Number)
     end
     return u
 end
+
+derivative(r::Thiele, ζ::Number) = derivative(r)(ζ)
+function derivative(r::Thiele)
+    return function(ζ)
+        p, q, pʹ, qʹ = _evaluate_numden_derivs(r, ζ)
+        return (pʹ * q - p * qʹ) / (q^2)
+    end
+end
+
 
 function poles(r::Thiele{T,S}) where {T,S}
     n = length(r.nodes)
@@ -120,11 +151,10 @@ function residues(r::Thiele)
     T = real_type(eltype(ζ))
     for i in eachindex(ζ)
         # is it a simple pole?
-        numer, denom = _evaluate_numden(r, ζ[i])
-        if abs(denom) < 100eps(T) * abs(numer)
+        p, q, pʹ, qʹ = _evaluate_numden_derivs(r, ζ[i])
+        if abs(q) < 100eps(T) * abs(p) && !iszero(qʹ)
             # simple pole
-            denomʹ = conj(gradient(z -> real(_evaluate_numden(r, z)[2]), ζ[i])[1])
-            res[i] = numer / denomʹ
+            res[i] = p / qʹ
         else
             # not a simple pole; use fallback contour integral
             res[i] = Res(r, ζ[i]; avoid=ζ)
