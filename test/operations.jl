@@ -1,4 +1,4 @@
-@testset "Operators" begin
+@testset "Operations" begin
     @testset "Derivatives for $method" verbose=true for method in (Thiele, )
         using ComplexRegions
         @testset "Domain $it_d" for (it_d, domain) in enumerate((unit_interval, unit_disk, Shapes.square))
