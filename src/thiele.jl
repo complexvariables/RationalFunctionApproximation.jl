@@ -40,9 +40,9 @@ function Base.copy(r::Thiele)
     return Thiele(copy(r.nodes), copy(r.values), copy(r.weights))
 end
 
-function evaluate(r::Thiele, z::Number)
+function evaluate(r::Thiele, z::Number, evaluator=_evaluate_onediv)
     return if isinf(z)
-         if isodd(n)
+        if isodd(n)
             sum(r.weights[1:2:end])
         else
             Inf
@@ -50,27 +50,30 @@ function evaluate(r::Thiele, z::Number)
     elseif isnan(z)
         NaN
     else
-        _evaluate(r, z)
-        # numer, denom = _evaluate(r, z)
-        # return if iszero(denom)
-        #     @debug "Evaluation produced a division by zero at " z
-        #     _evaluate_slow(r, z)  # fallback to slow evaluation
-        # else
-        #     numer / denom
-        # end
+        evaluator(r, z)
     end
 end
 
-function _evaluate_fast(r::Thiele, z::Number)
+function _evaluate_onediv(r::Thiele, z::Number)
+    numer, denom = _evaluate_numden(r, z)
+    return if iszero(denom)
+        @debug "Evaluation produced a division by zero at " z
+        _evaluate_classic(r, z)  # fallback to slow evaluation
+    else
+        numer / denom
+    end
+  end
+
+function _evaluate_numden(r::Thiele, z::Number)
+    # use 3-term pair recurrence to avoid division until the end
     @assert isfinite(z)
     n = length(r.weights)
     return if n == 1
         r.weights[1], 1
     else
-        # use 3-term pair recurrence to avoid division until the end
         a = r.weights[n]
         b = z - r.nodes[n-1]
-        @fastmath for k in n-1:-1:2
+        @inbounds for k in n-1:-1:2
             t = r.weights[k] * a + b
             b = a * (z - r.nodes[k-1])
             a = t
@@ -79,15 +82,14 @@ function _evaluate_fast(r::Thiele, z::Number)
     end
 end
 
-function _evaluate(r::Thiele, z::Number)
+function _evaluate_classic(r::Thiele, z::Number)
     n = length(r.nodes)
     u = last(r.weights)
-    for k in n-1:-1:1
+    @inbounds for k in n-1:-1:1
         u = r.weights[k] + (z - r.nodes[k]) / u
     end
     return u
 end
-
 
 function poles(r::Thiele{T,S}) where {T,S}
     n = length(r.nodes)
@@ -118,10 +120,10 @@ function residues(r::Thiele)
     T = real_type(eltype(ζ))
     for i in eachindex(ζ)
         # is it a simple pole?
-        numer, denom = _evaluate(r, ζ[i])
+        numer, denom = _evaluate_numden(r, ζ[i])
         if abs(denom) < 100eps(T) * abs(numer)
             # simple pole
-            denomʹ = conj(gradient(z -> real(_evaluate(r, z)[2]), ζ[i])[1])
+            denomʹ = conj(gradient(z -> real(_evaluate_numden(r, z)[2]), ζ[i])[1])
             res[i] = numer / denomʹ
         else
             # not a simple pole; use fallback contour integral

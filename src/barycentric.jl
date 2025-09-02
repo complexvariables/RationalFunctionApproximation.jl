@@ -107,12 +107,21 @@ function evaluate(r::Barycentric, z::Number)
     end
     k = findfirst(z .== r.nodes)
     if isnothing(k)         # not at a node
-        C = @. 1 / (z - r.nodes)
-        return sum(C .* r.w_times_f) / sum(C .* r.weights)
+        num, den = _evaluate_numden(r, z)
+        if iszero(den)
+            @debug "Evaluation produced a division by zero at " z
+        end
+        return num / den
     else                    # interpolation at node
         return r.values[k]
     end
 end
+
+function _evaluate_numden(r::Barycentric, z::Number)
+    C = @. 1 / (z - r.nodes)
+    return sum(C .* r.w_times_f), sum(C .* r.weights)
+end
+
 
 # Evaluate when given Cauchy matrix
 function evaluate!(u::AbstractArray, r::Barycentric, C::AbstractMatrix)
