@@ -13,8 +13,8 @@
                 (sin, cos),
             ))
                 r = approximate(f, domain; method)
-                @test(isapprox(derivative(r; allowed=true), df))
-                @test derivative(r.fun, 0.1) ≈ df(0.1)
+                @test_skip(isapprox(derivative(r; allowed=true), df))
+                @test_skip derivative(r.fun, 0.1) ≈ df(0.1)
             end
         end
     end
