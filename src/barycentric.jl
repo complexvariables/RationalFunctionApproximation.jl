@@ -135,11 +135,11 @@ end
 # Schneider & Werner formulas for the derivative
 function _derivative(w, y, z, ζ, rζ)
     n = length(z)
-   return if isinf(ζ)
-        zero(complex(ζ))
+    if isinf(ζ)
+        return zero(complex(ζ))
     else
         δ = ζ .- z
-        k = findfirst(abs(δ) < eps(real(ζ)) for δ in δ)
+        k = findfirst(abs(δ) < eps(float(real(ζ))) for δ in δ)
         if isnothing(k)         # not at a node
             num, den = 0, 0
             for i in 1:n
@@ -147,9 +147,9 @@ function _derivative(w, y, z, ζ, rζ)
                 num += D * (rζ - y[i]) / δ[i]
                 den += D
             end
-            num / den
+            return num / den
         else
-            -sum(w[i] * (y[k] - y[i]) / (z[k] - z[i]) for i in 1:n if i != k) / w[k]
+            return -sum(w[i] * (y[k] - y[i]) / (z[k] - z[i]) for i in 1:n if i != k) / w[k]
         end
     end
 end
