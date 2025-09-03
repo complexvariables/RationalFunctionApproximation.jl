@@ -1,6 +1,6 @@
 name = "RationalFunctionApproximation"
 uuid = "c92886a3-cb30-4e18-b84f-372dde475ecc"
-version = "0.2.5"
+version = "0.2.6"
 authors = ["Toby Driscoll <driscoll@udel.edu> and contributors"]
 
 [deps]
