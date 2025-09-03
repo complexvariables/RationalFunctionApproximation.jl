@@ -108,7 +108,7 @@ function evaluate(p::ArnoldiPolynomial, z::Number)
     g = p.coeff[1]
     H = p.basis.H
     n = size(H, 2)
-    Q = fill(one(g), n+1)
+    Q = fill(one(float(z)), n+1)
     for k in 1:n-1
         v = z .* Q[k]
         for j in 1:k

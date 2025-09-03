@@ -1,6 +1,6 @@
 module RationalFunctionApproximation
 
-using LinearAlgebra, Statistics, GenericLinearAlgebra, ComplexRegions, GenericSchur, Zygote
+using LinearAlgebra, Statistics, GenericLinearAlgebra, ComplexRegions, GenericSchur
 using PyFormattedStrings
 
 export unit_interval, unit_circle, unit_disk, DiscretizedPath

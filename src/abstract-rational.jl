@@ -56,18 +56,6 @@ function Res(f::Function, z::Number; avoid=nothing, radius=100eps(abs(z)), n=200
     return radius * trap / n
 end
 
-function derivative(f::AbstractRationalFunction)
-    return function(z::Number)
-        ζ = complex(z)
-        return something(conj(gradient(real ∘ f, ζ)[1]), zero(ζ))
-    end
-end
-
-function derivative(f::AbstractRationalFunction, z::Number)
-    ζ = complex(z)
-    return something(conj(gradient(real ∘ f, ζ)[1]), zero(ζ))
-end
-
 Base.:+(r::AbstractRationalFunction, ::Number) = error("`+` not implemented for $(typeof(r))")
 Base.:+(s::Number, r::AbstractRationalFunction) = r + s
 Base.:-(r::AbstractRationalFunction, s::Number) = r + (-s)
