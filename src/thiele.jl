@@ -238,7 +238,7 @@ function approximate(::Type{Thiele},
         # test_actual = view(fτ, idx_test)      # f at test points
         err = @. abs(fτ[idx_test] - r(τ[idx_test]))
         err_max, idx_max = findmax(err)
-        history[end].error = err_max
+        history[n].error = err_max
 
         status = quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
         if status > 0
@@ -253,7 +253,19 @@ function approximate(::Type{Thiele},
         push!(history, IterationRecord(r, NaN, missing))
         n += 1
 
-        idx_new_test = add_node!(path, idx_new)
+        try
+            idx_new_test = add_node!(path, idx_new)
+        catch
+            # check error on the latest interpolant
+            err = @. abs(fτ[idx_test] - r(τ[idx_test]))
+            history[n].error = maximum(err)
+            # look for the best acceptable case
+            status = quitting_check(history, stagnation, tol, fmax, 1, allowed)
+            r = history[status].interpolant
+            @warn("Maximum path refinement exceeded; stopping with estimated error $(round(history[status].error, sigdigits=4))")
+            break
+        end
+
         # In the initial phase, we throw out the old test points.
         if num_ref > refinement    # initial phase
             num_ref = max(2, num_ref - 3)    # gradually decrease refinement level

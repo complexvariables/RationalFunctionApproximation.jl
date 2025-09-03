@@ -292,6 +292,7 @@ function approximate(::Type{Barycentric},
     history = [IterationRecord(r, NaN, missing)]
 
     # Main iteration
+    idx_new_test = nothing
     n = 1       # iteration counter
     while true
         Cmatrix = reshape(view(C, idx_test, 1:n), :, n)
@@ -310,9 +311,21 @@ function approximate(::Type{Barycentric},
         ### Refinement
         idx_new = idx_test[idx_max]      # location of worst test point
         new_σ, new_fσ = τ[idx_new], fτ[idx_new]
-        # In the initial phase, we throw out the old test points.
-        idx_new_test = add_node!(path, idx_new)
+        try
+            idx_new_test = add_node!(path, idx_new)
+        catch
+            # check error on the latest interpolant
+            err = @. abs(fτ[idx_test] - r(τ[idx_test]))
+            history[n].error = maximum(err)
+            # look for the best acceptable case
+            status = quitting_check(history, stagnation, tol, fmax, 1, allowed)
+            r = history[status].interpolant
+            @warn("Maximum path refinement exceeded; stopping with estimated error $(round(history[status].error, sigdigits=4))")
+            break
+        end
+
         if num_ref > refinement    # initial phase
+            # In the initial phase, we throw out the old test points.
             num_ref = max(2, num_ref - 3)    # gradually decrease refinement level
             s, _ = collect(path, :nodes)
             path = DiscretizedPath(d, s; refinement=num_ref, maxpoints=max_iter * refinement)

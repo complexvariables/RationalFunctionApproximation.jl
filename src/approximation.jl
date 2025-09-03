@@ -380,7 +380,7 @@ function quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
     end
 
     # Decide on unsuccessful stopping
-    if (n == max_iter) || stagnant
+    if (n >= max_iter) || stagnant
         # Look for the best acceptable approximation:
         if (allowed === true)
             n = argmin(err)

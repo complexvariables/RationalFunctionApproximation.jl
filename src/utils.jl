@@ -76,6 +76,11 @@ function DiscretizedPath(p::DiscretizedPath, refinement::Int)
     maxpoints = max(length(s), size(p.points, 1))
     return DiscretizedPath(p.path, s; refinement, maxpoints)
 end
+
+struct MaxRefinementException <: Exception
+    msg::String
+end
+
 """
     add_node!(d::DiscretizedPath, idx)
 
@@ -99,35 +104,43 @@ function add_node!(d::DiscretizedPath, idx)
     (idx[2] == 1) && return
     n = length(d.next) + 1
     if n == size(d.points, 1)
-        throw(error("Cannot add more points to this discretization"))
+        throw(MaxRefinementException("Cannot add more points to this discretization"))
     end
     if idx[2] > size(d.params, 2)
-        throw(error("Indicated new node is not in the discretization"))
+        throw(KeyError("Indicated new node is not in the discretization"))
     end
 
     s_new = d.params[idx[1], idx[2]]
-    ref = size(d.params, 2)
+    nref = size(d.params, 2)
+
     # Replace row idx[1] with new values
-    δ = (s_new - d.params[idx[1], 1]) / ref
-    for j in 2:ref
+    δ = (s_new - d.params[idx[1], 1]) / nref
+    if d.params[idx[1], 1] + δ == d.params[idx[1], 1]
+        throw(MaxRefinementException("Maximum path refinement exceeded"))
+    end
+    for j in 2:nref
         d.params[idx[1], j] = d.params[idx[1], 1] + (j - 1) * δ
         d.points[idx[1], j] = point(d.path, d.params[idx[1], j])
     end
+
     # Add new row at the end
     succ = d.next[idx[1]]    # inherits the old successor
     if succ == 0   # successor is the end of the path
-        δ = (length(d.path) - s_new) / ref
+        δ = (length(d.path) - s_new) / nref
     else
-        δ = (d.params[succ, 1] - s_new) / ref
+        δ = (d.params[succ, 1] - s_new) / nref
     end
-    for j in 1:ref
+    if s_new + δ == s_new
+        throw(MaxRefinementException("Maximum path refinement exceeded"))
+    end
+    for j in 1:nref
         d.params[n, j] = s_new + (j - 1) * δ
         d.points[n, j] = point(d.path, d.params[n, j])
     end
     d.next[idx[1]] = n        # new successor for the old point
     push!(d.next, succ)       # old succcessor for the new point
     # return indexes into the new parts
-    return [CartesianIndices((idx[1]:idx[1], 1:ref)); CartesianIndices((n:n, 1:ref))]
+    return [CartesianIndices((idx[1]:idx[1], 1:nref)); CartesianIndices((n:n, 1:nref))]
 end
 
 """
