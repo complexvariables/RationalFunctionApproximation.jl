@@ -1,7 +1,7 @@
 name = "RationalFunctionApproximation"
 uuid = "c92886a3-cb30-4e18-b84f-372dde475ecc"
-version = "0.2.6"
 authors = ["Toby Driscoll <driscoll@udel.edu> and contributors"]
+version = "0.2.6"
 
 [deps]
 ComplexRegions = "c64915e2-6c82-11e9-38e9-1f159a780463"
@@ -15,23 +15,23 @@ PyFormattedStrings = "5f89f4a4-a228-4886-b223-c468a82ed5b9"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [weakdeps]
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PythonCall = "6099a3de-0909-46bc-b1f4-468b9a2dfc0d"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
-ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
-
 
 [extensions]
+RFAForwardDiffExt = "ForwardDiff"
 RFAMakieExt = "Makie"
 RFAPlotsExt = "Plots"
 RFAPythonCallExt = "PythonCall"
 RFAZygoteExt = "Zygote"
-RFAForwardDiffExt = "ForwardDiff"
 
 [compat]
 ComplexRegions = "0.3"
 ComplexValues = "0.3"
+ForwardDiff = "1"
 GenericLinearAlgebra = "0.3"
 GenericSchur = "0.5"
 Logging = "1"
@@ -49,9 +49,9 @@ CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 ComplexRegions = "c64915e2-6c82-11e9-38e9-1f159a780463"
 DoubleFloats = "497a8b3b-efae-58df-a0af-a86822472b78"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
-Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 ReTest = "e0db7c4e-2690-44b9-bad6-7687da720f89"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
 docs = ["CairoMakie"]
-test = ["Test", "ReTest","LinearAlgebra", "ComplexRegions", "DoubleFloats"]
+test = ["Test", "ReTest", "LinearAlgebra", "ComplexRegions", "DoubleFloats"]
