@@ -18,6 +18,14 @@ const Domain{T} = Union{ComplexCurve{T}, ComplexPath{T}, ComplexSCRegion{T}, Abs
 isclosed(p::ComplexCurve) = isa(p, ComplexClosedCurve)
 isclosed(p::ComplexPath) = isa(p, ComplexClosedPath)
 
+struct MaxRefinementException <: Exception
+    msg::String
+end
+
+struct NaNException <: Exception
+    msg::String
+end
+
 # Provide a fallback `dist` method for unknown (i.e., user-defined) curve types
 function ComplexRegions.dist(z::Number, p::ComplexRegions.AbstractCurve)
     return minimum(abs(z - point(p, t)) for t in range(0, 1, length=300))
@@ -75,10 +83,6 @@ function DiscretizedPath(p::DiscretizedPath, refinement::Int)
     s, _ = collect(p, :nodes)
     maxpoints = max(length(s), size(p.points, 1))
     return DiscretizedPath(p.path, s; refinement, maxpoints)
-end
-
-struct MaxRefinementException <: Exception
-    msg::String
 end
 
 """

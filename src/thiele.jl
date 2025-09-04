@@ -42,7 +42,7 @@ end
 
 function evaluate(r::Thiele, z::Number, evaluator=_evaluate_onediv)
     return if isinf(z)
-        if isodd(n)
+        if isodd(length(r.nodes))
             sum(r.weights[1:2:end])
         else
             Inf
@@ -184,10 +184,14 @@ function Thiele(x::AbstractVector, y::AbstractVector)
 end
 
 # update in-place the nodes and weights
-function add_node!(r::Thiele, new_σ, new_f)
-    push!(r.weights, _new_weight(r.nodes, r.weights, new_σ, new_f))
-    push!(r.nodes, new_σ)
-    push!(r.values, new_f)
+function add_node!(r::Thiele, z_new, y_new)
+    w = _new_weight(r.nodes, r.weights, z_new, y_new)
+    if isnan(w)
+        throw(NaNException("Adding node at $z_new caused NaN weight"))
+    end
+    push!(r.weights, w)
+    push!(r.nodes, z_new)
+    push!(r.values, y_new)
     return r
 end
 
@@ -249,8 +253,14 @@ function approximate(::Type{Thiele},
 
         ### Refinement
         idx_new = idx_test[idx_max]      # location of worst test point
-        add_node!(r, τ[idx_new], fτ[idx_new])
-        push!(history, IterationRecord(r, NaN, missing))
+        try
+            add_node!(r, τ[idx_new], fτ[idx_new])
+            push!(history, IterationRecord(r, NaN, missing))
+        catch
+            @warn("NaN weight encountered; stopping with estimated error $(round(history[n].error, sigdigits=4))")
+            break
+        end
+
         n += 1
 
         try
