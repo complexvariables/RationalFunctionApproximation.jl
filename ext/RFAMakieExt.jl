@@ -96,7 +96,7 @@ function RFA.animate(r::RFA.Approximation, filename=tempname()*".mp4")
     max_err_lo = @lift(-$max_err_hi / 20)
     lines!(ax2, err_data)
 
-    record(fig, filename, eachindex(r.history.len); framerate=2) do n
+    record(fig, filename, eachindex(r.history); framerate=2) do n
         iter[] = n
         ylims!(ax2, max_err_lo[], max_err_hi[])
         # autolimits!(ax2)
