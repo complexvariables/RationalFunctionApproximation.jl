@@ -23,30 +23,6 @@ function ComplexRegions.dist(z::Number, p::ComplexRegions.AbstractCurve)
     return minimum(abs(z - point(p, t)) for t in range(0, 1, length=300))
 end
 
-# Find the distance to the nearest neighbor at every point.
-function spacing(d::DiscretizedPath{T,F}) where {T,F}
-    m = length(d.next)
-    n = size(d.params, 2)
-    Δ = fill(F(Inf), m, n)
-    k = idx = 1
-    while true
-        δ = @. abs(d.points[idx, 2:n] - d.points[idx, 1:n-1])
-        @. Δ[idx, 2:n-1] = min(δ[1:n-2], δ[2:n-1])
-        Δ[idx, 1] = min(Δ[idx, 1], δ[1])
-        idx1 = d.next[idx]
-        if idx1 == 0
-            Δ[idx, n] = δ[n-1]
-            break
-        end
-        δ₊ = abs(d.points[idx1, 1] - d.points[idx, n])
-        Δ[idx, n] = min(δ[n-1], δ₊)
-        Δ[idx1, 1] = δ₊
-        idx = idx1
-        k += 1
-    end
-    return Δ
-end
-
 # Refinement in parameter space
 function refine(t, N, include_ends=false)
     x = sort(t)

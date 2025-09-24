@@ -6,10 +6,11 @@ struct NaNException <: Exception
     msg::String
 end
 
-struct DiscretizedPath{T,F}
+mutable struct DiscretizedPath{T,F}
     path::T              # original Curve or Path
     points::Matrix       # first column = active points, others are refinements
     params::Matrix{F}    # first column = active points, others are refinements
+    nref::Int            # number of refinements between nodes
     next::Vector{Int}    # next[i] = index of the next point in the path
 end
 """
@@ -20,8 +21,8 @@ Discretize a path, keeping the option of future making local refinements.
 
 # Arguments
 - `path`: a ComplexCurve or ComplexPath
-- `s`: a vector of parameter values
-- `n`: number of points to discretize the path
+- `s`: a vector of parameter values for the nodes
+- `n`: number of equally spaced nodes on the path
 
 # Keyword arguments
 - `refinement`: number of refinements to make between consecutive points
@@ -45,7 +46,7 @@ function DiscretizedPath(path::ComplexCurveOrPath, s::AbstractVector; refinement
     end
     next = [collect(2:n-1); 0]
     sizehint!(next, maxpoints)
-    return DiscretizedPath{typeof(path),F}(path, points, params, next)
+    return DiscretizedPath{typeof(path),F}(path, points, params, refinement, next)
 end
 
 function DiscretizedPath(path::ComplexCurveOrPath=ComplexRegions.Circle(0,1), n::Integer=0; kwargs...)
@@ -56,6 +57,29 @@ function DiscretizedPath(p::DiscretizedPath, refinement::Int)
     s, _ = collect(p, :nodes)
     maxpoints = max(length(s), size(p.points, 1))
     return DiscretizedPath(p.path, s; refinement, maxpoints)
+end
+
+function reset!(d::DiscretizedPath, s::AbstractVector; refinement=0)
+    if refinement + 1 > size(d.params, 2)
+        throw(ArgumentError("New refinement level exceeds allocated size"))
+    elseif length(s) > size(d.params, 1)
+        throw(ArgumentError("New number of nodes exceeds allocated size"))
+    end
+    n = length(s)
+    for i in 1:n-1
+        δ = (s[i+1] - s[i]) / (refinement + 1)
+        for j in 0:refinement
+            d.params[i, j+1] = s[i] + j * δ
+        end
+    end
+    for i in 1:n-1, j in 1:refinement+1
+        d.points[i, j] = d.path(d.params[i, j])
+    end
+    resize!(d.next, n-1)
+    d.next[1:n-2] .= 2:n-1
+    d.next[n-1] = 0
+    d.nref = refinement
+    return d
 end
 
 """
@@ -83,19 +107,18 @@ function add_node!(d::DiscretizedPath, idx)
     if n == size(d.points, 1)
         throw(MaxRefinementException("Cannot add more points to this discretization"))
     end
-    if idx[2] > size(d.params, 2)
+    if idx[2] > d.nref + 1
         throw(KeyError("Indicated new node is not in the discretization"))
     end
 
     s_new = d.params[idx[1], idx[2]]
-    nref = size(d.params, 2)
 
     # Replace row idx[1] with new values
-    δ = (s_new - d.params[idx[1], 1]) / nref
+    δ = (s_new - d.params[idx[1], 1]) / (1 + d.nref)
     if d.params[idx[1], 1] + δ == d.params[idx[1], 1]
-        throw(MaxRefinementException("Maximum path refinement exceeded"))
+        throw(MaxRefinementException("Minimum refinement length reached"))
     end
-    for j in 2:nref
+    for j in 2:d.nref+1
         d.params[idx[1], j] = d.params[idx[1], 1] + (j - 1) * δ
         d.points[idx[1], j] = point(d.path, d.params[idx[1], j])
     end
@@ -103,21 +126,21 @@ function add_node!(d::DiscretizedPath, idx)
     # Add new row at the end
     succ = d.next[idx[1]]    # inherits the old successor
     if succ == 0   # successor is the end of the path
-        δ = (length(d.path) - s_new) / nref
+        δ = (length(d.path) - s_new) / (1 + d.nref)
     else
-        δ = (d.params[succ, 1] - s_new) / nref
+        δ = (d.params[succ, 1] - s_new) / (1 + d.nref)
     end
     if s_new + δ == s_new
-        throw(MaxRefinementException("Maximum path refinement exceeded"))
+        throw(MaxRefinementException("Minimum refinement length reached"))
     end
-    for j in 1:nref
+    for j in 1:d.nref+1
         d.params[n, j] = s_new + (j - 1) * δ
         d.points[n, j] = point(d.path, d.params[n, j])
     end
     d.next[idx[1]] = n        # new successor for the old point
     push!(d.next, succ)       # old succcessor for the new point
     # return indexes into the new parts
-    return [CartesianIndices((idx[1]:idx[1], 1:nref)); CartesianIndices((n:n, 1:nref))]
+    return [CartesianIndices((idx[1]:idx[1], 1:d.nref+1)); CartesianIndices((n:n, 1:d.nref+1))]
 end
 
 """
@@ -139,9 +162,9 @@ function Base.collect(d::DiscretizedPath, which=:nodes)
     if which == :nodes
         columns = [1]
     elseif which == :test
-        columns = 2:size(d.params, 2)
+        columns = 2:d.nref+1
     elseif which == :all
-        columns = 1:size(d.params, 2)
+        columns = 1:d.nref+1
     else
         throw(ArgumentError("Second argument must be :nodes, :test, or :all"))
     end
@@ -160,4 +183,28 @@ function Base.collect(d::DiscretizedPath, which=:nodes)
     else
         return vec(params), vec(points)
     end
+end
+
+# Find the distance to the nearest neighbor at every point.
+function spacing(d::DiscretizedPath{T,F}) where {T,F}
+    m = length(d.next)
+    n = size(d.params, 2)
+    Δ = fill(F(Inf), m, n)
+    k = idx = 1
+    while true
+        δ = @. abs(d.points[idx, 2:n] - d.points[idx, 1:n-1])
+        @. Δ[idx, 2:n-1] = min(δ[1:n-2], δ[2:n-1])
+        Δ[idx, 1] = min(Δ[idx, 1], δ[1])
+        idx1 = d.next[idx]
+        if idx1 == 0
+            Δ[idx, n] = δ[n-1]
+            break
+        end
+        δ₊ = abs(d.points[idx1, 1] - d.points[idx, n])
+        Δ[idx, n] = min(δ[n-1], δ₊)
+        Δ[idx1, 1] = δ₊
+        idx = idx1
+        k += 1
+    end
+    return Δ
 end

@@ -6,7 +6,7 @@
         @test length(t) == length(z) == 5
         @test isapprox(z, (0:4) .// 4)
         @test isapprox(t, (0:4) .// 4)
-        @test_throws ErrorException RFA.add_node!(p, [1, 2])
+        @test_throws RFA.MaxRefinementException RFA.add_node!(p, [1, 2])
 
         p = DiscretizedPath(domain, (0:4) .// 4; refinement=4)
         @test size(p.params) == (5, 5)
@@ -19,6 +19,12 @@
         @test isapprox(t[1:end-1], vec(A))
         t, z = collect(p, :test)
         @test isapprox(t, vec(A[2:end, :]))
+
+        RFA.reset!(p, (0:2) .// 2; refinement=3)
+        @test size(p.params) == (5, 5)
+        @test size(p.points) == (5, 5)
+        @test p.next == [2, 0]
+        @test p.params[1:2, 2] ≈ @. (0:1) // 2 + (1//8)
 
         domain = Segment(-3, 2)
         p = DiscretizedPath(domain, 5)

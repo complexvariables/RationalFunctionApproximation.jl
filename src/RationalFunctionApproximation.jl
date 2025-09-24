@@ -3,11 +3,11 @@ module RationalFunctionApproximation
 using LinearAlgebra, Statistics, GenericLinearAlgebra, ComplexRegions, GenericSchur
 using PyFormattedStrings
 
-export DiscretizedPath
-include("discretized_path.jl")
-
 export unit_interval, unit_circle, unit_disk, DiscretizedPath
 include("utils.jl")
+
+export DiscretizedPath
+include("discretized_path.jl")
 
 export nodes, weights, degree, degrees, poles, Res, residues, roots
 include("abstract-rational.jl")
