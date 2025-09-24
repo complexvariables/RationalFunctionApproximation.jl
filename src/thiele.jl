@@ -278,10 +278,9 @@ function approximate(::Type{Thiele},
 
         # In the initial phase, we throw out the old test points.
         if num_ref > refinement    # initial phase
-            num_ref = max(2, num_ref - 3)    # gradually decrease refinement level
+            num_ref = max(refinement, num_ref - 1)    # gradually decrease refinement level
             s = first(collect(path))
-            path = DiscretizedPath(d, s; refinement=num_ref, maxpoints=max_iter * refinement)
-            τ = path.points
+            reset!(path, s; refinement=num_ref)
             idx_test = CartesianIndices((1:n, 2:num_ref+1))
             @. fτ[idx_test] = f(τ[idx_test])
             fmax = maximum(abs, view(fτ, idx_test))

@@ -259,20 +259,24 @@ function add_node(r::Barycentric, C, L, new_σ, new_fσ, τ, fτ, idx_test, idx_
     return Barycentric(σ, fσ, A)
 end
 
-function _initialize(f, num_ref, max_iter, σ, fσ, path, idx_test)
+function _allocate(num_ref, max_iter, σ, fσ, path)
     τ = path.points
     fτ = Matrix{eltype(fσ)}(undef, size(τ))        # f at test points
-    @. fτ[idx_test] = f(τ[idx_test])
     rτ = complex(similar(fτ))    # rational function at test points
     value_type = promote_type(eltype(σ), eltype(fτ))
     C = Array{value_type}(undef, max_iter + 1, num_ref + 1, max_iter + 1)
     L = Array{value_type}(undef, max_iter + 1, num_ref + 1, max_iter + 1)
+    return τ, fτ, rτ, C, L
+end
+
+function _initialize!(τ, fτ, C, L, f, σ, fσ, idx_test)
+    @. fτ[idx_test] = f(τ[idx_test])
     @inbounds @fastmath for i in idx_test
         Δ = τ[i] - σ[1]
         C[i, 1] = iszero(Δ) ? 1 / eps() : 1 / Δ
         L[i, 1] = (fτ[i] - fσ[1]) * C[i, 1]
     end
-    return τ, fτ, rτ, C, L
+    return nothing
 end
 
 # TODO: This should probably enforce parameters S and T
@@ -295,7 +299,8 @@ function approximate(::Type{Barycentric},
 
     # Arrays of test points have one row per node (except the last)
     idx_test = CartesianIndices((1:1, 2:num_ref+1))
-    τ, fτ, rτ, C, L = _initialize(f, num_ref, max_iter, σ, fσ, path, idx_test)
+    τ, fτ, rτ, C, L = _allocate(num_ref, max_iter, σ, fσ, path)
+    _initialize!(τ, fτ, C, L, f, σ, fσ, idx_test)
     fmax = maximum(abs, view(fτ, idx_test))        # scale of f
 
     # Initialize rational approximation
@@ -331,17 +336,17 @@ function approximate(::Type{Barycentric},
             # look for the best acceptable case
             status = quitting_check(history, stagnation, tol, fmax, 1, allowed)
             r = history[status].interpolant
-            @warn("Maximum path refinement exceeded; stopping with estimated error $(round(history[status].error, sigdigits=4))")
+            @warn("Unable to add new node; stopping with estimated error $(round(history[status].error, sigdigits=4))")
             break
         end
 
         if num_ref > refinement    # initial phase
             # In the initial phase, we throw out the old test points.
-            num_ref = max(2, num_ref - 3)    # gradually decrease refinement level
+            num_ref = max(refinement, num_ref - 1)    # gradually decrease refinement level
             s, _ = collect(path, :nodes)
-            path = DiscretizedPath(d, s; refinement=num_ref, maxpoints=max_iter * refinement)
+            reset!(path, s; refinement=num_ref)
             idx_new_test = idx_test = CartesianIndices((1:n+1, 2:num_ref+1))
-            τ, fτ, rτ, C, L = _initialize(f, num_ref, max_iter, σ, fσ, path, idx_test)
+            _initialize!(τ, fτ, C, L, f, σ, fσ, idx_test)
             fmax = maximum(abs, view(fτ, idx_test))        # scale of f
         else
             idx_test = CartesianIndices((1:n+1, 2:num_ref+1))
