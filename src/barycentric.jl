@@ -216,6 +216,17 @@ function roots(r::Barycentric)
     end
 end
 
+function loewner(nodes, node_values, samples, sample_values)
+    m, n = length(samples), length(nodes)
+    L = Array{promote_type(eltype(nodes), eltype(samples))}(undef, m, n)
+    @inbounds @fastmath for i in 1:m, j in 1:n
+        Δ = samples[i] - nodes[j]
+        c = iszero(Δ) ? 1 / eps() : 1 / Δ
+        L[i, j] = (sample_values[i] - node_values[j]) * c
+    end
+    return L
+end
+
 # add new nodes to an existing Barycentric function
 function add_node(r::Barycentric, C, L, new_σ, new_fσ, τ, fτ, idx_test, idx_new_test)
     σ =  [r.nodes;   new_σ]
