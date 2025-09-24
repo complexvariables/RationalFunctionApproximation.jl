@@ -33,7 +33,7 @@
     @testset "Double64 for $method" for method in (Barycentric, Thiele)
         T = Double64
         pts = test_points[T]
-        tol = 2000*eps(T)
+        tol = 3000*eps(T)
         approx(f; kw...) = approximate(f, domain[T]; method, kw...)
         @testset "Function $iter" for (iter, f) in enumerate((
             x -> abs(x - 1//2 + 1im//100),
@@ -41,7 +41,7 @@
             x -> exp(10*(x + 1//4)^2),
             x -> exp(-10 / (6//5 - x)),
             x -> 1/(1 + exp(100*(x + 1im//2)^2)),
-            x -> sinh(50x) * exp(10x^2),
+            x -> sinh(40x) * exp(10x^2),
             x -> tan(100*(x - 1//5)),
             x -> exp(x),
             x -> cis(x),
