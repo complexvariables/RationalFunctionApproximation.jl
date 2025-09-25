@@ -251,7 +251,7 @@ function approximate(::Type{Thiele},
         end
         (status != 0) && break
 
-        ### Refinement
+        # Refinement
         idx_new = idx_test[idx_max]      # location of worst test point
         try
             add_node!(r, τ[idx_new], fτ[idx_new])
@@ -262,13 +262,9 @@ function approximate(::Type{Thiele},
         end
 
         n += 1
-
         try
             idx_new_test = add_node!(path, idx_new)
         catch
-            # check error on the latest interpolant
-            err = @. abs(fτ[idx_test] - r(τ[idx_test]))
-            history[n].error = maximum(err)
             # look for the best acceptable case
             status = quitting_check(history, stagnation, tol, fmax, 1, allowed)
             r = history[status].interpolant

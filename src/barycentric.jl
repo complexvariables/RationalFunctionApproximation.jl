@@ -315,7 +315,7 @@ function approximate(::Type{Barycentric},
         evaluate!(view(rτ, idx_test), r, Cmatrix)    # r at test points
         err = @. abs(fτ[idx_test] - rτ[idx_test])
         err_max, idx_max = findmax(err)
-        history[end].error = err_max
+        history[n].error = err_max
 
         status = quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
         if status > 0
@@ -330,9 +330,6 @@ function approximate(::Type{Barycentric},
         try
             idx_new_test = add_node!(path, idx_new)
         catch
-            # check error on the latest interpolant
-            err = @. abs(fτ[idx_test] - r(τ[idx_test]))
-            history[n].error = maximum(err)
             # look for the best acceptable case
             status = quitting_check(history, stagnation, tol, fmax, 1, allowed)
             r = history[status].interpolant
