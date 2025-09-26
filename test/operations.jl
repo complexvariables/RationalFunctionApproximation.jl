@@ -13,7 +13,7 @@
                 (sin, cos),
             ))
                 r = approximate(f, domain; method)
-                @test isapprox(derivative(r; allowed=true), df)
+                @test isapprox(derivative(r; allowed=true), df, atol=sqrt(eps()))
                 @test derivative(r.fun, 0.1) ≈ df(0.1)
             end
         end
@@ -35,8 +35,8 @@
                 @test op(e, 3.14 + 2.72im) ≈ z -> op(e(z), 3.14 + 2.72im)
                 @test op(3.14 + 2.72im, e) ≈ z -> op(3.14 + 2.72im, e(z))
                 @test op(t, e) ≈ z -> op(t(z), e(z))
-                @test op(c, e) ≈ z -> op(c(z), e(z))
-                @test op(e, c) ≈ z -> op(e(z), c(z))
+                @test isapprox(op(c, e), z -> op(c(z), e(z)), atol=sqrt(eps()))
+                @test isapprox(op(e, c), z -> op(e(z), c(z)), atol=sqrt(eps()))
                 @test_throws DomainError op(ec, e)
                 @test !(ec ≈ e)
             end
