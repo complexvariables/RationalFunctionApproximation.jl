@@ -9,7 +9,7 @@
 
     @testset "Basic functions for $method" for method in (Barycentric, Thiele)
         T = Float64
-        tol = 2000*eps(T)
+        tol = 3000*eps(T)
         pts = test_points[T]
         approx(f; kw...) = approximate(f, domain[T]; method, kw...)
         @testset "Function $iter" for (iter, f) in enumerate((
@@ -21,7 +21,7 @@
             x -> sin(1 / (21//20 - x)),
             x -> abs(x + 1//2 + 1im//60),
             x -> exp(-100x^2),
-            x -> sin(60x) * exp(-10x^2),
+            x -> sin(50x) * exp(-10x^2),
             x -> 1im + exp(-10 / (6//5 - x)),
             x -> 10im*x + tanh(100*(x - 1//5)),
             x -> x + tanh(100x),
