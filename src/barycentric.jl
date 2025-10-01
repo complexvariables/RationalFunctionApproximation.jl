@@ -367,7 +367,7 @@ function approximate(::Type{Barycentric},
 
     m = length(z)
     fmax = maximum(abs, y)     # scale of f
-    values = similar(y)
+    values = complex(similar(y))
 
     _, i₀ = findmin(abs, y)
     idx_test = trues(m)
