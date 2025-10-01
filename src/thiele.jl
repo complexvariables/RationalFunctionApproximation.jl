@@ -327,10 +327,19 @@ function approximate(::Type{Thiele},
         (status != 0) && break
 
         # Add new node:
-        add_node!(r, z[idx_new], y[idx_new])
+        try
+            add_node!(r, z[idx_new], y[idx_new])
+            push!(history, IterationRecord(r, NaN, missing))
         deleteat!(y, idx_new)    # remove the minimum value
         deleteat!(z, idx_new)    # remove the minimum value
-        push!(history, IterationRecord(r, NaN, missing))
+        catch(e)
+            # look for the best acceptable case
+            status = quitting_check(history, stagnation, tol, fmax, 1, allowed)
+            r = history[status].interpolant
+            @warn("NaN weight encountered; stopping with estimated error $(round(history[status].error, sigdigits=4))")
+            @debug("Error $e")
+            break
+        end
         n += 1
     end
     return r, history
