@@ -40,6 +40,7 @@ function Base.copy(r::Thiele)
     return Thiele(copy(r.nodes), copy(r.values), copy(r.weights))
 end
 
+# Evaluation at a point
 function evaluate(r::Thiele, z::Number, evaluator=_evaluate_onediv)
     return if isinf(z)
         if isodd(length(r.nodes))
@@ -188,6 +189,7 @@ function add_node!(r::Thiele, z_new, y_new)
     w = _new_weight(r.nodes, r.weights, z_new, y_new)
     if isnan(w)
         throw(NaNException("Adding node at $z_new caused NaN weight"))
+        @debug("Adding node at $z_new caused NaN weight")
     end
     push!(r.weights, w)
     push!(r.nodes, z_new)
@@ -251,17 +253,21 @@ function approximate(::Type{Thiele},
         end
         (status != 0) && break
 
-        # Refinement
+        # Add node to approximant
         idx_new = idx_test[idx_max]      # location of worst test point
         try
             add_node!(r, τ[idx_new], fτ[idx_new])
             push!(history, IterationRecord(r, NaN, missing))
-        catch
-            @warn("NaN weight encountered; stopping with estimated error $(round(history[n].error, sigdigits=4))")
+        catch(e)
+            # look for the best acceptable case
+            status = quitting_check(history, stagnation, tol, fmax, 1, allowed)
+            r = history[status].interpolant
+            @warn("NaN weight encountered; stopping with estimated error $(round(history[status].error, sigdigits=4))")
+            @debug("Error $e")
             break
         end
 
-        n += 1
+        # Add node to path
         try
             idx_new_test = add_node!(path, idx_new)
         catch
@@ -272,6 +278,7 @@ function approximate(::Type{Thiele},
             break
         end
 
+        n += 1
         # In the initial phase, we throw out the old test points.
         if num_ref > refinement    # initial phase
             num_ref = max(refinement, num_ref - 1)    # gradually decrease refinement level
