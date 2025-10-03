@@ -19,6 +19,7 @@ poles(r::AbstractRationalFunction) = error("`poles` not implemented for $(typeof
 "residues(r) returns two vectors of the poles and residues of the rational function `r`."
 residues(r::AbstractRationalFunction) = error("`residues` not implemented for $(typeof(r))")
 
+Base.isreal(r::AbstractRationalFunction) = error("`isreal` not implemented for $(typeof(r))")
 Base.isempty(r::AbstractRationalFunction) = degrees(r) == (0, 0)
 
 "roots(r) returns the roots of the rational function `r`."

@@ -92,6 +92,7 @@ Base.values(r::Barycentric) = r.values
 weights(r::Barycentric) = r.weights
 degrees(r::Barycentric) = (length(r.nodes) - 1, length(r.nodes) - 1)
 degree(r::Barycentric) = length(r.nodes) - 1
+Base.isreal(r::Barycentric) = isreal(r.values) && isreal(r.nodes) && isreal(r.weights)
 
 """
     r(z)

@@ -25,7 +25,7 @@ function Base.convert(::Type{Thiele{T}}, r::Thiele{S}) where {S,T}
     return Thiele{T}( T.(nodes(r)), T.(values(r)), T.(weights(r)) )
 end
 
-# convenience accessors
+# convenience accessors amd overloads
 nodes(r::Thiele) = r.nodes
 Base.values(r::Thiele) = r.values
 weights(r::Thiele) = r.weights
@@ -35,6 +35,8 @@ function degrees(r::Thiele)
     return q + s, q
 end
 degree(r::Thiele) = div(length(r.nodes) - 1, 2)
+
+Base.isreal(r::Thiele) = isreal(r.nodes) && isreal(r.weights)
 
 function Base.copy(r::Thiele)
     return Thiele(copy(r.nodes), copy(r.values), copy(r.weights))
@@ -202,8 +204,12 @@ function _new_weight(z, w, z_new, y_new)
     b = y_new
     @inbounds for k in eachindex(z)
         t = -w[k] * a + b
+        # println("$((abs(w[k]*a) + abs(b))/abs(t))")
         b = a * (z_new - z[k])
         a = t
+        aa = abs(a)
+        # a = a/aa
+        # b = b/aa
     end
     return b / a
 end
@@ -330,8 +336,8 @@ function approximate(::Type{Thiele},
         try
             add_node!(r, z[idx_new], y[idx_new])
             push!(history, IterationRecord(r, NaN, missing))
-        deleteat!(y, idx_new)    # remove the minimum value
-        deleteat!(z, idx_new)    # remove the minimum value
+            deleteat!(y, idx_new)    # remove the minimum value
+            deleteat!(z, idx_new)    # remove the minimum value
         catch(e)
             # look for the best acceptable case
             status = quitting_check(history, stagnation, tol, fmax, 1, allowed)
