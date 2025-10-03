@@ -3,38 +3,64 @@ module RFAMakieExt
 using RationalFunctionApproximation, Makie, ComplexRegions, Printf
 RFA = RationalFunctionApproximation
 
-function RFA.convergenceplot(r::RFA.Approximation)
+function RFA.convergenceplot!(target, r::RFA.Approximation; show_best=true, kwargs...)
     deg, err, _, allowed, best = get_history(r)
-    fig = Figure( )
-    ax = Axis(fig[1,1], xlabel="degree", ylabel="relative max error", yscale=log10)
-    color = if r.allowed == true
-        fill(:black, length(deg))
-    else
-        [all(b) ? :darkblue : :red for b in allowed]
+    attr = Makie.Attributes(; markersize=8)
+    if r.allowed != true
+        attr = merge(attr, Makie.Attributes(
+            markercolor= [all(b) ? :darkblue : :red for b in allowed],
+            color=RGBAf(0, 0, 0, 0.5)
+            ))
     end
-    scatterlines!(ax, deg, err; markercolor=color, markersize=8, color=RGBAf(0, 0, 0, 0.5))
-    scatterlines!(ax, deg[best], err[best],
-        color=RGBAf(1,1,1,0), strokecolor=:gold, strokewidth=3, markersize=13 )
-    return fig
+    attr = merge(attr, Makie.Attributes(; kwargs...))
+    out1 = scatterlines!(target, deg, err; attr...)
+    out2 = if show_best
+        scatterlines!(target, deg[best], err[best],
+                color=RGBAf(1,1,1,0), strokecolor=:gold, strokewidth=3, markersize=13 )
+    else
+        nothing
+    end
+    return out1, out2
 end
 
-function RFA.errorplot(r::RFA.Approximation; use_abs=false)
+function RFA.convergenceplot(pos::GridPosition, r::RFA.Approximation; kwargs...)
+    ax = Axis(pos, xlabel="degree", ylabel="relative max error", yscale=log10)
+    return Makie.AxisPlot(ax, RFA.convergenceplot!(ax, r; kwargs...)[1])
+end
+
+function RFA.convergenceplot(r::RFA.Approximation; kwargs...)
     fig = Figure( )
-    ax = Axis(fig[1, 1], xlabel="boundary parameter", ylabel="error")
+    return Makie.FigureAxisPlot(fig, RFA.convergenceplot(fig[1, 1], r; kwargs...)...)
+end
+
+function RFA.errorplot!(target, r::RFA.Approximation; use_abs=false, kwargs...)
     # try to get enough points for a smooth result
     N = ceil(Int, 1000 / length(nodes(r)))
     t, τ, err = check(r, refinement=N, quiet=true, prenodes=true)
-    if use_abs
-        lines!(ax, t, abs.(err))
-        ax.ylabel = "| error |"
+    out = if use_abs
+        lines!(target, t, abs.(err); kwargs...)
     elseif isreal(err)
-        lines!(ax, t, err)
+        lines!(target, t, err; kwargs...)
     else
-        lines!(ax, t, real.(err))
-        lines!(ax, t, imag.(err))
-        ax.ylabel = "Re, Im error"
+        series!(target, t, hcat(reim(err)...)'; kwargs...)
     end
-    return fig
+    return out
+end
+
+function RFA.errorplot(pos::GridPosition, r::RFA.Approximation; use_abs=false, kwargs...)
+    ax = if use_abs
+        Axis(pos, xlabel="boundary parameter", ylabel="| error |")
+    elseif isreal(r.fun)
+        Axis(pos, xlabel="boundary parameter", ylabel="error")
+    else
+        Axis(pos, xlabel="boundary parameter", ylabel="Re, Im error")
+    end
+    return Makie.AxisPlot(ax, RFA.errorplot!(ax, r; use_abs, kwargs...))
+end
+
+function RFA.errorplot(r::RFA.Approximation; kwargs...)
+    fig = Figure( )
+    return Makie.FigureAxisPlot(fig, RFA.errorplot(fig[1, 1], r; kwargs...)...)
 end
 
 function axisbox(z)
@@ -46,18 +72,28 @@ function axisbox(z)
     return xbox, ybox
 end
 
-function RFA.poleplot(r::RFA.Approximation, idx::Integer=0)
-    fig = Figure( )
-    ax = Axis(fig[1,1], xlabel="Re(z)", ylabel="Im(z)", aspect=DataAspect())
-    z, _ = check(r, quiet=true)
-    z = [z; z[1]]
-    lines!(ax, real(z), imag(z))
-    zp = iszero(idx) ? RFA.poles(r) : RFA.poles(rewind(r, idx))
-    color = [r.allowed(z) ? :black : :red for z in zp]
-    scatter!(ax, Point2.(real(zp), imag(zp)); color, markersize=7)
-    xbox, ybox = axisbox(z)
+function RFA.poleplot!(target, r::RFA.Approximation; kwargs...)
+    zp = RFA.poles(r)
+    attr = Makie.Attributes(; marker=:+, markersize=7, kwargs...)
+    if r.allowed != true
+        attr = merge(attr, Makie.Attributes(
+            color= [r.allowed(z) ? :black : :red for z in zp],
+            ))
+    end
+    return scatter!(target, Point2.(real(zp), imag(zp)); attr...)
+end
+
+function RFA.poleplot(pos::GridPosition, r::RFA.Approximation; kwargs...)
+    ax = Axis(pos, xlabel="Re(z)", ylabel="Im(z)", aspect=DataAspect())
+    out = RFA.poleplot!(ax, r; kwargs...)
+    xbox, ybox = axisbox(test_points(r))
     limits!(ax, xbox..., ybox...)
-    return fig
+    return Makie.AxisPlot(ax, out)
+end
+
+function RFA.poleplot(r::RFA.Approximation; kwargs...)
+    fig = Figure( )
+    return Makie.FigureAxisPlot(fig, RFA.poleplot(fig[1, 1], r; kwargs...)...)
 end
 
 function RFA.animate(r::RFA.Approximation, filename=tempname()*".mp4")

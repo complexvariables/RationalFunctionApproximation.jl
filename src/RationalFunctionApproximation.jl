@@ -32,7 +32,7 @@ include("lawson.jl")
 # include("operations.jl")
 
 # These are overloaded by plotting extensions.
-export convergenceplot, errorplot, animate, poleplot
+export convergenceplot, convergenceplot!, errorplot, errorplot!, animate, poleplot, poleplot!
 
 # COV_EXCL_START
 function animate(::Any)
@@ -50,6 +50,10 @@ function convergenceplot(::Any)
     error("Load the Makie or Plots package first.")
 end
 
+function convergenceplot!(::Any)
+    error("Load the Makie or Plots package first.")
+end
+
 """
     errorplot(r; use_abs=false)
 
@@ -59,12 +63,20 @@ function errorplot(::Any; kwargs...)
     error("Load the Makie or Plots package first.")
 end
 
-"""
-    poleplot(r, idx=0)
+function errorplot!(::Any; kwargs...)
+    error("Load the Makie or Plots package first.")
+end
 
-Plot the domain of the approximation `r` and the poles of the rational approximant. If `idx` is nonzero, it should be an index into the convergence history of `r`.
+"""
+    poleplot(r)
+
+Plot the poles of the rational approximant.
 """
 function poleplot(::Any; kwargs...)
+    error("Load the Makie package first.")
+end
+
+function poleplot!(::Any; kwargs...)
     error("Load the Makie package first.")
 end
 # COV_EXCL_END
