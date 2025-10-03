@@ -272,10 +272,10 @@ end
 
 function _initialize!(τ, fτ, C, L, f, σ, fσ, idx_test)
     @. fτ[idx_test] = f(τ[idx_test])
-    @inbounds @fastmath for i in idx_test
-        Δ = τ[i] - σ[1]
-        C[i, 1] = iszero(Δ) ? 1 / eps() : 1 / Δ
-        L[i, 1] = (fτ[i] - fσ[1]) * C[i, 1]
+    @inbounds @fastmath for i in idx_test, j in eachindex(σ)
+        Δ = τ[i] - σ[j]
+        C[i, j] = iszero(Δ) ? 1 / eps() : 1 / Δ
+        L[i, j] = (fτ[i] - fσ[j]) * C[i, j]
     end
     return nothing
 end
@@ -295,8 +295,9 @@ function approximate(::Type{Barycentric},
 
     num_ref = 15    # initial number of test points between nodes; decreases to `refinement`
     path = DiscretizedPath(d, [0, 1]; refinement=num_ref, maxpoints=max_iter * refinement)
-    σ = [point(d, 0)]
-    fσ = f.(σ)         # f at nodes
+    σ = isclosed(d) ? point(d, [0]) : point(d, [0, 1])    # initial nodes
+    fσ = f.(σ)              # f at nodes
+    numnodes = length(σ)
 
     # Arrays of test points have one row per node (except the last)
     idx_test = CartesianIndices((1:1, 2:num_ref+1))
@@ -305,14 +306,14 @@ function approximate(::Type{Barycentric},
     fmax = maximum(abs, view(fτ, idx_test))        # scale of f
 
     # Initialize rational approximation
-    r = Barycentric(σ, fσ, reshape(view(L, idx_test, 1:1), :, 1))
+    r = Barycentric(σ, fσ, reshape(view(L, idx_test, 1:numnodes), :, 1:numnodes))
     history = [IterationRecord(r, NaN, missing)]
 
     # Main iteration
     idx_new_test = nothing
     n = 1       # iteration counter
     while true
-        Cmatrix = reshape(view(C, idx_test, 1:n), :, n)
+        Cmatrix = reshape(view(C, idx_test, 1:numnodes), :, numnodes)
         evaluate!(view(rτ, idx_test), r, Cmatrix)    # r at test points
         err = @. abs(fτ[idx_test] - rτ[idx_test])
         err_max, idx_max = findmax(err)
@@ -353,6 +354,7 @@ function approximate(::Type{Barycentric},
         r = add_node(r, C, L, new_σ, new_fσ, τ, fτ, idx_test, idx_new_test)
         push!(history, IterationRecord(r, NaN, missing))
         n += 1
+        numnodes += 1
     end
     return Approximation(f, d, r, allowed, path, history)
 end
