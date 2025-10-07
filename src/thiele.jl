@@ -207,9 +207,6 @@ function _new_weight(z, w, z_new, y_new)
         # println("$((abs(w[k]*a) + abs(b))/abs(t))")
         b = a * (z_new - z[k])
         a = t
-        aa = abs(a)
-        # a = a/aa
-        # b = b/aa
     end
     return b / a
 end
