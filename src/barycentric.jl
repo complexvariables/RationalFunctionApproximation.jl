@@ -306,7 +306,7 @@ function approximate(::Type{Barycentric},
     fmax = maximum(abs, view(fτ, idx_test))        # scale of f
 
     # Initialize rational approximation
-    r = Barycentric(σ, fσ, reshape(view(L, idx_test, 1:numnodes), :, 1:numnodes))
+    r = Barycentric(σ, fσ, reshape(view(L, idx_test, 1:numnodes), :, numnodes))
     history = [IterationRecord(r, NaN, missing)]
 
     # Main iteration
