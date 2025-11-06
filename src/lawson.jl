@@ -57,20 +57,22 @@ function minimax(r::Barycentric, f::Function, nsteps::Integer=20)
     return Barycentric(node, ⍺ ./ β, β, ⍺)
 end
 
-function minimax(r::Approximation, nsteps::Integer=20)
-    if !isa(r.fun, Barycentric)
-        error("`minimax`` only works with barycentric approximations")
-    end
+function minimax(r::ContinuumApproximation{S,T,R}, nsteps::Integer=20) where {S,T,R<:Barycentric}
     p = DiscretizedPath(r.path, 20)
     _, test = collect(p, :test)
     ftest = r.original.(test)
     ⍺, β = lawson(test, ftest, nodes(r.fun), values(r.fun), weights(r.fun), nsteps)
     r̂ = Barycentric(nodes(r.fun), ⍺ ./ β, β, ⍺)
-    return Approximation(r.original, r.domain, r̂, r.allowed, r.path)
+    return ContinuumApproximation(r.original, r.domain, r̂, r.allowed, r.path)
 end
 
+function minimax(r::DiscreteApproximation{S,T,R}, nsteps::Integer=20) where {S,T,R<:Barycentric}
+    ⍺, β = lawson(test, ftest, nodes(r.fun), values(r.fun), weights(r.fun), nsteps)
+    r̂ = Barycentric(nodes(r.fun), ⍺ ./ β, β, ⍺)
+    return ContinuumApproximation(r.original, r.domain, r̂, r.allowed, r.path)
+end
 # just for some experimentation
-function brasil(r::Approximation{T}; tol=1000*eps(T), σmax=0.1, τ=0.1, max_iter=20) where T
+function brasil(r::ContinuumApproximation{T}; tol=1000*eps(T), σmax=0.1, τ=0.1, max_iter=20) where T
     t, z = collect(r.path, :nodes)
     p = r.path.path
     idx = 1:length(t)-1
@@ -105,5 +107,5 @@ function brasil(r::Approximation{T}; tol=1000*eps(T), σmax=0.1, τ=0.1, max_ite
         @show maximum(δ) / minimum(δ) - 1, extrema(δ)
         iter += 1
     end
-    return Approximation(r.original, r.domain, fun, r.allowed, DiscretizedPath(r.path.path, t))
+    return ContinuumApproximation(r.original, r.domain, fun, r.allowed, DiscretizedPath(r.path.path, t))
 end

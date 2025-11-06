@@ -12,7 +12,7 @@ include("discretized_path.jl")
 export nodes, weights, degree, degrees, poles, Res, residues, roots
 include("abstract-rational.jl")
 
-export approximate, check, rewind, get_history, test_points
+export approximate, get_function, domain, check, rewind, get_history, test_points
 include("approximation.jl")
 
 export ArnoldiBasis, ArnoldiPolynomial, PartialFractions

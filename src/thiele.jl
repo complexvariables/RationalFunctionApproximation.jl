@@ -296,7 +296,7 @@ function approximate(::Type{Thiele},
             idx_test = CartesianIndices((1:n, 2:num_ref+1))
         end
     end
-    return Approximation(f, d, r, allowed, path, history)
+    return ContinuumApproximation(f, d, r, allowed, path, history)
 end
 
 function approximate(::Type{Thiele},
@@ -352,7 +352,7 @@ function approximate(::Type{Thiele},
         end
         n += 1
     end
-    return r, history
+    return DiscreteApproximation(y, z, r, idx_test, allowed, history)
 end
 
 # Operations with scalars that can be done quickly.

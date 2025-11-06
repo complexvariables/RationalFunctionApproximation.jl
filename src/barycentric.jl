@@ -356,7 +356,7 @@ function approximate(::Type{Barycentric},
         n += 1
         numnodes += 1
     end
-    return Approximation(f, d, r, allowed, path, history)
+    return ContinuumApproximation(f, d, r, allowed, path, history)
 end
 
 function approximate(::Type{Barycentric},
@@ -413,7 +413,7 @@ function approximate(::Type{Barycentric},
         push!(history, IterationRecord(r, NaN, missing))
         n += 1
     end
-    return r, history
+    return DiscreteApproximation(y, z, r, idx_test, allowed, history)
 end
 
 # Operations with scalars that can be done quickly.

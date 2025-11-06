@@ -268,12 +268,13 @@ function approximate(::Type{PartialFractions},
     _, σ = collect(path, :nodes)
     fσ = f.(σ)
     r = PartialFractions(σ, fσ, ζ, degree)
-    return Approximation(f, d, r, true, path, nothing)
+    return ContinuumApproximation(f, d, r, true, path, nothing)
 end
 
 function approximate(::Type{PartialFractions},
     y::AbstractVector, z::AbstractVector, ζ::AbstractVector;
     degree = max(1, div(length(ζ), 2)),
     )
-    return PartialFractions(z, y, ζ, degree)
+    r = PartialFractions(z, y, ζ, degree)
+    return DiscreteApproximation(y, z, r, trues(length(y)), true, nothing)
 end

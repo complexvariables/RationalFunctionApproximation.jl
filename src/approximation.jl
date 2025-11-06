@@ -19,6 +19,8 @@ function Base.show(io::IO, ::MIME"text/plain", h::IterationRecord)
 end
 # COV_EXCL_STOP
 
+abstract type AbstractApproximation{T,S} <: Function end
+
 """
     Approximation (type)
 
@@ -32,44 +34,81 @@ Approximation of a function on a domain.
 - `path`: a `DiscretizedPath` for the domain boundary
 - `history`: all approximations in the iteration
 """
-struct Approximation{T,S} <: Function
+struct ContinuumApproximation{T,S,R} <: AbstractApproximation{T,S}
     original::Function
     domain::Domain{T}
-    fun::Union{AbstractRationalInterpolant{T,S},AbstractRationalFunction{S}}
+    fun::R
     allowed::Union{Bool,Function}
     path::DiscretizedPath
     history::Union{Vector{<:IterationRecord},Nothing}
 end
 
-function Approximation(
+function ContinuumApproximation(
     f::Function,
-    domain::Domain,
-    fun::AbstractRationalInterpolant,
+    domain::Domain{T},
+    fun::R,
     allowed::Union{Bool,Function},
-    path::DiscretizedPath
-    )
-    return Approximation(f, domain, fun, allowed, path, nothing)
+    path::DiscretizedPath,
+    history=nothing
+    ) where {T,S,R<:AbstractRationalFunction{S}}
+    return ContinuumApproximation{T,S,R}(f, domain, fun, allowed, path, history)
 end
 
-(f::Approximation)(z) = f.fun(z)
+(f::ContinuumApproximation)(z) = f.fun(z)
+domain(r::ContinuumApproximation) = r.domain
+get_function(r::ContinuumApproximation) = r.fun
+history(r::ContinuumApproximation) = r.history
+
+struct DiscreteApproximation{T,S,R} <: AbstractApproximation{T,S}
+    data::Vector{S}
+    domain::Vector{T}
+    fun::R
+    test_index::BitVector
+    allowed::Union{Bool,Function}
+    history::Union{Vector{<:IterationRecord},Nothing}
+    function DiscreteApproximation{T,S,R}(
+        data::AbstractVector{S},
+        domain::AbstractVector{T},
+        args...
+        ) where {T,S,R}
+        @assert length(data) == length(domain)
+        return new{T,S,R}(data, domain, args...)
+    end
+end
+
+function DiscreteApproximation(
+    data::AbstractVector{S},
+    domain::AbstractVector{T},
+    fun::R,
+    test_index::BitVector,
+    allowed::Union{Bool,Function}=true,
+    history=nothing
+    ) where {T,S,R<:AbstractRationalFunction}
+    return DiscreteApproximation{T,float(S),typeof(fun)}(float(data), domain, fun, test_index, allowed, history)
+end
+
+(f::DiscreteApproximation)(z) = f.fun(z)
+domain(r::DiscreteApproximation) = r.domain
+get_function(r::DiscreteApproximation) = r.fun
+history(r::DiscreteApproximation) = r.history
 
 # COV_EXCL_START
-function Base.show(io::IO, ::MIME"text/plain", f::Approximation)
+function Base.show(io::IO, ::MIME"text/plain", f::AbstractApproximation)
     print(io, f.fun)
     print(IOContext(io, :compact=>true), " on the domain: ", f.domain)
 end
 # COV_EXCL_STOP
 
-nodes(r::Approximation, args...) = nodes(r.fun, args...)
-Base.values(r::Approximation, args...) = values(r.fun, args...)
-weights(r::Approximation, args...) = weights(r.fun, args...)
-degree(r::Approximation) = degree(r.fun)
-degrees(r::Approximation) = degrees(r.fun)
-poles(F::Approximation) = poles(F.fun)
-residues(f::Approximation, args...) = residues(f.fun, args...)
-roots(f::Approximation) = roots(f.fun)
+nodes(r::AbstractApproximation, args...) = nodes(r.fun, args...)
+Base.values(r::AbstractApproximation, args...) = values(r.fun, args...)
+weights(r::AbstractApproximation, args...) = weights(r.fun, args...)
+degree(r::AbstractApproximation) = degree(r.fun)
+degrees(r::AbstractApproximation) = degrees(r.fun)
+poles(F::AbstractApproximation) = poles(F.fun)
+residues(f::AbstractApproximation, args...) = residues(f.fun, args...)
+roots(f::AbstractApproximation) = roots(f.fun)
 
-function test_points(r::Approximation; with_parameters=false)
+function test_points(r::ContinuumApproximation; with_parameters=false)
     s, z = collect(r.path, :all)
     return with_parameters ? (s, z) : z
 end
@@ -198,7 +237,7 @@ end
 # Given a region as domain, we interpret poles as not being allowed in that region.
 function approximate(f::Function, R::ComplexRegions.AbstractRegion; kw...)
     r = approximate(f, R.boundary; allowed=z->!in(z,R), kw...)
-    return Approximation(f, R, r.fun, r.allowed, r.path, r.history)
+    return ContinuumApproximation(f, R, r.fun, r.allowed, r.path, r.history)
 end
 
 # ::Function, ::AbstractVector
@@ -208,39 +247,40 @@ function approximate(
     allowed = true,
     kw...
     )
-    r, history = approximate(f.(z), z; kw...)
-    return Approximation(f, z, r, allowed, DiscretizedPath(), history)
+    y = f.(z)
+    r = approximate(y, z; allowed, kw...)
+    return DiscreteApproximation(y, z, r.fun, r.test_index, r.allowed, r.history)
 end
 
 # ::Function,::AbstractVector, ::AbstractVector
 function approximate(
     f::Function, z::AbstractVector, ζ::AbstractVector;
-    allowed = true,
     method = PartialFractions,
     kw...
     )
-    r = approximate(method, f.(z), z, ζ; kw...)
-    return Approximation(f, z, r, allowed, DiscretizedPath(), nothing)
+    y = f.(z)
+    r = approximate(method, y, z, ζ; kw...)
+    return DiscreteApproximation(y, z, r.fun, r.test_index, true, r.history)
 end
 
 #####
 ##### Support functions
 #####
 
-function Base.isapprox(r::Approximation, s::Approximation; kwargs...)
-    return if isapprox(r.domain, s.domain)
-        all( isapprox(r.fun(z), s.fun(z); kwargs...) for z in test_points(r) )
+function Base.isapprox(r::AbstractApproximation, s::AbstractApproximation; kwargs...)
+    return if isapprox(domain(r), domain(s))
+        all( isapprox(r(z), s(z); kwargs...) for z in test_points(r) )
     else
         false
     end
 end
 
-function Base.isapprox(r::Approximation, f::Function; kwargs...)
-    return all(isapprox(r.fun(z), f(z); kwargs...) for z in test_points(r))
+function Base.isapprox(r::AbstractApproximation, f::Function; kwargs...)
+    return all(isapprox(r(z), f(z); kwargs...) for z in test_points(r))
 end
 
-function Base.isapprox(r::Approximation, z::Number; kwargs...)
-    return all(isapprox(r.fun(x), z; kwargs...) for x in test_points(r))
+function Base.isapprox(r::AbstractApproximation, u::Number; kwargs...)
+    return all(isapprox(r(z), u; kwargs...) for z in test_points(r))
 end
 
 """
@@ -264,11 +304,11 @@ julia> rewind(r, 10)
 Barycentric{Float64, Float64} rational interpolant of type (10, 10) on the domain: Path{Float64} with 1 curve
 ```
 """
-function rewind(r::Approximation, idx::Integer)
+function rewind(r::AbstractApproximation, idx::Integer)
     if isnothing(r.history)
         @error("No convergence history exists.")
     end
-    return Approximation(r.original, r.domain, r.history[idx].interpolant, r.allowed, r.path, r.history)
+    return typeof(r)(r.original, r.domain, r.history[idx].interpolant, r.allowed, r.path, r.history)
 end
 
 """
@@ -289,23 +329,20 @@ Check the accuracy of a rational approximation `r` on its domain. Returns the te
 
 See also [`approximate`](@ref).
 """
-function check(
-    F::Approximation;
+function check(F::ContinuumApproximation;
     quiet=false,
+    verbose=!quiet,
     prenodes=false,
     refinement=10
     )
-    if F.domain isa AbstractVector    # discrete domain
-        τ = F.domain
-        t = collect(eachindex(τ))
-    elseif refinement == :test
+    if refinement == :test
         t, τ = collect(F.path, :test)
     else
         q = DiscretizedPath(F.path, refinement)
         t, τ = collect(q, :all)
     end
-    err = F.original.(τ) - F.fun.(τ)
-    !quiet && @info f"Max error is {norm(err, Inf):.2e}"
+    err = F.original.(τ) - F.(τ)
+    verbose && @info f"Max error is {norm(err, Inf):.2e}"
     return prenodes ? (t, τ, err) : (τ, err)
 end
 
@@ -324,7 +361,7 @@ Parse the convergence history of a rational approximation.
 
 See also [`convergenceplot`](@ref).
 """
-function get_history(r::Approximation{T,S}; get_poles=!(r.allowed == true)) where {T,S}
+function get_history(r::AbstractApproximation{T,S}; get_poles=!(r.allowed == true)) where {T,S}
     hist = r.history
     deg = Int[]
     zp = Vector{complex(S)}[]
@@ -407,10 +444,10 @@ end
 
 Create an approximation of the derivative of `r` on the same domain.
 """
-function derivative(r::Approximation; kwargs...)
+function derivative(r::AbstractApproximation; kwargs...)
     # TODO: This ought to be handled by dispatch on a type parameter.
-    return if isa(r.fun, AbstractRationalInterpolant)
-        approximate(derivative(r.fun), r.domain; method=typeof(r.fun), kwargs...)
+    return if isa(get_function(r), AbstractRationalInterpolant)
+        approximate(derivative(get_function(r)), domain(r); method=typeof(get_function(r)), kwargs...)
     else
         @error("Not supported. Take the derivative of the `.fun` field.")
     end
@@ -418,78 +455,93 @@ end
 
 # Arithmetic Big 4
 
-function Base.:+(r::Approximation, s::Approximation)
-    if !(r.domain ≈ s.domain)
+function Base.:+(r::AbstractApproximation, s::AbstractApproximation)
+    if !(domain(r) ≈ domain(s))
         throw(DomainError("Approximation domains do not match"))
     end
     return r + s.fun
 end
 
-function Base.:+(r::Approximation, g::Function)
-    f(z) = r.fun(z) + g(z)
-    return approximate(f, r.domain; method=typeof(r.fun))
+function Base.:+(r::AbstractApproximation, g::Function)
+    f(z) = r(z) + g(z)
+    return approximate(f, domain(r); method=typeof(get_function(r)))
 end
 
-function Base.:+(r::Approximation, s::Number)
-    rs = r.fun + s
-    return Approximation(rs, r.domain, rs, r.allowed, r.path, r.history)
+function Base.:+(r::ContinuumApproximation, s::Number)
+    rs = get_function(r) + s
+    return ContinuumApproximation(rs, domain(r), rs, r.allowed, r.path, r.history)
 end
 
-Base.:+(s::Union{Function,Number}, r::Approximation) = r + s
+function Base.:+(r::DiscreteApproximation, s::Number)
+    rs = get_function(r) + s
+    return DiscreteApproximation(r.data .+ s, domain(r), rs, r.test_index, r.allowed, r.history)
+end
 
-Base.:-(r::Approximation, s::Approximation) = -s + r
-Base.:-(r::Approximation, s::Number) = -s + r
-Base.:-(r::Approximation, s::Function) = r + ∘(-, s)
-Base.:-(r::Union{Function,Number}, s::Approximation) = -s + r
+Base.:+(s::Union{Function,Number}, r::AbstractApproximation) = r + s
+
+Base.:-(r::AbstractApproximation, s::AbstractApproximation) = -s + r
+Base.:-(r::AbstractApproximation, s::Number) = -s + r
+Base.:-(r::AbstractApproximation, s::Function) = r + ∘(-, s)
+Base.:-(r::Union{Function,Number}, s::AbstractApproximation) = -s + r
 
 # unary -
-function Base.:-(r::Approximation)
-    rs = -r.fun
-    return Approximation(rs, r.domain, rs, r.allowed, r.path, r.history)
+function Base.:-(r::ContinuumApproximation)
+    rs = -get_function(r)
+    return ContinuumApproximation(rs, domain(r), rs, r.allowed, r.path, r.history)
+end
+
+function Base.:-(r::DiscreteApproximation)
+    rs = -get_function(r)
+    return DiscreteApproximation(-r.data, domain(r), rs, r.test_index, r.allowed, r.history)
 end
 
 # * and / with 3 levels of generality
-function Base.:*(r::Approximation, s::Approximation)
-    if !(r.domain ≈ s.domain)
+function Base.:*(r::AbstractApproximation, s::AbstractApproximation)
+    if !(domain(r) ≈ domain(s))
         throw(DomainError("Approximation domains do not match"))
     end
     return r * s.fun
 end
 
-function Base.:*(r::Approximation, g::Function)
-    f(z) = r.fun(z) * g(z)
-    return approximate(f, r.domain; method=typeof(r.fun))
+function Base.:*(r::AbstractApproximation, g::Function)
+    f(z) = r(z) * g(z)
+    return approximate(f, domain(r); method=typeof(get_function(r)))
 end
 
-function Base.:*(r::Approximation, s::Number)
-    rs = r.fun * s
-    return Approximation(rs, r.domain, rs, r.allowed, r.path, r.history)
+function Base.:*(r::ContinuumApproximation, s::Number)
+    rs = get_function(r) * s
+    return ContinuumApproximation(rs, domain(r), rs, r.allowed, r.path, r.history)
 end
 
-Base.:*(s::Union{Function,Number}, r::Approximation) = r * s
+function Base.:*(r::DiscreteApproximation, s::Number)
+    rs = get_function(r) * s
+    return DiscreteApproximation(r.data * s, domain(r), rs, r.test_index, r.allowed, r.history)
+end
 
-function Base.:/(r::Approximation, s::Approximation)
-    if !(r.domain ≈ s.domain)
+Base.:*(s::Union{Function,Number}, r::AbstractApproximation) = r * s
+
+function Base.:/(r::AbstractApproximation, s::AbstractApproximation)
+    if !(domain(r) ≈ domain(s))
         throw(DomainError("Approximation domains do not match"))
     end
     return r / s.fun
 end
 
-function Base.:/(r::Approximation, g::Function)
-    f(z) = r.fun(z) / g(z)
-    return approximate(f, r.domain; method=typeof(r.fun))
+function Base.:/(r::AbstractApproximation, g::Function)
+    f(z) = r(z) / g(z)
+    return approximate(f, domain(r); method=typeof(get_function(r)))
 end
 
-function Base.:/(r::Function, s::Approximation)
+function Base.:/(r::Function, s::AbstractApproximation)
     f(z) = r(z) / s.fun(z)
-    return approximate(f, s.domain; method=typeof(s.fun))
+    return approximate(f, domain(s); method=typeof(s.fun))
 end
 
-Base.:/(r::Approximation, s::Number) = iszero(s) ? throw(DomainError("Division by zero")) : r * (1 / s)
-Base.:/(r::Number, s::Approximation) = (z -> r) / s
+Base.:/(r::AbstractApproximation, s::Number) = iszero(s) ? throw(DomainError("Division by zero")) : r * (1 / s)
+Base.:/(r::Number, s::AbstractApproximation) = (z -> r) / s
 
 # composition
-function Base.:∘(f::Function, g::Approximation)
+function Base.:∘(f::Function, g::AbstractApproximation)
     # No domain checking is attempted.
     return approximate(f ∘ g.fun, g.domain; method=typeof(g.fun))
 end

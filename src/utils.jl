@@ -13,7 +13,7 @@ const VectorVectorRealComplex{T} = Union{Vector{Vector{T}},Vector{Vector{Complex
 const unit_interval = Segment(-1.,1.)
 const unit_circle = Circle(0., 1.)
 const unit_disk = disk(0., 1.)
-const Domain{T} = Union{ComplexCurve{T}, ComplexPath{T}, ComplexSCRegion{T}, AbstractVector{T}}
+const Domain{T} = Union{ComplexCurve{T}, ComplexPath{T}, ComplexSCRegion{T}}
 
 isclosed(p::ComplexCurve) = isa(p, ComplexClosedCurve)
 isclosed(p::ComplexPath) = isa(p, ComplexClosedPath)
