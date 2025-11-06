@@ -15,14 +15,14 @@ end
 
 # COV_EXCL_START
 function Base.show(io::IO, ::MIME"text/plain", h::IterationRecord)
-    print(IOContext(io, :compact=>true), "$(degrees(h.interpolant)) rational interpolant with error $(round(h.error, sigdigits=3))")
+    print(IOContext(io, :compact=>true), "$(degrees(h.interpolant)) rational approximation with error $(round(h.error, sigdigits=3))")
 end
 # COV_EXCL_STOP
 
 abstract type AbstractApproximation{T,S} <: Function end
 
 """
-    Approximation (type)
+    ContinuumApproximation (type)
 
 Approximation of a function on a domain.
 
@@ -59,6 +59,19 @@ domain(r::ContinuumApproximation) = r.domain
 get_function(r::ContinuumApproximation) = r.fun
 history(r::ContinuumApproximation) = r.history
 
+"""
+    DiscreteApproximation (type)
+
+Approximation of a function on a domain.
+
+# Fields
+- `data`: sample values to be approximated
+- `domain`: points for the sample values
+- `fun`: the barycentric representation of the approximation
+- `test_index`: indicator of which domain points remain as test points
+- `allowed`: function to determine if a pole is allowed
+- `history`: all approximations in the iteration
+"""
 struct DiscreteApproximation{T,S,R} <: AbstractApproximation{T,S}
     data::Vector{S}
     domain::Vector{T}
@@ -93,9 +106,14 @@ get_function(r::DiscreteApproximation) = r.fun
 history(r::DiscreteApproximation) = r.history
 
 # COV_EXCL_START
+function Base.show(io::IO, ::MIME"text/plain", f::ContinuumApproximation)
+    print(io, f.fun)
+    print(IOContext(io, :compact=>true), " constructed on: ", f.domain)
+end
+
 function Base.show(io::IO, ::MIME"text/plain", f::AbstractApproximation)
     print(io, f.fun)
-    print(IOContext(io, :compact=>true), " on the domain: ", f.domain)
+    print(IOContext(io, :compact=>true), " constructed from $(length(f.domain)) samples")
 end
 # COV_EXCL_STOP
 
@@ -128,8 +146,8 @@ Adaptively compute a rational interpolant on a continuous or discrete domain.
 - `domain`: curve, path, or region from ComplexRegions
 
 ## Discrete domain
-- `f::Function`: function to approximate
-- `z::AbstractVector`: point set on which to approximate
+- `f::Function` or `y::AbstractVector`: function or discrete values to approximate
+- `z::AbstractVector`: domain point set
 
 # Keywords
 - `max_iter::Integer=150`: maximum number of iterations on node addition
@@ -145,7 +163,7 @@ Adaptively compute a rational interpolant on a continuous or discrete domain.
 # Returns
 - `r::Approximation`: the rational interpolant
 
-See also [`Approximation`](@ref), [`check`](@ref), [`rewind`](@ref).
+See also [`ContinuumApproximation`](@ref), [`DiscreteApproximation`](@ref), [`check`](@ref), [`rewind`](@ref).
 
 # Examples
 ```julia-repl
@@ -185,7 +203,7 @@ Computes a linear least-squares approximation with prescribed poles.
 # Returns
 - `r::Approximation`: the rational approximant
 
-See also [`Approximation`](@ref), [`check`](@ref), [`rewind`](@ref).
+See also [`ContinuumApproximation`](@ref), [`DiscreteApproximation`](@ref), [`check`](@ref), [`rewind`](@ref).
 
 # Examples
 ```julia-repl
@@ -344,6 +362,17 @@ function check(F::ContinuumApproximation;
     err = F.original.(τ) - F.(τ)
     verbose && @info f"Max error is {norm(err, Inf):.2e}"
     return prenodes ? (t, τ, err) : (τ, err)
+end
+
+
+function check(F::DiscreteApproximation;
+    quiet=false,
+    verbose=!quiet,
+    )
+    τ = F.domain[F.test_index]
+    err = F.data[F.test_index] - F.(τ)
+    verbose && @info f"Max error is {norm(err, Inf):.2e}"
+    return τ, err
 end
 
 """
