@@ -229,7 +229,7 @@ function loewner(nodes, node_values, samples, sample_values)
 end
 
 # add new nodes to an existing Barycentric function
-function add_node(r::Barycentric, C, L, new_σ, new_fσ, τ, fτ, idx_test, idx_new_test)
+function add_node!(r::Barycentric, C, L, new_σ, new_fσ, τ, fτ, idx_test, idx_new_test)
     σ =  [r.nodes;   new_σ]
     fσ = [r.values; new_fσ]
     n = length(σ)
@@ -351,7 +351,7 @@ function approximate(::Type{Barycentric},
             idx_test = CartesianIndices((1:n+1, 2:num_ref+1))
             @. fτ[idx_new_test] = f(τ[idx_new_test])
         end
-        r = add_node(r, C, L, new_σ, new_fσ, τ, fτ, idx_test, idx_new_test)
+        r = add_node!(r, C, L, new_σ, new_fσ, τ, fτ, idx_test, idx_new_test)
         push!(history, IterationRecord(r, NaN, missing))
         n += 1
         numnodes += 1
@@ -388,8 +388,16 @@ function approximate(::Type{Barycentric},
     n = 1    # iteration counter
     while count(idx_test) > 0
         evaluate!(view(values, idx_test), r, view(C, idx_test, 1:n))    # r at test points
-        err = @. abs(y[idx_test] - values[idx_test])
-        err_max, idx_max = findmax(err)
+        idx_max, err_max = 0, -Inf
+        for i in eachindex(y)
+            if idx_test[i]
+                err = abs(y[i] - values[i])
+                if err > err_max
+                    err_max = err
+                    idx_max = i
+                end
+            end
+        end
         history[n].error = err_max
 
         status = quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
@@ -400,9 +408,8 @@ function approximate(::Type{Barycentric},
         (status != 0) && break
 
         # Add new node:
-        idx_new = findall(idx_test)[idx_max]
-        idx_test[idx_new] = false
-        r = add_node(r, C, L, z[idx_new], y[idx_new], z, y, findall(idx_test), [])
+        idx_test[idx_max] = false
+        r = add_node!(r, C, L, z[idx_max], y[idx_max], z, y, findall(idx_test), [])
         push!(history, IterationRecord(r, NaN, missing))
         n += 1
     end

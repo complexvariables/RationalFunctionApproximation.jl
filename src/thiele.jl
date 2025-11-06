@@ -308,18 +308,26 @@ function approximate(::Type{Thiele},
     stagnation::Int = 5,
     ) where {T<:Number,S<:Number}
 
-    y = copy(y)
-    z = collect(copy(z))
+    m = length(z)
+    idx_test = trues(m)
     fmax = maximum(abs, y)     # scale of f
     _, idx_min = findmin(abs, y)
     r = Thiele([z[idx_min]], [y[idx_min]])
-    deleteat!(y, idx_min)    # remove the minimum value
-    deleteat!(z, idx_min)    # remove the minimum value
+    idx_test[idx_min] = false
+
     history = [IterationRecord(r, NaN, missing)]
     n = 1    # iteration counter
     while length(z) > 0
-        err = @. abs(y - r(z))
-        err_max, idx_new = findmax(err)
+        idx_max, err_max = 0, -Inf
+        for i in eachindex(y)
+            if idx_test[i]
+                err = abs(y[i] - r(z[i]))
+                if err > err_max
+                    err_max = err
+                    idx_max = i
+                end
+            end
+        end
         history[n].error = err_max
 
         status = quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
@@ -331,10 +339,9 @@ function approximate(::Type{Thiele},
 
         # Add new node:
         try
-            add_node!(r, z[idx_new], y[idx_new])
+            add_node!(r, z[idx_max], y[idx_max])
             push!(history, IterationRecord(r, NaN, missing))
-            deleteat!(y, idx_new)    # remove the minimum value
-            deleteat!(z, idx_new)    # remove the minimum value
+            idx_test[idx_max] = false
         catch(e)
             # look for the best acceptable case
             status = quitting_check(history, stagnation, tol, fmax, 1, allowed)
