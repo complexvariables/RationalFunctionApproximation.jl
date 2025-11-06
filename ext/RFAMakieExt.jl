@@ -3,7 +3,7 @@ module RFAMakieExt
 using RationalFunctionApproximation, Makie, ComplexRegions, Printf
 RFA = RationalFunctionApproximation
 
-function RFA.convergenceplot!(target, r::RFA.Approximation; show_best=true, kwargs...)
+function RFA.convergenceplot!(target, r::RFA.AbstractApproximation; show_best=true, kwargs...)
     deg, err, _, allowed, best = get_history(r)
     attr = Makie.Attributes(; markersize=8)
     if r.allowed != true
@@ -23,17 +23,17 @@ function RFA.convergenceplot!(target, r::RFA.Approximation; show_best=true, kwar
     return out1, out2
 end
 
-function RFA.convergenceplot(pos::GridPosition, r::RFA.Approximation; kwargs...)
+function RFA.convergenceplot(pos::GridPosition, r::RFA.AbstractApproximation; kwargs...)
     ax = Axis(pos, xlabel="degree", ylabel="relative max error", yscale=log10)
     return Makie.AxisPlot(ax, RFA.convergenceplot!(ax, r; kwargs...)[1])
 end
 
-function RFA.convergenceplot(r::RFA.Approximation; kwargs...)
+function RFA.convergenceplot(r::RFA.AbstractApproximation; kwargs...)
     fig = Figure( )
     return Makie.FigureAxisPlot(fig, RFA.convergenceplot(fig[1, 1], r; kwargs...)...)
 end
 
-function RFA.errorplot!(target, r::RFA.Approximation; use_abs=false, kwargs...)
+function RFA.errorplot!(target, r::RFA.ContinuumApproximation; use_abs=false, kwargs...)
     # try to get enough points for a smooth result
     N = ceil(Int, 1000 / length(nodes(r)))
     t, τ, err = check(r, refinement=N, quiet=true, prenodes=true)
@@ -47,7 +47,7 @@ function RFA.errorplot!(target, r::RFA.Approximation; use_abs=false, kwargs...)
     return out
 end
 
-function RFA.errorplot(pos::GridPosition, r::RFA.Approximation; use_abs=false, kwargs...)
+function RFA.errorplot(pos::GridPosition, r::RFA.ContinuumApproximation; use_abs=false, kwargs...)
     ax = if use_abs
         Axis(pos, xlabel="boundary parameter", ylabel="| error |")
     elseif isreal(r.fun)
@@ -58,7 +58,7 @@ function RFA.errorplot(pos::GridPosition, r::RFA.Approximation; use_abs=false, k
     return Makie.AxisPlot(ax, RFA.errorplot!(ax, r; use_abs, kwargs...))
 end
 
-function RFA.errorplot(r::RFA.Approximation; kwargs...)
+function RFA.errorplot(r::RFA.ContinuumApproximation; kwargs...)
     fig = Figure( )
     return Makie.FigureAxisPlot(fig, RFA.errorplot(fig[1, 1], r; kwargs...)...)
 end
@@ -72,7 +72,7 @@ function axisbox(z)
     return xbox, ybox
 end
 
-function RFA.poleplot!(target, r::RFA.Approximation; kwargs...)
+function RFA.poleplot!(target, r::RFA.AbstractApproximation; kwargs...)
     zp = RFA.poles(r)
     attr = Makie.Attributes(; marker=:+, markersize=7, kwargs...)
     if r.allowed != true
@@ -83,7 +83,7 @@ function RFA.poleplot!(target, r::RFA.Approximation; kwargs...)
     return scatter!(target, Point2.(real(zp), imag(zp)); attr...)
 end
 
-function RFA.poleplot(pos::GridPosition, r::RFA.Approximation; kwargs...)
+function RFA.poleplot(pos::GridPosition, r::RFA.AbstractApproximation; kwargs...)
     ax = Axis(pos, xlabel="Re(z)", ylabel="Im(z)", aspect=DataAspect())
     out = RFA.poleplot!(ax, r; kwargs...)
     xbox, ybox = axisbox(test_points(r))
@@ -91,12 +91,12 @@ function RFA.poleplot(pos::GridPosition, r::RFA.Approximation; kwargs...)
     return Makie.AxisPlot(ax, out)
 end
 
-function RFA.poleplot(r::RFA.Approximation; kwargs...)
+function RFA.poleplot(r::RFA.AbstractApproximation; kwargs...)
     fig = Figure( )
     return Makie.FigureAxisPlot(fig, RFA.poleplot(fig[1, 1], r; kwargs...)...)
 end
 
-function RFA.animate(r::RFA.Approximation, filename=tempname()*".mp4")
+function RFA.animate(r::RFA.AbstractApproximation, filename=tempname()*".mp4")
     function get_error(n, x)
         y = r.original.(x) - rewind(r, n).(x)
         return abs.(y)

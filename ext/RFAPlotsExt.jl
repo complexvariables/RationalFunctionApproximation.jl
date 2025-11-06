@@ -4,7 +4,7 @@ using RationalFunctionApproximation, ComplexRegions, Plots
 RFA = RationalFunctionApproximation
 
 # Plot a convergence curve, showing which steps had bad poles
-function RFA.convergenceplot(r::RFA.Approximation)
+function RFA.convergenceplot(r::RFA.AbstractApproximation)
     deg, err, _, allowed, best = get_history(r)
     fig = plot(xlabel="degree", ylabel="max relative error", yscale=:log10, legend=false)
     seriescolor = [ all(b) ? :darkblue : :red for b in allowed]
@@ -14,7 +14,7 @@ function RFA.convergenceplot(r::RFA.Approximation)
     return fig
 end
 
-function RFA.errorplot(r::RFA.Approximation; use_abs=false)
+function RFA.errorplot(r::RFA.AbstractApproximation; use_abs=false)
     fig = plot(xlabel="boundary parameter", ylabel="error", legend=false)
     # try to get enough points for a smooth result
     N = ceil(Int, 1000 / length(nodes(r)))
@@ -42,7 +42,7 @@ function axisbox(z)
     return xbox, ybox
 end
 
-function RFA.poleplot(r::RFA.Approximation, idx::Integer=0)
+function RFA.poleplot(r::RFA.AbstractApproximation, idx::Integer=0)
     fig = plot(xlabel="Re(z)", ylabel="Im(z)", aspect_ratio=1, legend=false)
     z, _ = check(r, quiet=true)
     z = [z; z[1]]
