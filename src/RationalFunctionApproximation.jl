@@ -18,7 +18,7 @@ include("approximation.jl")
 export ArnoldiBasis, ArnoldiPolynomial, PartialFractions
 include("parfrac.jl")
 
-export Barycentric, Thiele, derivative, evaluate
+export Barycentric, AAA, Thiele, TCF, derivative, evaluate
 include("barycentric.jl")
 include("thiele.jl")
 

@@ -42,6 +42,8 @@ function Base.copy(r::Thiele)
     return Thiele(copy(r.nodes), copy(r.values), copy(r.weights))
 end
 
+const TCF = Thiele    # alias
+
 # Evaluation at a point
 function evaluate(r::Thiele, z::Number, evaluator=_evaluate_onediv)
     return if isinf(z)
