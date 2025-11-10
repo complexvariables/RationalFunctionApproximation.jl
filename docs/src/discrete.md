@@ -20,7 +20,7 @@ r = approximate(y, x)
 As long as there are no singularities as close to the domain as the sample points are to one another, a basic discretization works well.
 
 ```@example mode
-I = r.domain
+I = unit_interval
 println("nearest pole is $(minimum(dist(z, I) for z in poles(r))) away")
 _, err = check(r);
 println("max error on the given domain: ", maximum(abs, err))
