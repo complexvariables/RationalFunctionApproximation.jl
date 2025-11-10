@@ -1,34 +1,64 @@
 # Algorithms
 
+There are three algorithms for rational approximation offered in this version of the package:
+
+AAA
+: Adaptive iteration based on the barycentric representation of rational functions [NakatsukasaAAAAlgorithm2018](@cite), [DriscollAAARational2024](@cite). 
+
+Thiele continued fractions
+: Adaptive iteration based on the Thiele continued fraction representation of rational functions [SalazarCelisNumericalContinued2024](@cite).
+
+Partial fractions with prescribed poles
+: Linear least-squares approximation with user-specified poles [CostaAAAleastSquares2023](@cite).
+
+The first two algorithms are nonlinear but capable of high accuracy with automatic selection of poles. The third algorithm is linear and fast, but achieving high accuracy depends on the singularity structure and the quality of information known about it.
+
+Each algorithm has a **discrete** variant, which approximates values given on a point set, and a **continuum** variant, which approximates a function defined on a piecewise-smooth domain in the complex plane. The continuum variants are generally more robust and accurate when there are singularities near the domain of approximation.
+
+## AAA algorithm
+
 ```@example convergence
 using RationalFunctionApproximation, CairoMakie
 ```
 
-There are three algorithms for rational approximation offered in this version of the package. 
-
-## AAA
-
-The most robust method is the [continuum variant of the AAA algorithm](https://doi.org/10.1137/23M1570508) (see also the [arXiv version](https://arxiv.org/abs/2305.03677)). Briefly speaking, the AAA algorithm maintains a set of interpolation nodes and a set of test points on the boundary of the domain. The node set is grown iteratively by finding the best current approximation in a least-squares sense on the test nodes, then greedily adding the worst-case test point to the node set.
+The AAA algorithm is the best-known and most widely used method for rational approximation. Briefly speaking, the AAA algorithm maintains a set of interpolation nodes (called *support points* in the AAA literature) and a set of sample points on the boundary of the domain. The node set is grown iteratively by finding the best approximation in a least-squares sense on the sample points using the interpolation nodes, then greedily adding the worst-case sample point to the node set.
 
 The `convergenceplot` function shows the errors of the approximants found during the AAA iteration.
 
 ```@example convergence
-f = x -> cos(11x)
+f = x -> cos(exp(3x))
 r = approximate(f, unit_interval)
 convergenceplot(r)
 ```
 
-(The plots in this documentation are made using `CairoMakie`, but the same functions are made available for `Plots`.)  In the plot above, the markers show the estimated max-norm error of the AAA rational interpolant over the domain as a function of the iteration counter. Each iteration adds one degree to both the numerator and denominator of the rational approximation. The gold halo indicates the final approximation chosen by the algorithm. The red dots indicate that a pole of the rational interpolant lies in the approximation domain. We can verify this fact by using `rewind` to recover the approximation from iteration 7:
+(The plots in this documentation are made using `CairoMakie`, but the same functions are made available for `Plots`.)  In the plot above, the markers show the estimated max-norm error of the AAA rational approximant over the domain as a function of the denominator degree; each iteration adds one degree to both the numerator and denominator. The gold halo indicates the final approximation chosen by the algorithm.
+
+The red dots in the convergence plot indicate that a genuine pole—that is, one with residue larger than machine precision—of the rational approximant lies in the approximation domain. We can verify this fact here by using `rewind` to recover the approximation from iteration 9:
 
 ```@repl convergence
-r7 = rewind(r, 7)
-poles(r7)
+r9 = rewind(r, 9)
+poles(r9)
 ```
 
-In most cases, the poles move out of the approximation domain as the iteration proceeds to better accuracy. However, it is possible for the iteration to stagnate if the original function has a singularity very close to the domain.
+What is going on near the "bad" pole? Let's isolate it and look at the point values of the approximation:
+
+```@repl convergence
+x = first(filter(isreal, poles(r9)))
+[r9(x), r9(x + 1e-6), r9(x + 1e-3)]
+```
+
+It's a genuine pole, but with a highly localized effect. At this stage of the iteration, AAA has not invested much resolution near this location:
+
+```@repl convergence
+filter(<(-0.75), test_points(r9))
+```
+
+That's why the reported error is not very large. It's worth keeping in mind that the convergence plot shows the algorithm's estimate of the error, not the true error. Guarantees are hard to come by; no matter how carefully we told the algorithm to look within the interval, some cases would fall through the cracks. Fortunately, both the pole check and the overall error indicate that the approximation is not yet fully baked, and the iteration continues.
+
+It is possible for the iteration to stagnate with bad poles if the original function has a singularity very close to the domain.
 
 ```@example convergence
-f = x -> tanh(3000*(x - 1//4))
+f = x -> tanh(500*(x - 1//4))
 r = approximate(f, unit_interval)
 convergenceplot(r)
 ```
@@ -56,17 +86,45 @@ r = approximate(f, unit_interval, stagnation=50)
 convergenceplot(r)
 ```
 
+However, AAA is an $O(n^4)$ algorithm, so venturing into higher degrees can become costly.
+
+## Thiele continued fractions (TCF)
+
+The TCF algorithm [SalazarCelisNumericalContinued2024](@cite) is much newer than AAA and less thoroughly battle-tested, even though it's based on a continued fraction representation of rational functions that is over a century old. Like AAA, it uses iterative greedy node selection, and the effects of that ordering look good in experiments so far but are poorly understood theoretically. In TCF's favor are its $O(n^3)$ complexity requirement and an algorithmic simplicity that requires nothing more than basic arithmetic.
+
+To try greedy TCF, use `method=Thiele` or `method=TCF` as an argument to `approximate`.
+
+```@example convergence
+f = x -> cos(41x - 5) * exp(-10x^2)
+r = approximate(f, unit_interval; method=TCF)
+convergenceplot(r)
+```
+
+The $x$-axis of the convergence plot shows the degree of the denominator polynomial. Because the Thiele method alternates between interpolants of type $(n, n)$ and $(n+1, n)$, there are two dots in the plot for each degree.
+
+Because TCF uses only addition, multiplication, and division, it is easy to use in extended precision arithmetic. Here, we use `allowed=true` to disable checking for poles, which requires solving an eigenvalue problem that is far more expensive than the iteration itself:
+
+```@example convergence
+f = x -> atan(1e5*(x - 1//2))
+domain = Segment{BigFloat}(-1, 1)
+@elapsed r = approximate(f, domain; method=TCF, max_iter=400, allowed=true, stagnation=40)
+```
+
+```@example convergence
+convergenceplot(r)
+```
+
 ## Prescribed poles
 
-While finding a rational interpolant is a nonlinear problem, we can compute a linear variant if we prescribe the poles of the rational function. Specifically, given the poles $\zeta_1,\ldots, \zeta_n$, we can find a polynomial $p$ and residues $w_k$ such that
+While AAA and TCF are nonlinear iterations, we can compute an approximation linearly if we prescribe the poles of the rational approximant. Specifically, given the poles $\zeta_1,\ldots, \zeta_n$, we can find a polynomial $p$ and residues $w_k$ such that
 
 ```math
 f(z) \approx p(z) + \sum_{k=1}^n \frac{w_k}{z - \zeta_k}. 
 ```
 
-When posed on a discrete set of test points, this is a linear least-squares problem. In order to represent the polynomial stably, an Arnoldi iteration is used to find a well-conditioned basis for the test points. 
+When posed on a discrete set of test points, this is a linear least-squares problem. In order to represent the polynomial stably, an Arnoldi iteration is used to find a well-conditioned basis for the test points [BrubeckVandermondeArnoldi2021](@cite).
 
-There is no iteration on the degree of the polynomial or rational parts of the approximant. Instead, the discretization of the boundary of the domain is refined iteratively until either the max-norm error is below a specified threshold or has stopped improving.
+There is no iteration on the degree of the polynomial or rational parts of the approximant. In the continuum variant, though, the discretization of the boundary of the domain is refined iteratively until either the max-norm error is below a specified threshold or has stopped improving.
 
 ```@example convergence
 f = x -> tanh(x)
@@ -75,18 +133,18 @@ r = approximate(f, Segment(-2, 2), ζ)
 ```
 
 ```@example convergence
-max_err(r) = println("Max error: ", maximum(abs, check(r, quiet=true)[2]))
-max_err(r);
+max_err(r) = maximum(abs(r.original(x) - r(x)) for x in discretize(r.domain; ds=1/1000))
+println("Max error: $(max_err(r))")
 ```
 
 To get greater accuracy, we can increase the degree of the polynomial part.
 
 ```@example convergence
 r = approximate(f, Segment(-2, 2), ζ; degree=20)
-max_err(r);
+max_err(r)
 ```
 
-Note that the residues (in the exact function, all equal to one) may be accurate at the poles closest to the domain, but much less so elsewhere.
+Note that the residues, which are all equal to 1 for the exact function, may not be reproduced by the rational approximation:
 
 ```@example convergence
 Pair.(residues(r)...)
@@ -103,34 +161,5 @@ To what extent might these poles be suitable for a different function that has t
 
 ```@example convergence
 s = approximate(x -> exp(abs(x)), unit_interval, ζ; degree=20)
-max_err(r);
-```
-
-## Thiele continued fractions (experimental)
-
-The AAA algorithm is remarkably robust, but a potential downside is that constructing an approximant of degree $n$ requires an SVD that takes $O(n^3)$ time. Thus, for an iteration up to degree $n$, the work is $O(n^4)$. In many cases, the value of $n$ is small enough not to cause a concern, but there is some motivation to find a more efficient algorithm.
-
-One possibility is to use a continued fraction representation of the rational approximant. The Thiele representation, dating back to the 1800s, uses inverse divided differences to represent a rational interpolant, requiring just $O(n)$ time to add a node to an approximation of degree $n$. Divided differences are notoriously unstable, but [work by Salazar in 2024](https://doi.org/10.1007/s11253-024-02344-5) (or [the arXiv version](http://arxiv.org/abs/2109.10529)) indicates that a greedy adaptive approach can reduce or eliminate the instability.  
-
-To try greedy Thiele, use `method=Thiele` as an argument to `approximate`. 
-
-```@example convergence
-f = x -> cos(41x - 5) * exp(-10x^2)
-r = approximate(f, unit_interval; method=Thiele)
-convergenceplot(r)
-```
-
-The $x$-axis of the convergence plot shows the degree of the denominator polynomial. Because the Thiele method alternates between interpolants of type $(n, n)$ and $(n+1, n)$, there are two dots above for each degree.
-
-The primary appeal of the greedy Thiele method is that adding a node to an interpolant of degree $n$ takes $O(n)$ time, compared to $O(n^3)$ for the AAA method. Some experiments suggest that the Thiele method is faster in practice, though a systematic comparison is still needed.
-
-```@example convergence
-f = x -> abs(x-0.5)
-@elapsed r = approximate(f, unit_interval; method=Barycentric, max_iter=150, allowed=true)
-max_err(r);
-```
-
-```@example convergence
-@elapsed r = approximate(f, unit_interval; method=Thiele, max_iter=300, allowed=true)
-max_err(r);
+max_err(r)
 ```

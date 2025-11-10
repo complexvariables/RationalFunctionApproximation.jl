@@ -4,12 +4,12 @@
 
 This package computes rational approximations of a function or data given in the complex plane. For background reading, see [NakatsukasaAAAAlgorithm2018](@cite), [DriscollAAARational2024](@cite) (or the related arXiv version [DriscollAAARational2023a](@cite)), [CostaAAAleastSquares2023](@cite), and [SalazarCelisNumericalContinued2024](@cite).
 
-A rational function is a ratio of two polynomials. Rational functions are capable of very high accuracy and, unlike polynomial interpolation, do not require the interpolation nodes to be distributed in a highly restricted way. They are a good choice for approximating functions with singularities or other complicated behavior. Also unlike polynomials, however, they do not depend linearly on the data, which has historically made them difficult to compute and work with.
+A rational function is a ratio of two polynomials. Rational functions are capable of very high accuracy, usually requiring fewer degrees of freedom than polynomial approximations. They are an especially good choice for approximating functions with singularities near the domain of approximation. However, they do not depend linearly on the data, which has historically made them difficult to compute and work with, but breakthroughs in algorithms over the last decade have changed that.
 
 Here's a smooth, gentle function on the interval $[-1, 1]$:
 
 ```@example interval
-using RationalFunctionApproximation, CairoMakie
+using CairoMakie
 CairoMakie.update_theme!(size = (600, 400), fontsize=11)
 const shg = current_figure
 
@@ -19,13 +19,14 @@ lines(-1..1, f)
 
 To create a rational function that approximates $f$ well on this domain, we make a call to the `approximate` function:
 
-```@example interval
+```@repl interval
+using RationalFunctionApproximation
 r = approximate(f, unit_interval)
 ```
 
 The value of `unit_interval` is defined by the package to be the interval $[-1, 1]$. The result `r` is a type (19,19) rational approximant that can be evaluated like a function:
 
-```@example interval
+```@repl interval
 f(0.5) - r(0.5)
 ```
 
@@ -46,14 +47,14 @@ shg()
 
 We could choose to approximate over a wider interval:
 
-```@example interval
+```@repl interval
 using ComplexRegions
 r = approximate(f, Segment(-2, 4))
 ```
 
-Note that the degree of the rational function increased to capture the additional complexity.
+Note that the degree of the rational approximant increased to capture the additional complexity.
 
-One interesting feature of a rational function is that it can have poles, or infinite value, at the roots of the denominator polynomial. In this case, the poles hint at where the function is most sharply peaked:
+One important feature of a rational function is that it can have poles, or infinite value, at the roots of the denominator polynomial. In this case, the poles hint at where the function is most sharply peaked:
 
 ```@example interval
 poleplot(r)

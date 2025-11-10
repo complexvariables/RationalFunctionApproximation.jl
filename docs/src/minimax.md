@@ -1,6 +1,6 @@
 # Minimax approximation
 
-The `approximate` function minimizes approximation error in a discrete least-squares sense. By following up with an iteratively reweighted least-squares (IRLS) approach initially due to Lawson, we can approach the classical problem of optimization in the infinity- or max-norm sense instead.
+The `approximate` function minimizes approximation error in a discrete least-squares sense. By following up with an iteratively reweighted least-squares (IRLS) approach initially due to Lawson [LawsonContributionsTheory1961, DriscollAAARational2024](@cite), we can approach the classical problem of optimization in the infinity- or max-norm sense instead.
 
 For example, suppose we limit the degree of a rational interpolant of a smooth function:
 
@@ -24,7 +24,7 @@ r = minimax(r, 20)
 errorplot(r)
 ```
 
-As you can see above, the error is now nearly equioscillatory over the interval. Moreover, the interpolation nodes appear to have shifted to resemble Chebyshev points of the first kind. If we try minimax approximation on the unit circle, however, equioscillation tends to lead to equally spaced nodes:
+As you can see above, the error is now nearly equioscillatory over the interval. Moreover, the interpolation nodes appear to have shifted to resemble Chebyshev points of the first kind. But if we try minimax approximation on the unit circle, max-norm approximation tends to lead to equally spaced nodes:
 
 ```@example minimax
 f = z -> cos(4z) - sin(3z)
