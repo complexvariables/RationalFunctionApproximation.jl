@@ -400,12 +400,14 @@ function get_history(r::AbstractApproximation{T,S}; get_poles=!(r.allowed == tru
     for (idx, record) in enumerate(hist)
         fun = record.interpolant
         push!(deg, degree(fun))
+        res = []
         if get_poles && ismissing(record.poles)
-            record.poles = poles(fun)
+            record.poles, res = residues(fun)
         end
         push!(zp, coalesce(record.poles, []))
         if !(r.allowed == true)
-            push!(allowed, r.allowed.(zp[end]))
+            allow = [r.allowed(z) || abs(R) < eps(S) for (z, R) in zip(zp[end], res)]
+            push!(allowed, allow)
         else
             push!(allowed, fill(true, length(zp[end])))
         end
