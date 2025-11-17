@@ -45,7 +45,7 @@ end
 const TCF = Thiele    # alias
 
 # Evaluation at a point
-function evaluate(r::Thiele, z::Number, evaluator=_evaluate_onediv)
+function evaluate(r::Thiele, z::Number)
     return if isinf(z)
         if isodd(length(r.nodes))
             sum(r.weights[1:2:end])
@@ -55,8 +55,17 @@ function evaluate(r::Thiele, z::Number, evaluator=_evaluate_onediv)
     elseif isnan(z)
         NaN
     else
-        evaluator(r, z)
+        _evaluator(r, z)
     end
+end
+
+function _evaluate_classic(r::Thiele, z::Number)
+    n = length(r.nodes)
+    u = last(r.weights)
+    @inbounds for k in n-1:-1:1
+        u = r.weights[k] + (z - r.nodes[k]) / u
+    end
+    return u
 end
 
 function _evaluate_onediv(r::Thiele, z::Number)
@@ -68,6 +77,8 @@ function _evaluate_onediv(r::Thiele, z::Number)
         numer / denom
     end
   end
+
+_evaluator = _evaluate_onediv    # default choice
 
 function _evaluate_numden(r::Thiele, z::Number)
     # use 3-term pair recurrence to avoid division until the end
@@ -109,15 +120,6 @@ function _evaluate_numden_derivs(r::Thiele, z::Number)
     end
 end
 
-function _evaluate_classic(r::Thiele, z::Number)
-    n = length(r.nodes)
-    u = last(r.weights)
-    @inbounds for k in n-1:-1:1
-        u = r.weights[k] + (z - r.nodes[k]) / u
-    end
-    return u
-end
-
 derivative(r::Thiele, ζ::Number) = derivative(r)(ζ)
 function derivative(r::Thiele)
     return function(ζ)
@@ -125,7 +127,6 @@ function derivative(r::Thiele)
         return (pʹ * q - p * qʹ) / (q^2)
     end
 end
-
 
 function poles(r::Thiele{T,S}) where {T,S}
     n = length(r.nodes)
@@ -201,17 +202,26 @@ function add_node!(r::Thiele, z_new, y_new)
     return r
 end
 
-function _new_weight(z, w, z_new, y_new)
+function _new_weight_onediv(z, w, z_new, y_new)
     a = 1
     b = y_new
     @inbounds for k in eachindex(z)
         t = -w[k] * a + b
-        # println("$((abs(w[k]*a) + abs(b))/abs(t))")
         b = a * (z_new - z[k])
         a = t
     end
     return b / a
 end
+
+function _new_weight_classic(z, w, z_new, y_new)
+    u = y_new
+    @inbounds for k in eachindex(z)
+        u = (z_new - z[k]) / (u - w[k])
+    end
+    return u
+end
+
+_new_weight = _new_weight_onediv   # default choice
 
 # TODO: This should probably enforce parameters S and T
 approximate(::Type{Thiele{S,T}}, args...; kw...) where {S,T} = approximate(Thiele, args...; kw...)

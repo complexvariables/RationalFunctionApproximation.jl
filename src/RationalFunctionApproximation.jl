@@ -1,5 +1,8 @@
 module RationalFunctionApproximation
 
+const RFA = RationalFunctionApproximation
+export RFA
+
 using LinearAlgebra, Statistics, GenericLinearAlgebra, ComplexRegions, GenericSchur
 using PyFormattedStrings
 
