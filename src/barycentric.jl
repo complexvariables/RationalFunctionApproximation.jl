@@ -135,32 +135,59 @@ function evaluate!(u::AbstractArray, r::Barycentric, C::AbstractMatrix)
     return nothing
 end
 
-# Schneider & Werner formulas for the derivative
-function _derivative(w, y, z, ζ, rζ)
+function _derivative(w, y, z, ζ, δ=similar(z))
     n = length(z)
     if isinf(ζ)
         return zero(complex(ζ))
     else
-        δ = ζ .- z
-        k = findfirst(abs(δ) < eps(float(real(ζ))) for δ in δ)
-        if isnothing(k)         # not at a node
-            num, den = 0, 0
-            for i in 1:n
-                D = w[i] / δ[i]
-                num += D * (rζ - y[i]) / δ[i]
-                den += D
+        @. δ = ζ - z
+        # Double summation stable formula
+        # k = findfirst(abs(d) < eps(float(real(ζ))) for d in δ)
+        # if isnothing(k)        # not at a node
+        #     num, densqrt = 0, 0
+        #     for i in 1:n
+        #         D = w[i] / δ[i]
+        #         densqrt += D
+        #         N = sum( w[j] * (y[j] - y[i]) / δ[j] for j in 1:n if i != j )
+        #         num += D * N / δ[i]
+        #     end
+        #     return num / densqrt^2
+
+        # O(n) stabilized for nearest node
+        minδ, k = findmin(abs, δ)
+        if minδ > eps(float(real(ζ)))        # not at a node
+            N, D, Nʹ, Dʹ = 0, 0, 0, 0
+            kth = 0
+            for i in [1:k-1; k+1:n]
+                Di = w[i] / δ[i]
+                D += Di
+                Dʹ -= Di / δ[i]
+                Ni = y[i] * Di
+                N += Ni
+                Nʹ -= Ni / δ[i]
+                kth += Di * (z[k] - z[i]) * (y[i] - y[k]) / δ[i]
             end
+            Dk = w[k] / δ[k]
+            den = (D + Dk)^2
+            num = Nʹ * D - N * Dʹ
+            num += Dk / δ[k] * kth
             return num / den
         else
+            # Schneider–Werner formula for the derivative
             return -sum(w[i] * (y[k] - y[i]) / (z[k] - z[i]) for i in 1:n if i != k) / w[k]
         end
     end
 end
 
-derivative(r::Barycentric, ζ::Number) = derivative(r)(ζ)
+derivative(r::Barycentric, ζ::Number) = _derivative(weights(r), values(r), nodes(r), ζ)
 function derivative(r::Barycentric)
+    # preallocate temporary storage
     w, y, z = weights(r), values(r), nodes(r)
-    return ζ -> _derivative(w, y, z, ζ, r(ζ))
+    tmp1 = similar(z)    # real result if real nodes, real ζ
+    tmp2 = similar(complex(z))    # use for complex ζ
+    return function(ζ)
+        isreal(ζ) ? _derivative(w, y, z, ζ, tmp1) : _derivative(w, y, z, ζ, tmp2)
+    end
 end
 
 """
