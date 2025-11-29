@@ -3,12 +3,15 @@ module RFAPythonCallExt
 using RationalFunctionApproximation, PythonCall
 const RFA = RationalFunctionApproximation
 
-function RFA.aaa(f::Py, args...; kw...)
-    RFA.aaa(x -> pyconvert(Number, pycall(f,x)), args...; kw...)
-end
-
 function RFA.approximate(f::Py, args...; kw...)
-    RFA.approximate(x -> pyconvert(Number, pycall(f,x)), args...; kw...)
+    try
+        one = pyconvert(Vector, f)
+        a  = [pyconvert(Vector, x) for x in args]
+        RFA.approximate(one, a...; kw...)
+    catch
+        fun = x -> pyconvert(Number, pycall(f, x))
+        RFA.approximate(fun, args...; kw...)
+    end
 end
 
 end  # module
