@@ -221,7 +221,7 @@ function _new_weight_classic(z, w, z_new, y_new)
     return u
 end
 
-_new_weight = _new_weight_onediv   # default choice
+_new_weight = _new_weight_classic   # default choice
 
 # TODO: This should probably enforce parameters S and T
 approximate(::Type{Thiele{S,T}}, args...; kw...) where {S,T} = approximate(Thiele, args...; kw...)
