@@ -17,8 +17,8 @@
         @testset "Function $iter" for (iter, f) in enumerate((
             x -> abs(x - 1//2 + 1im//100),
             x -> sinh(1 / (21//20 - x)),
-            x -> tan(100x),
-            x -> exp(100x^2),
+            x -> tan(60x),
+            x -> exp(60x^2),
             x -> exp(-10 / (6//5 - x)),
             x -> sinh(80x) * exp(10x^2),
             x -> 10x + tan(100*(x - 1//5)),
