@@ -216,7 +216,18 @@ end
 function _new_weight_classic(z, w, z_new, y_new)
     u = y_new
     @inbounds for k in eachindex(z)
-        u = (z_new - z[k]) / (u - w[k])
+        D = u - w[k]
+        N = z_new - z[k]
+        u =
+        if iszero(D)
+            if iszero(N)
+                NaN
+            else
+                Inf
+            end
+        else
+            N / D
+        end
     end
     return u
 end
