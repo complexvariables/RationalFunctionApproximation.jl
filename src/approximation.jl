@@ -150,6 +150,7 @@ Adaptively compute a rational interpolant on a continuous or discrete domain.
 - `z::AbstractVector`: domain point set
 
 # Keywords
+- `method::Type`: type of rational interpolant to use (`AAA` default, `TCF`, `PartialFractions`)
 - `max_iter::Integer=150`: maximum number of iterations on node addition
 - `float_type::Type`: floating point type to use for the computation¹
 - `tol::Real=1000*eps(float_type)`: relative tolerance for stopping

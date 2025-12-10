@@ -216,12 +216,23 @@ end
 function _new_weight_classic(z, w, z_new, y_new)
     u = y_new
     @inbounds for k in eachindex(z)
-        u = (z_new - z[k]) / (u - w[k])
+        D = u - w[k]
+        N = z_new - z[k]
+        u =
+        if iszero(D)
+            if iszero(N)
+                NaN
+            else
+                Inf
+            end
+        else
+            N / D
+        end
     end
     return u
 end
 
-_new_weight = _new_weight_onediv   # default choice
+_new_weight = _new_weight_classic   # default choice
 
 # TODO: This should probably enforce parameters S and T
 approximate(::Type{Thiele{S,T}}, args...; kw...) where {S,T} = approximate(Thiele, args...; kw...)
