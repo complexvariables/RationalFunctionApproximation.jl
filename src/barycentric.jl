@@ -135,8 +135,8 @@ function evaluate!(u::AbstractArray, r::Barycentric, C::AbstractMatrix)
     return nothing
 end
 
-# Schneider & Werner formulas for the derivative
-function _derivative(w, y, z, ζ, rζ)
+# Schneider & Werner formula for the derivative
+function _deriv_sw(w, y, z, ζ, rζ)
     n = length(z)
     if isinf(ζ)
         return zero(complex(ζ))
@@ -157,11 +157,75 @@ function _derivative(w, y, z, ζ, rζ)
     end
 end
 
-derivative(r::Barycentric, ζ::Number) = derivative(r)(ζ)
-function derivative(r::Barycentric)
-    w, y, z = weights(r), values(r), nodes(r)
-    return ζ -> _derivative(w, y, z, ζ, r(ζ))
+_derivative_swmod(r, ζ) = _deriv_swmod(weights(r), values(r), nodes(r), ζ, r(ζ))
+function _deriv_swmod(w, y, z, ζ, rζ)
+    n = length(z)
+    if isinf(ζ)
+        return zero(complex(ζ))
+    else
+        δ = ζ .- z
+        _, k = findmin(abs, δ)
+        Nk, Dk = 0, 0
+        Nkʹ, Dkʹ = 0, 0
+        for i in 1:n
+            if i != k
+                d = w[i] / δ[i]
+                Nk += y[i] * d
+                Dk += d
+                d /= δ[i]
+                Nkʹ -= y[i] * d
+                Dkʹ -= d
+            end
+        end
+        Ñ = w[k] * y[k] + δ[k] * Nk
+        Ñʹ = Nk + δ[k] * Nkʹ
+        D̃ = w[k] + δ[k] * Dk
+        D̃ʹ = Dk + δ[k] * Dkʹ
+        rζ = Ñ / D̃
+        return (Ñʹ - rζ * D̃ʹ) / D̃
+    end
 end
+
+_derivative_swnew(r, ζ) = _deriv_swnew(weights(r), values(r), nodes(r), ζ)
+function _deriv_swnew(w, y, z, ζ)
+    n = length(z)
+    if isinf(ζ)
+        return zero(complex(ζ))
+    else
+        δ = ζ .- z
+        m, k = findmin(abs, δ)
+        if m > eps(float(real(ζ)))         # not at a node
+            Nk, Dk = 0, 0
+            Nkʹ, Dkʹ = 0, 0
+            G, Gʹ = 0, 0
+            for i in 1:n
+                if i != k
+                    d = w[i] / δ[i]
+                    Nk += y[i] * d
+                    Dk += d
+                    G += d * (y[i] - y[k])
+                    d /= δ[i]
+                    Nkʹ -= y[i] * d
+                    Dkʹ -= d
+                    Gʹ -= d * (y[i] - y[k])
+                end
+            end
+            num = w[k] * (G +  δ[k] * Gʹ) + δ[k]^2 * (Nkʹ * Dk - Nk * Dkʹ)
+            den = (w[k] + δ[k] * Dk)^2
+            return num / den
+        else
+            # Schneider & Werner formula for the derivative
+            return -sum(w[i] * (y[k] - y[i]) / (z[k] - z[i]) for i in 1:n if i != k) / w[k]
+        end
+    end
+end
+
+derivative(r::Barycentric, ζ::Number) = _derivative_swmod(r, ζ)
+derivative(r::Barycentric) = ζ -> derivative(r, ζ)
+# function derivative(r::Barycentric)
+#     w, y, z = weights(r), values(r), nodes(r)
+#     return ζ -> _derivative(w, y, z, ζ, r(ζ))
+# end
 
 """
     poles(r)
