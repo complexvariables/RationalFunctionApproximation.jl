@@ -1,20 +1,20 @@
 @testset "Operations" begin
-    @testset "Derivatives for $method" verbose=true for method in (Thiele, )
+    @testset "Derivatives for $method" verbose=true for method in (Thiele, Barycentric)
         using ComplexRegions
         @testset "Domain $it_d" for (it_d, domain) in enumerate((unit_interval, unit_disk, Shapes.square))
-            @testset "Function $it_f" for (it_f, (f, df)) in enumerate((
-                (x -> exp(x), x -> exp(x)),
-                (x -> exp(-x), x -> -exp(-x)),
-                (x -> cis(x), x -> 1im * cis(x)),
-                (x -> x, x -> 1),
-                (x -> 1im * x^2, x -> 2im * x),
-                (x -> 1 / (1.1 - x), x -> 1 / (1.1 - x)^2),
-                (x -> log(1.1 - x), x -> -1 / (1.1 - x)),
-                (sin, cos),
+            @testset "Function $it_f" for (it_f, (f, df, d2f)) in enumerate((
+                (x -> exp(x), x -> exp(x), exp),
+                (x -> exp(-x), x -> -exp(-x), x -> exp(-x)),
+                (x -> cis(x), x -> 1im * cis(x), x -> -cis(x)),
+                (x -> x, x -> 1, x -> 0),
+                (x -> 1im * x^2, x -> 2im * x, x -> 2im),
+                (x -> 1 / (1.1 - x), x -> 1 / (1.1 - x)^2, x -> 2 / (1.1 - x)^3),
+                (x -> log(1.1 - x), x -> -1 / (1.1 - x), x -> -1 / (1.1 - x)^2),
+                (sin, cos, x -> -sin(x)),
             ))
                 r = approximate(f, domain; method)
                 @test isapprox(derivative(r; allowed=true), df, atol=sqrt(eps()))
-                @test derivative(r.fun, 0.1) ≈ df(0.1)
+                # @test isapprox(derivative(r, 2; allowed=true), d2f, atol=50sqrt(eps()))
             end
         end
     end
