@@ -167,14 +167,6 @@ function _evaluate_numden_derivs(r::Thiele, z::Number)
     end
 end
 
-derivative(r::Thiele, ζ::Number) = derivative(r)(ζ)
-function derivative(r::Thiele)
-    return function(ζ)
-        p, q, pʹ, qʹ = _evaluate_numden_derivs(r, ζ)
-        return (pʹ * q - p * qʹ) / (q^2)
-    end
-end
-
 function poles(r::Thiele{T,S}) where {T,S}
     n = length(r.nodes)
     (n < 3) && return S[]
