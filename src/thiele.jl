@@ -98,6 +98,53 @@ function _evaluate_numden(r::Thiele, z::Number)
     end
 end
 
+function _derivative!(ζ, w, z, order, A, B, vals)
+    n = length(w)
+    A[1] = w[n]
+    A[2:order+1] .= 0
+    B[1] = ζ - z[n-1]
+    B[2] = 1
+    B[3:order+1] .= 0
+    @inbounds for k in n-1:-1:2
+        d = ζ - z[k-1]
+        for m in order:-1:0
+            t = w[k] * A[m+1] + B[m+1]
+            B[m+1] = d * A[m+1] + (m > 0 ? m * A[m] : 0)
+            A[m+1] = t
+        end
+    end
+    # numer derivs = w[1] * A + B
+    # denom derivs = A
+    vals[1] = w[1]  + B[1] / A[1]
+    for m in 1:order
+        s = sum( binomial(m, j) * vals[j+1] * A[m-j+1] for j in 0:m-1 )
+        vals[m+1] = (w[1] * A[m+1] + B[m+1] - s) / A[1]
+    end
+    return vals
+end
+
+function derivative(r::Thiele{T,S}, order::Integer=1) where {T,S}
+    f = derivative(r, [order])
+    return ζ -> only(f(ζ))
+end
+
+function derivative(r::Thiele{T,S}, orders::AbstractVector{<:Integer}) where {T,S}
+    w, z = weights(r), nodes(r)
+    order = maximum(orders)
+    A = similar(complex(z), order+1)
+    B = similar(A)
+    vals = similar(A)
+    index = 1 .+ orders
+    return function(ζ)
+        d = _derivative!(ζ, w, z, order, A, B, vals)
+        if isreal(ζ) && isreal(r)
+            d = real(d)
+        end
+        return d[index]
+    end
+end
+
+
 function _evaluate_numden_derivs(r::Thiele, z::Number)
     n = length(r.weights)
     return if n == 1

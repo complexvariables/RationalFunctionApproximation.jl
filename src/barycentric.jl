@@ -177,15 +177,8 @@ function _derivative!(ζ, w, y, z, order, δ, Nk, Dk, Ñ, D̃, rval)
 end
 
 function derivative(r::Barycentric{T,S}, order::Integer=1) where {T,S}
-    w, y, z = weights(r), values(r), nodes(r)
-    δ, space = _derivative_setup(r, zero(complex(eltype(z))), order)
-    return function(ζ)
-        d = _derivative!(ζ, w, y, z, order, δ, space...)
-        if isreal(ζ) && isreal(r)
-            d = real(d)
-        end
-        return d[end]
-    end
+    f = derivative(r, [order])
+    return ζ -> only(f(ζ))
 end
 
 function derivative(r::Barycentric{T,S}, orders::AbstractVector{<:Integer}) where {T,S}

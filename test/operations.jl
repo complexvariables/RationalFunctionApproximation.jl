@@ -3,7 +3,7 @@
         using ComplexRegions
         @testset "Domain $it_d" for (it_d, domain) in enumerate((unit_interval, unit_disk, Shapes.square))
             @testset "Function $it_f" for (it_f, (f, df, d2f)) in enumerate((
-                (x -> exp(x), x -> exp(x), exp),
+                (exp, exp, exp),
                 (x -> exp(-x), x -> -exp(-x), x -> exp(-x)),
                 (x -> cis(x), x -> 1im * cis(x), x -> -cis(x)),
                 (x -> x, x -> 1, x -> 0),
@@ -14,7 +14,7 @@
             ))
                 r = approximate(f, domain; method)
                 @test isapprox(derivative(r; allowed=true), df, atol=sqrt(eps()))
-                # @test isapprox(derivative(r, 2; allowed=true), d2f, atol=50sqrt(eps()))
+                @test isapprox(derivative(r, 2; allowed=true), d2f, atol=50sqrt(eps()))
             end
         end
     end
