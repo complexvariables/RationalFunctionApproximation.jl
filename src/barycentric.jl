@@ -135,35 +135,22 @@ function evaluate!(u::AbstractArray, r::Barycentric, C::AbstractMatrix)
     return nothing
 end
 
-function _derivative!(δ, ζ, w, y, z; order)
+function _derivative_setup(r::Barycentric, ζ::Number, order::Integer)
+    T = promote_type(eltype(nodes(r)), typeof(ζ))
+    δ = Vector{T}(undef, length(nodes(r)))
+    space = Tuple(Vector{T}(undef, order + 1) for _ in 1:5)
+    return δ, space
+end
+
+function _derivative!(ζ, w, y, z, order, δ, Nk, Dk, Ñ, D̃, rval)
     n = length(z)
     if isinf(ζ)
         return zero(complex(ζ))   # true for order > 1?
-    elseif false #order==1  # allocation-free
-        @. δ = ζ - z
-        _, k = findmin(abs, δ)
-        Nk = Dk = Nkʹ = Dkʹ = zero(eltype(δ))
-        for i in 1:n
-            if i != k
-                d = w[i] / δ[i]
-                Nk += y[i] * d
-                Dk += d
-                d /= δ[i]
-                Nkʹ -= y[i] * d
-                Dkʹ -= d
-            end
-        end
-        Ñ = w[k] * y[k] + δ[k] * Nk
-        Ñʹ = Nk + δ[k] * Nkʹ
-        D̃ = w[k] + δ[k] * Dk
-        D̃ʹ = Dk + δ[k] * Dkʹ
-        rζ = Ñ / D̃
-        return (Ñʹ - rζ * D̃ʹ) / D̃
     else
+        @. Nk = 0
+        @. Dk = 0
         @. δ = ζ - z
         _, k = findmin(abs, δ)
-        Nk = zeros(eltype(δ), order + 1)
-        Dk = copy(Nk)
         for i in 1:n
             if i != k
                 d = w[i] / δ[i]
@@ -176,9 +163,6 @@ function _derivative!(δ, ζ, w, y, z; order)
                 end
             end
         end
-        Ñ = similar(Nk)
-        D̃ = similar(Dk)
-        rval = similar(δ, order + 1)
         Ñ[1] = w[k] * y[k] + δ[k] * Nk[1]
         D̃[1] = w[k] + δ[k] * Dk[1]
         rval[1] = Ñ[1] / D̃[1]
@@ -188,24 +172,33 @@ function _derivative!(δ, ζ, w, y, z; order)
             s = sum( binomial(m, j) * rval[j+1] * D̃[m - j + 1] for j in 0:m-1 )
             rval[m+1] = (Ñ[m+1] - s) / D̃[1]
         end
-        return rval[order+1]
+        return rval
     end
 end
 
-function derivative(r::Barycentric{T,S}, ζ::Number; order::Integer=1) where {T,S}
-    d = _derivative!(similar(complex(nodes(r))), ζ, weights(r), values(r), nodes(r); order)
-    return convert(promote_type(S, typeof(ζ)), d)
-end
-
-function derivative(r::Barycentric{T,S}; order::Integer=1) where {T,S}
+function derivative(r::Barycentric{T,S}, order::Integer=1) where {T,S}
     w, y, z = weights(r), values(r), nodes(r)
-    δ = similar(complex(z))
+    δ, space = _derivative_setup(r, zero(complex(eltype(z))), order)
     return function(ζ)
-        d = _derivative!(δ, ζ, w, y, z; order)
+        d = _derivative!(ζ, w, y, z, order, δ, space...)
         if isreal(ζ) && isreal(r)
             d = real(d)
         end
-        return convert(promote_type(S, typeof(ζ)), d)
+        return d[end]
+    end
+end
+
+function derivative(r::Barycentric{T,S}, orders::AbstractVector{<:Integer}) where {T,S}
+    w, y, z = weights(r), values(r), nodes(r)
+    order = maximum(orders)
+    index = orders .+ 1
+    δ, space = _derivative_setup(r, zero(complex(eltype(z))), order)
+    return function(ζ)
+        d = _derivative!(ζ, w, y, z, order, δ, space...)
+        if isreal(ζ) && isreal(r)
+            d = real(d)
+        end
+        return d[index]
     end
 end
 
