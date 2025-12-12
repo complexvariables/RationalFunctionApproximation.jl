@@ -476,10 +476,10 @@ end
 
 Create an approximation of the derivative of `r` on the same domain.
 """
-function derivative(r::AbstractApproximation; kwargs...)
+function derivative(r::AbstractApproximation, order=1; kwargs...)
     # TODO: This ought to be handled by dispatch on a type parameter.
     return if isa(get_function(r), AbstractRationalInterpolant)
-        approximate(derivative(get_function(r)), domain(r); method=typeof(get_function(r)), kwargs...)
+        approximate(derivative(get_function(r), order), domain(r); method=typeof(get_function(r)), kwargs...)
     else
         @error("Not supported. Take the derivative of the `.fun` field.")
     end
