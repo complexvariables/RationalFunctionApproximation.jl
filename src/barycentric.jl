@@ -135,38 +135,14 @@ function evaluate!(u::AbstractArray, r::Barycentric, C::AbstractMatrix)
     return nothing
 end
 
-# Schneider & Werner formula for the derivative
-function _deriv_sw(w, y, z, ζ, rζ)
+function _derivative!(δ, ζ, w, y, z; order)
     n = length(z)
     if isinf(ζ)
-        return zero(complex(ζ))
-    else
-        δ = ζ .- z
-        k = findfirst(abs(δ) < eps(float(real(ζ))) for δ in δ)
-        if isnothing(k)         # not at a node
-            num, den = 0, 0
-            for i in 1:n
-                D = w[i] / δ[i]
-                num += D * (rζ - y[i]) / δ[i]
-                den += D
-            end
-            return num / den
-        else
-            return -sum(w[i] * (y[k] - y[i]) / (z[k] - z[i]) for i in 1:n if i != k) / w[k]
-        end
-    end
-end
-
-_derivative_swmod(r, ζ) = _deriv_swmod(weights(r), values(r), nodes(r), ζ, r(ζ))
-function _deriv_swmod(w, y, z, ζ, rζ)
-    n = length(z)
-    if isinf(ζ)
-        return zero(complex(ζ))
-    else
-        δ = ζ .- z
+        return zero(complex(ζ))   # true for order > 1?
+    elseif false #order==1  # allocation-free
+        @. δ = ζ - z
         _, k = findmin(abs, δ)
-        Nk, Dk = 0, 0
-        Nkʹ, Dkʹ = 0, 0
+        Nk = Dk = Nkʹ = Dkʹ = zero(eltype(δ))
         for i in 1:n
             if i != k
                 d = w[i] / δ[i]
@@ -183,49 +159,55 @@ function _deriv_swmod(w, y, z, ζ, rζ)
         D̃ʹ = Dk + δ[k] * Dkʹ
         rζ = Ñ / D̃
         return (Ñʹ - rζ * D̃ʹ) / D̃
-    end
-end
-
-_derivative_swnew(r, ζ) = _deriv_swnew(weights(r), values(r), nodes(r), ζ)
-function _deriv_swnew(w, y, z, ζ)
-    n = length(z)
-    if isinf(ζ)
-        return zero(complex(ζ))
     else
-        δ = ζ .- z
-        m, k = findmin(abs, δ)
-        if m > eps(float(real(ζ)))         # not at a node
-            Nk, Dk = 0, 0
-            Nkʹ, Dkʹ = 0, 0
-            G, Gʹ = 0, 0
-            for i in 1:n
-                if i != k
-                    d = w[i] / δ[i]
-                    Nk += y[i] * d
-                    Dk += d
-                    G += d * (y[i] - y[k])
-                    d /= δ[i]
-                    Nkʹ -= y[i] * d
-                    Dkʹ -= d
-                    Gʹ -= d * (y[i] - y[k])
+        @. δ = ζ - z
+        _, k = findmin(abs, δ)
+        Nk = zeros(eltype(δ), order + 1)
+        Dk = copy(Nk)
+        for i in 1:n
+            if i != k
+                d = w[i] / δ[i]
+                Nk[1] += y[i] * d
+                Dk[1] += d
+                for m in 1:order
+                    d *= -m / δ[i]
+                    Nk[m+1] += y[i] * d
+                    Dk[m+1] += d
                 end
             end
-            num = w[k] * (G +  δ[k] * Gʹ) + δ[k]^2 * (Nkʹ * Dk - Nk * Dkʹ)
-            den = (w[k] + δ[k] * Dk)^2
-            return num / den
-        else
-            # Schneider & Werner formula for the derivative
-            return -sum(w[i] * (y[k] - y[i]) / (z[k] - z[i]) for i in 1:n if i != k) / w[k]
         end
+        Ñ = similar(Nk)
+        D̃ = similar(Dk)
+        rval = similar(δ, order + 1)
+        Ñ[1] = w[k] * y[k] + δ[k] * Nk[1]
+        D̃[1] = w[k] + δ[k] * Dk[1]
+        rval[1] = Ñ[1] / D̃[1]
+        for m in 1:order
+            Ñ[m+1] = m * Nk[m] + δ[k] * Nk[m+1]
+            D̃[m+1] = m * Dk[m] + δ[k] * Dk[m+1]
+            s = sum( binomial(m, j) * rval[j+1] * D̃[m - j + 1] for j in 0:m-1 )
+            rval[m+1] = (Ñ[m+1] - s) / D̃[1]
+        end
+        return rval[order+1]
     end
 end
 
-derivative(r::Barycentric, ζ::Number) = _derivative_swmod(r, ζ)
-derivative(r::Barycentric) = ζ -> derivative(r, ζ)
-# function derivative(r::Barycentric)
-#     w, y, z = weights(r), values(r), nodes(r)
-#     return ζ -> _derivative(w, y, z, ζ, r(ζ))
-# end
+function derivative(r::Barycentric{T,S}, ζ::Number; order::Integer=1) where {T,S}
+    d = _derivative!(similar(complex(nodes(r))), ζ, weights(r), values(r), nodes(r); order)
+    return convert(promote_type(S, typeof(ζ)), d)
+end
+
+function derivative(r::Barycentric{T,S}; order::Integer=1) where {T,S}
+    w, y, z = weights(r), values(r), nodes(r)
+    δ = similar(complex(z))
+    return function(ζ)
+        d = _derivative!(δ, ζ, w, y, z; order)
+        if isreal(ζ) && isreal(r)
+            d = real(d)
+        end
+        return convert(promote_type(S, typeof(ζ)), d)
+    end
+end
 
 """
     poles(r)
