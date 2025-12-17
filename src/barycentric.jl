@@ -212,8 +212,8 @@ function poles(r::Barycentric{T,S}) where {T,S}
         pol = filter( isfinite, eigvals(E, B) )
     catch
         # generalized eigen not available in extended precision, so:
-        λ = filter( z->abs(z)>1e-13, eigvals(E\B) )
-        pol = 1 ./ λ
+        (; α, β) = schur(complex(E), complex(B))
+        pol = filter( isfinite, α ./ β )
     end
     return pol
 end
