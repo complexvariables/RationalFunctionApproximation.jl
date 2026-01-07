@@ -135,9 +135,9 @@ function evaluate!(u::AbstractArray, r::Barycentric, C::AbstractMatrix)
     return nothing
 end
 
-function _derivative_setup(r::Barycentric, ζ::Number, order::Integer)
-    T = promote_type(eltype(nodes(r)), typeof(ζ))
-    δ = Vector{T}(undef, length(nodes(r)))
+function _derivative_setup(::Type{Barycentric}, z::AbstractVector, ζ::Number, order::Integer)
+    T = promote_type(eltype(z), typeof(ζ))
+    δ = Vector{T}(undef, length(z))
     space = Tuple(Vector{T}(undef, order + 1) for _ in 1:5)
     return δ, space
 end
@@ -147,6 +147,7 @@ function _derivative!(ζ, w, y, z, order, δ, Nk, Dk, Ñ, D̃, rval)
     if isinf(ζ)
         return zero(complex(ζ))   # true for order > 1?
     else
+        # hold out the closest node for stability
         @. Nk = 0
         @. Dk = 0
         @. δ = ζ - z
@@ -183,9 +184,12 @@ end
 
 function derivative(r::Barycentric{T,S}, orders::AbstractVector{<:Integer}) where {T,S}
     w, y, z = weights(r), values(r), nodes(r)
+    # screen out zero weights
+    nonzero = @. !iszero(w)
+    w, y, z = w[nonzero], y[nonzero], z[nonzero]
     order = maximum(orders)
     index = orders .+ 1
-    δ, space = _derivative_setup(r, zero(complex(eltype(z))), order)
+    δ, space = _derivative_setup(Barycentric, z, zero(complex(eltype(z))), order)
     return function(ζ)
         d = _derivative!(ζ, w, y, z, order, δ, space...)
         if isreal(ζ) && isreal(r)
