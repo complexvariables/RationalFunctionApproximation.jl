@@ -1,7 +1,7 @@
 name = "RationalFunctionApproximation"
 uuid = "c92886a3-cb30-4e18-b84f-372dde475ecc"
 authors = ["Toby Driscoll <driscoll@udel.edu> and contributors"]
-version = "0.3.1"
+version = "0.3.2"
 
 [deps]
 ComplexRegions = "c64915e2-6c82-11e9-38e9-1f159a780463"
