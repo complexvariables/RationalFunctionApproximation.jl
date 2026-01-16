@@ -104,11 +104,11 @@ end
 Evaluate the ArnoldiPolynomial `p` at `z`.
 """
 (p::ArnoldiPolynomial)(z) = evaluate(p, z)
-function evaluate(p::ArnoldiPolynomial, z::Number)
+function evaluate(p::ArnoldiPolynomial{T}, z::Number) where {T}
     g = p.coeff[1]
     H = p.basis.H
     n = size(H, 2)
-    Q = fill(one(float(z)), n+1)
+    Q = fill(one(T), n+1)
     for k in 1:n-1
         v = z .* Q[k]
         for j in 1:k
@@ -277,4 +277,18 @@ function approximate(::Type{PartialFractions},
     )
     r = PartialFractions(z, y, ζ, degree)
     return DiscreteApproximation(y, z, r, trues(length(y)), true, nothing)
+end
+
+function Base.convert(::Type{PartialFractions}, r::Union{Barycentric, Thiele})
+    zp, res = residues(r)
+    m, n = degrees(r)
+    d = m - n    # degree of the polynomial part
+    if d >= 0
+        z = first(roots(r), d + 1)
+        pf(x) = -sum(res[i] / (x - zp[i]) for i in eachindex(zp))
+        p = ArnoldiBasis(z, d) \ pf
+    else
+        p = ArnoldiPolynomial([0], ArnoldiBasis([1], 0))
+    end
+    return PartialFractions(p, zp, res)
 end
