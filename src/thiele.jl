@@ -21,8 +21,13 @@ struct Thiele{T,S} <: AbstractRationalInterpolant{T,S}
 end
 
 # Convert the numeric type:
-function Base.convert(::Type{Thiele{T}}, r::Thiele{S}) where {S,T}
-    return Thiele{T}( T.(nodes(r)), T.(values(r)), T.(weights(r)) )
+function Base.convert(::Type{F}, r::Thiele{T,S}) where {F<:AbstractFloat,T,S<:Real}
+    return Thiele{F,F}( F.(nodes(r)), F.(values(r)), F.(weights(r)))
+end
+
+function Base.convert(::Type{F}, r::Thiele{T,S}) where {F<:AbstractFloat,T,S<:Complex}
+    CF = complex(F)
+    return Thiele{F,CF}( CF.(nodes(r)), CF.(values(r)), CF.(weights(r)))
 end
 
 # convenience accessors amd overloads

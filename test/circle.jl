@@ -18,6 +18,13 @@
         f = z -> tanh(100z); @test pass(f, approximate(f, UC), pts, rtol=2e-13)
     end
 
+    @testset "Float type conversion for $method" for method in (Barycentric, Thiele)
+        f = z -> abs(z - 1im)
+        r = approximate(f, UC; method)
+        r32 = convert(Float32, r.fun)
+        @test r32 isa method{Float32,ComplexF32}
+    end
+
     @testset "Translate and scale for $method" for method in (Barycentric, Thiele)
         f = z -> sin(10z) * exp(-z^2)
         for (a, c) in ( (2.5, 0), (1, -1im), (0.4, -2))

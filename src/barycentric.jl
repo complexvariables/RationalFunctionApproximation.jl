@@ -82,8 +82,13 @@ Base.copy(r::Barycentric) =
     Barycentric(copy(r.nodes), copy(r.values), copy(r.weights), copy(r.w_times_f))
 
 # Convert the numeric type:
-function Base.convert(::Type{Barycentric{T}}, r::Barycentric{S}) where {S,T}
-    return Barycentric{T}( T.(nodes(r)), T.(values(r)), T.(weights(r)), T.(r.w_times_f) )
+function Base.convert(::Type{F}, r::Barycentric{T,S}) where {F<:AbstractFloat,T,S<:Real}
+    return Barycentric{F,F}( F.(nodes(r)), F.(values(r)), F.(weights(r)), F.(r.w_times_f) )
+end
+
+function Base.convert(::Type{F}, r::Barycentric{T,S}) where {F<:AbstractFloat,T,S<:Complex}
+    CF = complex(F)
+    return Barycentric{F,CF}( CF.(nodes(r)), CF.(values(r)), CF.(weights(r)), CF.(r.w_times_f) )
 end
 
 # convenience accessors and overloads

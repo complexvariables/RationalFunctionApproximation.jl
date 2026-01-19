@@ -57,6 +57,18 @@
         end
     end
 
+    @testset "Float type conversion for $method" for method in (Barycentric, Thiele)
+        f = z -> abs(z - 1im)
+        r = approximate(f, unit_interval; method)
+        r32 = convert(Float32, r.fun)
+        @test r32 isa method{Float32,Float32}
+
+        f = z -> cis(z)
+        r = approximate(f, unit_interval; method)
+        r32 = convert(Float32, r.fun)
+        @test r32 isa method{Float32,ComplexF32}
+    end
+
     @testset "Tolerance" begin
         T = Float64
         method = Barycentric
