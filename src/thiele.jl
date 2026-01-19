@@ -105,6 +105,11 @@ end
 
 function _derivative!(ζ, w, z, order, A, B, vals)
     n = length(w)
+    if n == 1
+        vals[1] = w[1]
+        vals[2:order+1] .= 0
+        return vals
+    end
     A[1] = w[n]
     A[2:order+1] .= 0
     B[1] = ζ - z[n-1]
@@ -136,7 +141,7 @@ end
 function derivative(r::Thiele{T,S}, orders::AbstractVector{<:Integer}) where {T,S}
     w, z = weights(r), nodes(r)
     order = maximum(orders)
-    A = similar(complex(z), order+1)
+     A = similar(complex(z), order+1)
     B = similar(A)
     vals = similar(A)
     index = 1 .+ orders
