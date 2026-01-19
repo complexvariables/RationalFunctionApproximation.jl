@@ -18,12 +18,12 @@ include("abstract-rational.jl")
 export approximate, get_function, domain, check, rewind, get_history, test_points
 include("approximation.jl")
 
-export ArnoldiBasis, ArnoldiPolynomial, PartialFractions
-include("parfrac.jl")
-
 export Barycentric, AAA, Thiele, TCF, derivative, evaluate
 include("barycentric.jl")
 include("thiele.jl")
+
+export ArnoldiBasis, ArnoldiPolynomial, PartialFractions
+include("parfrac.jl")
 
 # legacy implementation of AAA
 export aaa
