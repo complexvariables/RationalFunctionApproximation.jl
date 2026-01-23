@@ -5,6 +5,7 @@ export RFA
 
 using LinearAlgebra, Statistics, GenericLinearAlgebra, ComplexRegions, GenericSchur
 using PyFormattedStrings
+using PrecompileTools
 
 export unit_interval, unit_circle, unit_disk, DiscretizedPath
 include("utils.jl")
@@ -32,7 +33,21 @@ include("aaa.jl")
 export minimax
 include("lawson.jl")
 
-# include("operations.jl")
+@setup_workload begin
+    x_interval = range(-1, 1, 200)
+    @compile_workload begin
+        for method in (Barycentric, Thiele)
+            approximate(sin, unit_circle; method)
+            for domain in (unit_interval, x_interval)
+                approximate(sin, domain; method)
+                approximate(cis, domain; method)
+                approximate(x -> 1/(x^2 + 4), domain, [2im, -2im])
+            end
+        end
+    end
+end
+
+
 
 # These are overloaded by plotting extensions.
 export convergenceplot, convergenceplot!, errorplot, errorplot!, animate, poleplot, poleplot!
