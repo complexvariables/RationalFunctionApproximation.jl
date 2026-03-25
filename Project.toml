@@ -1,7 +1,7 @@
 name = "RationalFunctionApproximation"
 uuid = "c92886a3-cb30-4e18-b84f-372dde475ecc"
-authors = ["Toby Driscoll <driscoll@udel.edu> and contributors"]
 version = "0.3.3"
+authors = ["Toby Driscoll <driscoll@udel.edu> and contributors"]
 
 [deps]
 ComplexRegions = "c64915e2-6c82-11e9-38e9-1f159a780463"
@@ -33,7 +33,7 @@ RFAZygoteExt = "Zygote"
 ComplexRegions = "0.3"
 ComplexValues = "0.3"
 ForwardDiff = "1"
-GenericLinearAlgebra = "0.3"
+GenericLinearAlgebra = "0.3, 0.4"
 GenericSchur = "0.5"
 Logging = "1"
 Makie = "0.24"
