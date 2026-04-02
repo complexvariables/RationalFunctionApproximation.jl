@@ -5,11 +5,10 @@
 Barycentric representation of a rational function.
 
 # Fields
-- `node`: the nodes of the rational function
-- `value`: the values of the rational function
-- `weight`: the weights of the rational function
-- `wf`: the weighted values of the rational function
-- `stats`: convergence statistics
+- `nodes`: interpolation nodes of the rational function
+- `values`: values at the nodes
+- `weights`: barycentric weights
+- `w_times_f`: `values .* weights`, precomputed for efficiency
 """
 struct Barycentric{T,S} <: AbstractRationalInterpolant{T,S}
     nodes::Vector{S}
@@ -37,7 +36,7 @@ struct Barycentric{T,S} <: AbstractRationalInterpolant{T,S}
 end
 
 """
-    Barycentric(node, value, weight, wf=value .* weight; stats=missing)
+    Barycentric(node, value, weight, wf=value .* weight)
 
 Construct a `Barycentric` rational function.
 
@@ -76,6 +75,36 @@ end
 function Barycentric(node::AbstractVector, value::AbstractVector, L::AbstractMatrix)
     _, _, V = svd(L)
     return Barycentric(node, value, V[:, end])
+end
+
+# construct from interpolation nodes/values, using the rest of the points as sample points
+"""
+    Barycentric(points, values, node_index)
+
+Construct a `Barycentric` rational approximation from interpolation nodes and values (i.e., support points), using the rest of the points as sample points.
+
+# Arguments
+- `points::Vector`: all data points
+- `values::Vector`: values at all data points
+- `node_index::Vector{Bool}` or `::Vector{<:Integer}`: index indicating interpolation nodes
+
+# Returns
+- `::Barycentric`: a barycentric rational approximation function
+
+# Notes
+For good approximations, use `approximate`, which applies the AAA algorithm, instead of this constructor.
+"""
+function Barycentric(points::AbstractVector, values::AbstractVector, nodeidx::AbstractVector{Bool})
+    sampleidx = .!nodeidx
+    nodes, vals = points[nodeidx], values[nodeidx]
+    L = loewner(nodes, vals, points[sampleidx], values[sampleidx])
+    return Barycentric(nodes, vals, L)
+end
+
+function Barycentric(points::AbstractVector, values::AbstractVector, nodeidx::AbstractVector{<:Integer})
+    idx = falses(length(points))
+    idx[nodeidx] .= true
+    return Barycentric(points, values, idx)
 end
 
 Base.copy(r::Barycentric) =
