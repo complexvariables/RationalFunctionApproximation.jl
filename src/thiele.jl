@@ -376,7 +376,7 @@ function approximate(::Type{Thiele},
     float_type::Type = promote_type(real_type(eltype(z)), typeof(float(1))),
     tol::AbstractFloat = 1000*eps(float_type),
     allowed::Union{Function,Bool} = true,
-    max_iter::Int = 240,
+    max_iter::Int = length(y),
     stagnation::Int = 5,
     ) where {T<:Number,S<:Number}
 
@@ -404,7 +404,12 @@ function approximate(::Type{Thiele},
 
         status = quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
         if status > 0
-            @warn("Stopping with estimated error $(round(history[status].error, sigdigits=4)) after $n iterations")
+            if isinf(err_max)
+                @warn("Used all sample values without convergence")
+                status = max_iter
+            else
+                @warn("Stopping with estimated error $(round(history[status].error, sigdigits=4)) after $n iterations")
+            end
             r = history[status].interpolant
         end
         (status != 0) && break
