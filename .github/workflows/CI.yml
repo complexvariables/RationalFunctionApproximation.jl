@@ -46,7 +46,7 @@ jobs:
         run: julia --project=. -e 'using Pkg; Pkg.add("Coverage"); using Coverage; LCOV.writefile("coverage-lcov.info", process_folder())'
       - name: Upload coverage to Codecov
         if: matrix.version == '1.12'
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage-lcov.info
