@@ -98,6 +98,10 @@ function _evaluate_numden(r::Thiele, z::Number)
             t = r.weights[k] * a + b
             b = a * (z - r.nodes[k-1])
             a = t
+            if abs(a) < 1e-20   # prevent underflow
+                a *= 1e20
+                b *= 1e20
+            end
         end
         r.weights[1] * a + b, a
     end
@@ -270,9 +274,9 @@ function _new_weight_classic(z, w, z_new, y_new)
         u =
         if iszero(D)
             if iszero(N)
-                NaN
+                convert(typeof(D), NaN)
             else
-                Inf
+                convert(typeof(D), Inf)
             end
         else
             N / D
