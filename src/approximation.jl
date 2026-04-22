@@ -4,12 +4,12 @@
 
 mutable struct IterationRecord{R,S,T}
     interpolant::R
-    error::S
+    error::Float64
     poles::Union{Missing, Vector{T}}
 
     function IterationRecord(r::R, error, poles) where
         {S<:AbstractFloat, R<:AbstractRationalInterpolant{S}}
-        return new{R,S,Complex{S}}(copy(r), error, poles)
+        return new{R,S,Complex{S}}(copy(r), Float64(error), poles)
     end
 end
 
