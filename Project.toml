@@ -4,6 +4,7 @@ version = "0.3.4"
 authors = ["Toby Driscoll <driscoll@udel.edu> and contributors"]
 
 [deps]
+ArnoldiVandermonde = "dfb2314e-7b44-493c-847d-ffb1b242c444"
 ComplexRegions = "c64915e2-6c82-11e9-38e9-1f159a780463"
 ComplexValues = "41a84b80-6cf2-11e9-379d-9df124847946"
 GenericLinearAlgebra = "14197337-ba66-59df-a3e3-ca00e7dcff7a"
@@ -30,6 +31,7 @@ RFAPythonCallExt = "PythonCall"
 RFAZygoteExt = "Zygote"
 
 [compat]
+ArnoldiVandermonde = "0.1.0"
 ComplexRegions = "0.3"
 ComplexValues = "0.3"
 ForwardDiff = "1"

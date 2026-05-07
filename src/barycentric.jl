@@ -367,7 +367,7 @@ function approximate(::Type{Barycentric},
 
     num_ref = 15    # initial number of test points between nodes; decreases to `refinement`
     path = DiscretizedPath(d, [0, 1]; refinement=num_ref, maxpoints=max_iter * refinement)
-    σ = isclosed(d) ? point(d, [0]) : point(d, [0, 1])    # initial nodes
+    σ = isclosed(d) ? points(d, [0]) : points(d, [0, 1])    # initial nodes
     fσ = f.(σ)              # f at nodes
     numnodes = length(σ)
 

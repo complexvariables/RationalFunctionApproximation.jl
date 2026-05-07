@@ -18,11 +18,6 @@ const Domain{T} = Union{ComplexCurve{T}, ComplexPath{T}, ComplexSCRegion{T}}
 isclosed(p::ComplexCurve) = isa(p, ComplexClosedCurve)
 isclosed(p::ComplexPath) = isa(p, ComplexClosedPath)
 
-# Provide a fallback `dist` method for unknown (i.e., user-defined) curve types
-function ComplexRegions.dist(z::Number, p::ComplexRegions.AbstractCurve)
-    return minimum(abs(z - point(p, t)) for t in range(0, 1, length=300))
-end
-
 # Refinement in parameter space
 function refine(t, N, include_ends=false)
     x = sort(t)
@@ -39,7 +34,7 @@ end
 refine(p::ComplexCurve, args...) = refine(Path(p), args...)
 function refine(p::ComplexPath, t::AbstractVector, N::Integer=3, args...)
     tt = refine(t, N, args...)
-    ττ = point(p, tt)
+    ττ = points(p, tt)
     if isreal(p)
         ττ = real(ττ)
     end
