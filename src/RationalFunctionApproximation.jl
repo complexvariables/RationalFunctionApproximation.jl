@@ -3,7 +3,7 @@ module RationalFunctionApproximation
 const RFA = RationalFunctionApproximation
 export RFA
 
-using LinearAlgebra, Statistics, GenericLinearAlgebra, ComplexRegions, GenericSchur
+using LinearAlgebra, Statistics, GenericLinearAlgebra, ComplexRegions, GenericSchur, ArnoldiVandermonde
 using PyFormattedStrings
 using PrecompileTools
 

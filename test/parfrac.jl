@@ -95,7 +95,7 @@
 
     @testset "Arnoldi polynomial" begin
         for path in [Segment(-0.3,1), Circle(1, 2), Shapes.square]
-            z = point(path, 0:0.001:1)
+            z = points(path, 0:0.001:1)
             B = RFA.ArnoldiBasis(z, 30)
             @test maximum(abs, (B\cis).(z) - cis.(z)) < 1e-10
         end
@@ -105,7 +105,7 @@
         tol = 1e-6
         approx(f, pts, ζ; kw...) = approximate(f, pts, ζ; degree=30, kw...)
         for path in [Segment(-0.3,1), Circle(1, 2), Shapes.square]
-            pts = point(path, 0:0.001:1)
+            pts = points(path, 0:0.001:1)
             f, ζ = (x -> 1im*tan(x), [-π/2, π/2, -3π/2, 3π/2]); @test pass(f, approx(f, pts, ζ), pts; rtol=tol)
             f, ζ = (x -> tanh(x), 1im*[-π/2, π/2, -3π/2, 3π/2]); @test pass(f, approx(f, pts, ζ), pts; rtol=tol)
             f, ζ = (x -> exp(x), []); @test pass(f, approx(f, pts, ζ), pts; rtol=tol)
