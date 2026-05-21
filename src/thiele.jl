@@ -211,10 +211,11 @@ function residues(r::Thiele)
     for i in eachindex(ζ)
         # is it a simple pole?
         p, q, pʹ, qʹ = _evaluate_numden_derivs(r, ζ[i])
-        if abs(q) < 100eps(T) * abs(p) && !iszero(qʹ)
+        if !iszero(qʹ)
             # simple pole
             res[i] = p / qʹ
         else
+            @debug "Fallback for residue at pole " ζ[i]
             # not a simple pole; use fallback contour integral
             res[i] = Res(r, ζ[i]; avoid=ζ)
         end
