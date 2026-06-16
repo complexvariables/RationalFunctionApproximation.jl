@@ -107,7 +107,7 @@ function _evaluate_onediv(r::Thiele, z::Number)
     else
         numer / denom
     end
-  end
+end
 
 _evaluator = _evaluate_onediv    # default choice
 
@@ -338,6 +338,7 @@ function approximate(::Type{Thiele},
     idx_test = CartesianIndices((1:1, 2:num_ref+1))
     idx_new_test = idx_test
     fτ = Matrix{eltype(fσ)}(undef, size(τ))        # f at test points
+    rτ = similar(complex(fτ))                               # r at test points
     fτ[idx_test] .= f.(τ[idx_test])
     fmax = maximum(abs, view(fτ, idx_test))        # scale of f
 
@@ -349,7 +350,8 @@ function approximate(::Type{Thiele},
     n = 1       # iteration counter
     while true
         # test_actual = view(fτ, idx_test)      # f at test points
-        err = @. abs(fτ[idx_test] - r(τ[idx_test]))
+        evaluate!(view(rτ, idx_test), r, view(τ, idx_test))     # r at test points
+        err = abs.(view(fτ, idx_test) - view(rτ, idx_test))
         err_max, idx_max = findmax(err)
         history[n].error = err_max
 
@@ -417,21 +419,18 @@ function approximate(::Type{Thiele},
     fmax = maximum(abs, y)     # scale of f
     _, idx_min = findmin(abs, y)
     r = Thiele([z[idx_min]], [y[idx_min]])
-    idx_test[idx_min] = false
+    y_test = copy(collect(y))
+    z_test = copy(collect(z))
+    deleteat!(y_test, idx_min)
+    deleteat!(z_test, idx_min)
+    r_test = similar(y_test)
 
     history = [IterationRecord(r, NaN, missing)]
     n = 1    # iteration counter
     while length(z) > 0
-        idx_max, err_max = 0, -Inf
-        for i in eachindex(y)
-            if idx_test[i]
-                err = abs(y[i] - r(z[i]))
-                if err > err_max
-                    err_max = err
-                    idx_max = i
-                end
-            end
-        end
+        evaluate!(r_test, r, z_test)
+        r_test .-= y_test
+        err_max, idx_max = findmax(abs(e) for e in r_test)
         history[n].error = err_max
 
         status = quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
@@ -448,14 +447,16 @@ function approximate(::Type{Thiele},
 
         # Add new node:
         try
-            add_node!(r, z[idx_max], y[idx_max])
+            add_node!(r, z_test[idx_max], y_test[idx_max])
             push!(history, IterationRecord(r, NaN, missing))
-            idx_test[idx_max] = false
+            deleteat!(y_test, idx_max)
+            deleteat!(z_test, idx_max)
+            deleteat!(r_test, idx_max)
         catch(e)
             # look for the best acceptable case
             status = quitting_check(history, stagnation, tol, fmax, 1, allowed)
             r = history[status].interpolant
-            @warn("NaN weight encountered; stopping with estimated error $(round(history[status].error, sigdigits=4))")
+            @warn("Adding node failed; stopping with estimated error $(round(history[status].error, sigdigits=4))")
             @debug("Error $e")
             break
         end
