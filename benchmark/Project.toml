@@ -1,0 +1,5 @@
+[deps]
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+ComplexRegions = "c64915e2-6c82-11e9-38e9-1f159a780463"
+Logging = "56ddb016-857b-54e1-b83d-db4d58db5568"
+RationalFunctionApproximation = "c92886a3-cb30-4e18-b84f-372dde475ecc"

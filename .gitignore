@@ -6,3 +6,4 @@
 test/Manifest.toml
 docs/node_modules
 *.cov
+benchmark/Manifest.toml
