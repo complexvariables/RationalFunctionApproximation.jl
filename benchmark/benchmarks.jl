@@ -15,6 +15,19 @@ for (name, method) in (("aaa", Barycentric), ("thiele", Thiele))
     g["abs_circle"]   = @benchmarkable approximate(z -> abs(z - 1.0001im), $unit_circle; method = $method, allowed = true)
 end
 
+# --- construction cost on a discrete point set ---
+# log-clustered points near 0, matching the discrete-domain test setup
+let zc = 10.0 .^ range(-15, 0, 500)
+    global const DISCRETE_PTS = [-reverse(zc); 0.0; zc]
+end
+SUITE["approximate_discrete"] = BenchmarkGroup()
+for (name, method) in (("aaa", Barycentric), ("thiele", Thiele))
+    g = SUITE["approximate_discrete"][name] = BenchmarkGroup()
+    g["tanh_steep"]  = @benchmarkable approximate(x -> tanh(100x), $DISCRETE_PTS; method = $method, allowed = true)
+    g["abs_shift"]   = @benchmarkable approximate(x -> abs(x + 0.5 + 0.01im), $DISCRETE_PTS; method = $method, allowed = true)
+    g["sin_recip"]   = @benchmarkable approximate(x -> sin(1 / (1.05 - x)), $DISCRETE_PTS; method = $method, allowed = true)
+end
+
 # --- evaluation cost on a fixed approximant ---
 SUITE["evaluate"] = BenchmarkGroup()
 let r = approximate(x -> tanh(50x), unit_interval, method = Barycentric, allowed = true),
