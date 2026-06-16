@@ -124,9 +124,10 @@ function _evaluate_numden(r::Thiele, z::Number)
             t = r.weights[k] * a + b
             b = a * (z - r.nodes[k-1])
             a = t
-            if abs(a) < 1e-20   # prevent underflow
-                a *= 1e20
-                b *= 1e20
+            if abs2(a) < 1e-200   # prevent underflow
+                @debug "scaling to avoid underflow at " z
+                a *= 1e100
+                b *= 1e100
             end
         end
         r.weights[1] * a + b, a
