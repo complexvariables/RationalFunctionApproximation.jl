@@ -154,11 +154,35 @@ function evaluate(r::Barycentric, z::Number)
     end
 end
 
+# faster version for evaluation on an array
+function evaluate(r::Barycentric, z::AbstractArray{<:Number})
+    u = similar(z, eltype(r.values))
+    return evaluate!(u, r, z)
+end
+
+function evaluate!(u::AbstractArray, r::Barycentric, z::AbstractArray{<:Number})
+    num = @. r.w_times_f[1] / (z - r.nodes[1])
+    den = @. r.weights[1] / (z - r.nodes[1])
+    safe = trues(size(z))
+    idx = isinf.(num)
+    safe[idx] .= false
+    u[idx] .= r.values[1]
+    @inbounds for k in 2:length(r.nodes)
+        c = @. 1 / (z - r.nodes[k])
+        idx = isinf.(c)
+        safe[idx] .= false
+        u[idx] .= r.values[k]
+        axpy!(r.w_times_f[k], c, num)
+        axpy!(r.weights[k], c, den)
+    end
+    @views u[safe] .= num[safe] ./ den[safe]
+    return u
+end
+
 function _evaluate_numden(r::Barycentric, z::Number)
     C = @. 1 / (z - r.nodes)
     return sum(C .* r.w_times_f), sum(C .* r.weights)
 end
-
 
 # Evaluate when given Cauchy matrix
 function evaluate!(u::AbstractArray, r::Barycentric, C::AbstractMatrix)
