@@ -30,6 +30,6 @@ end
 
 # --- pole solve ---
 SUITE["poles"] = BenchmarkGroup()
-let r = approximate(x -> 1 / (x^2 + 0.01), unit_interval; method = Thiele)
+let r = approximate(x -> 1 / sqrt(x^2 + 0.01), unit_interval; method = Thiele)
     SUITE["poles"]["thiele"] = @benchmarkable poles($r)
 end
