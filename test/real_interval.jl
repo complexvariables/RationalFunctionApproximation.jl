@@ -37,6 +37,17 @@
 
     end
 
+    @testset "Array evaluation for Thiele" begin
+        T = Float64
+        pts = test_points[T]
+        f = x -> sin(40x) * exp(-8x^2)
+        r = approximate(f, domain[T], method=Thiele)
+        @test isapprox(f.(pts), r(pts), norm=u->maximum(abs, u), rtol=2e-11)
+        f = x -> cis(16x)
+        r = approximate(f, domain[T], method=Thiele)
+        @test isapprox(f.(pts), r(pts), norm=u->maximum(abs, u), rtol=2e-11)
+    end
+
     @testset "Double64 for $method" for method in (Barycentric, Thiele)
         T = Double64
         tol = 2000*eps(T)

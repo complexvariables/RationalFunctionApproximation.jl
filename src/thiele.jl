@@ -64,6 +64,32 @@ function evaluate(r::Thiele, z::Number)
     end
 end
 
+# faster for array-valued evaluation
+function evaluate(r::Thiele, z::AbstractArray{<:Number})
+    t = similar(z, eltype(r.values))
+    return evaluate!(t, r, z)
+end
+
+function evaluate!(t::AbstractArray, r::Thiele, z::AbstractArray{<:Number})
+    # use 3-term pair recurrence to avoid division until the end
+    n = length(r.weights)
+    if n == 1
+        t .= r.weights[1]
+    else
+        a = similar(t)
+        a .= r.weights[n]
+        b = z .- r.nodes[n-1]
+        @inbounds for k in n-1:-1:2
+            t .= b
+            axpy!(r.weights[k], a, t)
+            b .= a .* (z .- r.nodes[k-1])
+            a .= t
+        end
+        t .= r.weights[1] .+ b ./ a
+    end
+    return t
+end
+
 function _evaluate_classic(r::Thiele, z::Number)
     n = length(r.nodes)
     u = last(r.weights)

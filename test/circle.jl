@@ -18,6 +18,15 @@
         f = z -> tanh(100z); @test pass(f, approximate(f, UC), pts, rtol=2e-13)
     end
 
+    @testset "Array evaluation for Thiele" begin
+        f = z -> sin(10z) * exp(-z^2)
+        r = approximate(f, UC, method=Thiele)
+        @test isapprox(f.(pts), r(pts), norm=u->maximum(abs, u), rtol=2e-11)
+        f = z -> real(tan(π*z))
+        r = approximate(f, UC, method=Thiele)
+        @test isapprox(f.(pts), r(pts), norm=u->maximum(abs, u), rtol=2e-11)
+    end
+
     @testset "Float type conversion for $method" for method in (Barycentric, Thiele)
         f = z -> abs(z - 1im)
         r = approximate(f, UC; method)
