@@ -23,9 +23,8 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - '1.10'
-          - '1.11'
-          - '1.12'
+          - 'lts'
+          - '1'
         os:
           - ubuntu-latest
         arch:
@@ -42,10 +41,10 @@ jobs:
       - name: Run tests with coverage
         run: julia --project=. -e 'using Pkg; Pkg.test(coverage=true)'
       - name: Generate coverage report
-        if: matrix.version == '1.12'
+        if: matrix.version == '1'
         run: julia --project=. -e 'using Pkg; Pkg.add("Coverage"); using Coverage; LCOV.writefile("coverage-lcov.info", process_folder())'
       - name: Upload coverage to Codecov
-        if: matrix.version == '1.12'
+        if: matrix.version == '1'
         uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
