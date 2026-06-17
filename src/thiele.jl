@@ -1,8 +1,8 @@
-struct Thiele{T,S} <: AbstractRationalInterpolant{T,S}
+struct ContinuedFractionInterpolant{T,S} <: AbstractRationalInterpolant{T,S}
     nodes::Vector{S}
     values::Vector{S}
     weights::Vector{S}
-    function Thiele{T}(
+    function ContinuedFractionInterpolant{T}(
         node::AbstractVector{S},
         value::AbstractVector{S},
         weight::AbstractVector{S}
@@ -10,7 +10,7 @@ struct Thiele{T,S} <: AbstractRationalInterpolant{T,S}
         @assert length(node) == length(value) == length(weight)
         new{T,S}(node, value, weight)
     end
-    function Thiele{T,S}(
+    function ContinuedFractionInterpolant{T,S}(
         node::AbstractVector{S},
         value::AbstractVector{S},
         weight::AbstractVector{S}
@@ -21,36 +21,39 @@ struct Thiele{T,S} <: AbstractRationalInterpolant{T,S}
 end
 
 # Convert the numeric type:
-function Base.convert(::Type{F}, r::Thiele{T,S}) where {F<:AbstractFloat,T,S<:Real}
-    return Thiele{F,F}( F.(nodes(r)), F.(values(r)), F.(weights(r)))
+function Base.convert(::Type{F}, r::ContinuedFractionInterpolant{T,S}) where {F<:AbstractFloat,T,S<:Real}
+    return ContinuedFractionInterpolant{F,F}( F.(nodes(r)), F.(values(r)), F.(weights(r)))
 end
 
-function Base.convert(::Type{F}, r::Thiele{T,S}) where {F<:AbstractFloat,T,S<:Complex}
+function Base.convert(::Type{F}, r::ContinuedFractionInterpolant{T,S}) where {F<:AbstractFloat,T,S<:Complex}
     CF = complex(F)
-    return Thiele{F,CF}( CF.(nodes(r)), CF.(values(r)), CF.(weights(r)))
+    return ContinuedFractionInterpolant{F,CF}( CF.(nodes(r)), CF.(values(r)), CF.(weights(r)))
 end
 
 # convenience accessors amd overloads
-nodes(r::Thiele) = r.nodes
-Base.values(r::Thiele) = r.values
-weights(r::Thiele) = r.weights
-function degrees(r::Thiele)
+nodes(r::ContinuedFractionInterpolant) = r.nodes
+Base.values(r::ContinuedFractionInterpolant) = r.values
+weights(r::ContinuedFractionInterpolant) = r.weights
+function degrees(r::ContinuedFractionInterpolant)
     n = length(r.nodes) - 1
     q, s = divrem(n, 2)
     return q + s, q
 end
-degree(r::Thiele) = div(length(r.nodes) - 1, 2)
+degree(r::ContinuedFractionInterpolant) = div(length(r.nodes) - 1, 2)
 
-Base.isreal(r::Thiele) = isreal(r.nodes) && isreal(r.weights)
+Base.isreal(r::ContinuedFractionInterpolant) = isreal(r.nodes) && isreal(r.weights)
 
-function Base.copy(r::Thiele)
-    return Thiele(copy(r.nodes), copy(r.values), copy(r.weights))
+function Base.copy(r::ContinuedFractionInterpolant)
+    return ContinuedFractionInterpolant(copy(r.nodes), copy(r.values), copy(r.weights))
 end
 
-const TCF = Thiele    # alias
+const TCF = ContinuedFractionInterpolant            # historical alias
+const Thiele = ContinuedFractionInterpolant         # backward compatibility
+
+ContinuedFractionInterpolant() = ContinuedFractionInterpolant(Float64[], Float64[], Float64[])
 
 # Evaluation at a point
-function evaluate(r::Thiele, z::Number)
+function evaluate(r::ContinuedFractionInterpolant, z::Number)
     return if isinf(z)
         if isodd(length(r.nodes))
             sum(r.weights[1:2:end])
@@ -65,12 +68,12 @@ function evaluate(r::Thiele, z::Number)
 end
 
 # faster for array-valued evaluation
-function evaluate(r::Thiele, z::AbstractArray{<:Number})
+function evaluate(r::ContinuedFractionInterpolant, z::AbstractArray{<:Number})
     t = similar(z, eltype(r.values))
     return evaluate!(t, r, z)
 end
 
-function evaluate!(t::AbstractArray, r::Thiele, z::AbstractArray{<:Number})
+function evaluate!(t::AbstractArray, r::ContinuedFractionInterpolant, z::AbstractArray{<:Number})
     # use 3-term pair recurrence to avoid division until the end
     n = length(r.weights)
     if n == 1
@@ -90,7 +93,7 @@ function evaluate!(t::AbstractArray, r::Thiele, z::AbstractArray{<:Number})
     return t
 end
 
-function _evaluate_classic(r::Thiele, z::Number)
+function _evaluate_classic(r::ContinuedFractionInterpolant, z::Number)
     n = length(r.nodes)
     u = last(r.weights)
     @inbounds for k in n-1:-1:1
@@ -99,7 +102,7 @@ function _evaluate_classic(r::Thiele, z::Number)
     return u
 end
 
-function _evaluate_onediv(r::Thiele, z::Number)
+function _evaluate_onediv(r::ContinuedFractionInterpolant, z::Number)
     numer, denom = _evaluate_numden(r, z)
     return if iszero(denom)
         @debug "Evaluation produced a division by zero at " z
@@ -111,7 +114,7 @@ end
 
 _evaluator = _evaluate_onediv    # default choice
 
-function _evaluate_numden(r::Thiele, z::Number)
+function _evaluate_numden(r::ContinuedFractionInterpolant, z::Number)
     # use 3-term pair recurrence to avoid division until the end
     @assert isfinite(z)
     n = length(r.weights)
@@ -164,12 +167,12 @@ function _derivative!(ζ, w, z, order, A, B, vals)
     return vals
 end
 
-function derivative(r::Thiele{T,S}, order::Integer=1) where {T,S}
+function derivative(r::ContinuedFractionInterpolant{T,S}, order::Integer=1) where {T,S}
     f = derivative(r, [order])
     return ζ -> only(f(ζ))
 end
 
-function derivative(r::Thiele{T,S}, orders::AbstractVector{<:Integer}) where {T,S}
+function derivative(r::ContinuedFractionInterpolant{T,S}, orders::AbstractVector{<:Integer}) where {T,S}
     w, z = weights(r), nodes(r)
     order = maximum(orders)
      A = similar(complex(z), order+1)
@@ -186,7 +189,7 @@ function derivative(r::Thiele{T,S}, orders::AbstractVector{<:Integer}) where {T,
 end
 
 
-function _evaluate_numden_derivs(r::Thiele, z::Number)
+function _evaluate_numden_derivs(r::ContinuedFractionInterpolant, z::Number)
     n = length(r.weights)
     return if n == 1
         r.weights[1], 1, 0, 1
@@ -208,7 +211,7 @@ function _evaluate_numden_derivs(r::Thiele, z::Number)
     end
 end
 
-function poles(r::Thiele{T,S}) where {T,S}
+function poles(r::ContinuedFractionInterpolant{T,S}) where {T,S}
     n = length(r.nodes)
     (n < 3) && return S[]
     C = diagm(1 => -ones(T, n-2))
@@ -223,7 +226,7 @@ function poles(r::Thiele{T,S}) where {T,S}
     return z
 end
 
-function roots(r::Thiele{S,T}) where {S,T}
+function roots(r::ContinuedFractionInterpolant{S,T}) where {S,T}
     n = length(r.nodes)
     C = diagm(1 => -ones(T, n-1))
     xi = view(r.nodes, 1:n-1)
@@ -231,7 +234,7 @@ function roots(r::Thiele{S,T}) where {S,T}
     return filter(isfinite, eigvals(D, C))
 end
 
-function residues(r::Thiele)
+function residues(r::ContinuedFractionInterpolant)
     ζ = poles(r)
     res = similar(complex(ζ))
     T = real_type(eltype(ζ))
@@ -250,16 +253,16 @@ function residues(r::Thiele)
     return ζ, res
 end
 
-function Thiele(nodes::AbstractVector, values::AbstractVector, weights::AbstractVector)
+function ContinuedFractionInterpolant(nodes::AbstractVector, values::AbstractVector, weights::AbstractVector)
     if isempty(nodes) && eltype(nodes) == Any
         nodes = values = weights = Float64[]
     end
     nodes, values, weights = promote(nodes, values, weights)
     T = eltype(values)
-    return Thiele{real_type(T)}(nodes, values, weights)
+    return ContinuedFractionInterpolant{real_type(T)}(nodes, values, weights)
 end
 
-function Thiele(x::AbstractVector, y::AbstractVector)
+function ContinuedFractionInterpolant(x::AbstractVector, y::AbstractVector)
     idx = axes(x, 1)
     d = copy(y)
     for (len, i) in enumerate(idx)
@@ -267,11 +270,11 @@ function Thiele(x::AbstractVector, y::AbstractVector)
             d[i] = (x[i] - x[k]) / (d[i] - d[k])
         end
     end
-    return Thiele(collect(x), y, d)
+    return ContinuedFractionInterpolant(collect(x), y, d)
 end
 
 # update in-place the nodes and weights
-function add_node!(r::Thiele, z_new, y_new)
+function add_node!(r::ContinuedFractionInterpolant, z_new, y_new)
     w = _new_weight(r.nodes, r.weights, z_new, y_new)
     if isnan(w)
         throw(NaNException("Adding node at $z_new caused NaN weight"))
@@ -316,9 +319,9 @@ end
 _new_weight = _new_weight_classic   # default choice
 
 # TODO: This should probably enforce parameters S and T
-approximate(::Type{Thiele{S,T}}, args...; kw...) where {S,T} = approximate(Thiele, args...; kw...)
+approximate(::Type{ContinuedFractionInterpolant{S,T}}, args...; kw...) where {S,T} = approximate(ContinuedFractionInterpolant, args...; kw...)
 
-function approximate(::Type{Thiele},
+function approximate(::Type{ContinuedFractionInterpolant},
     f::Function, d::Union{ComplexPath,ComplexCurve};
     float_type::Type = promote_type(real_type(d), typeof(float(1))),
     tol::Real = 1000*eps(float_type),
@@ -343,7 +346,7 @@ function approximate(::Type{Thiele},
     fmax = maximum(abs, view(fτ, idx_test))        # scale of f
 
     # Initialize rational approximation
-    r = Thiele(σ, fσ)
+    r = ContinuedFractionInterpolant(σ, fσ)
     history = [IterationRecord(r, NaN, missing)]
 
     # Main iteration
@@ -405,7 +408,7 @@ function approximate(::Type{Thiele},
     return ContinuumApproximation(f, d, r, allowed, path, history)
 end
 
-function approximate(::Type{Thiele},
+function approximate(::Type{ContinuedFractionInterpolant},
     y::AbstractVector{T}, z::AbstractVector{S};
     float_type::Type = promote_type(real_type(eltype(z)), typeof(float(1))),
     tol::AbstractFloat = 1000*eps(float_type),
@@ -418,7 +421,7 @@ function approximate(::Type{Thiele},
     idx_test = trues(m)
     fmax = maximum(abs, y)     # scale of f
     _, idx_min = findmin(abs, y)
-    r = Thiele([z[idx_min]], [y[idx_min]])
+    r = ContinuedFractionInterpolant([z[idx_min]], [y[idx_min]])
     y_test = copy(collect(y))
     z_test = copy(collect(z))
     deleteat!(y_test, idx_min)
@@ -467,25 +470,25 @@ end
 
 # Operations with scalars that can be done quickly.
 
-function Base.:+(r::Thiele, s::Number)
+function Base.:+(r::ContinuedFractionInterpolant, s::Number)
     w = copy(r.weights)
     w = [w[1] + s; w[2:end]]
-    return Thiele(r.nodes, r.values .+ s, w)
+    return ContinuedFractionInterpolant(r.nodes, r.values .+ s, w)
 end
 
-function Base.:-(r::Thiele)
-    return Thiele(r.nodes, -r.values, -r.weights)
+function Base.:-(r::ContinuedFractionInterpolant)
+    return ContinuedFractionInterpolant(r.nodes, -r.values, -r.weights)
 end
 
-function Base.:*(r::Thiele, s::Number)
+function Base.:*(r::ContinuedFractionInterpolant, s::Number)
     return if iszero(s)
         zer = zero(eltype(r.values))
-        Thiele(r.nodes[1:1], [zer], [zer])
+        ContinuedFractionInterpolant(r.nodes[1:1], [zer], [zer])
     else
         y = s * r.values
         w = Vector{eltype(y)}(undef, length(r.weights))
         w[1:2:end] .= r.weights[1:2:end] * s
         w[2:2:end] .= r.weights[2:2:end] / s
-        Thiele(r.nodes, y, w)
+        ContinuedFractionInterpolant(r.nodes, y, w)
     end
 end

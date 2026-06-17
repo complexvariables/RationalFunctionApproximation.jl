@@ -1,8 +1,8 @@
 
 """
-    Barycentric (type)
+    BarycentricInterpolant (type)
 
-Barycentric representation of a rational function.
+BarycentricInterpolant representation of a rational function.
 
 # Fields
 - `nodes`: interpolation nodes of the rational function
@@ -10,12 +10,12 @@ Barycentric representation of a rational function.
 - `weights`: barycentric weights
 - `w_times_f`: `values .* weights`, precomputed for efficiency
 """
-struct Barycentric{T,S} <: AbstractRationalInterpolant{T,S}
+struct BarycentricInterpolant{T,S} <: AbstractRationalInterpolant{T,S}
     nodes::Vector{S}
     values::Vector{S}
     weights::Vector{S}
     w_times_f::Vector{S}
-    function Barycentric{T}(
+    function BarycentricInterpolant{T}(
         node::AbstractVector{S},
         value::AbstractVector{S},
         weight::AbstractVector{S},
@@ -24,7 +24,7 @@ struct Barycentric{T,S} <: AbstractRationalInterpolant{T,S}
         @assert length(node) == length(value) == length(weight) == length(wf)
         new{T,S}(node, value, weight, wf)
     end
-    function Barycentric{T,S}(
+    function BarycentricInterpolant{T,S}(
         node::AbstractVector{S},
         value::AbstractVector{S},
         weight::AbstractVector{S},
@@ -36,9 +36,9 @@ struct Barycentric{T,S} <: AbstractRationalInterpolant{T,S}
 end
 
 """
-    Barycentric(node, value, weight, wf=value .* weight)
+    BarycentricInterpolant(node, value, weight, wf=value .* weight)
 
-Construct a `Barycentric` rational function.
+Construct a `BarycentricInterpolant` rational function.
 
 # Arguments
 - `node::Vector`: interpolation nodes
@@ -49,39 +49,39 @@ Construct a `Barycentric` rational function.
 - `wf::Vector = value .* weight`: weights times values
 
 # Returns
-- `::Barycentric`: a barycentric rational interpolating function
+- `::BarycentricInterpolant`: a barycentric rational interpolating function
 
 # Examples
 ```jldoctest
-julia> r = Barycentric([1, 2, 3], [1, 2, 3], [1/2, -1, 1/2])
-Barycentric function with 3 nodes and values:
+julia> r = BarycentricInterpolant([1, 2, 3], [1, 2, 3], [1/2, -1, 1/2])
+BarycentricInterpolant function with 3 nodes and values:
     1.0=>1.0,  2.0=>2.0,  3.0=>3.0
 
 julia> r(1.5)
 1.5
 ```
 """
-function Barycentric(node, value, weight, wf=value.*weight)
-    Barycentric( promote(float(node), float(value), float(weight))..., float(wf))
+function BarycentricInterpolant(node, value, weight, wf=value.*weight)
+    BarycentricInterpolant( promote(float(node), float(value), float(weight))..., float(wf))
 end
 
-function Barycentric(
+function BarycentricInterpolant(
     node::Vector{S}, value::Vector{S}, weight::Vector{S}, wf=value.*weight
     ) where {T<:AbstractFloat, S<:RealComplex{T}}
-    return Barycentric{T}(node, value, weight, wf)
+    return BarycentricInterpolant{T}(node, value, weight, wf)
 end
 
 # construct from Loewner matrix
-function Barycentric(node::AbstractVector, value::AbstractVector, L::AbstractMatrix)
+function BarycentricInterpolant(node::AbstractVector, value::AbstractVector, L::AbstractMatrix)
     _, _, V = svd(L)
-    return Barycentric(node, value, V[:, end])
+    return BarycentricInterpolant(node, value, V[:, end])
 end
 
 # construct from interpolation nodes/values, using the rest of the points as sample points
 """
-    Barycentric(points, values, node_index)
+    BarycentricInterpolant(points, values, node_index)
 
-Construct a `Barycentric` rational approximation from interpolation nodes and values (i.e., support points), using the rest of the points as sample points.
+Construct a `BarycentricInterpolant` rational approximation from interpolation nodes and values (i.e., support points), using the rest of the points as sample points.
 
 # Arguments
 - `points::Vector`: all data points
@@ -89,46 +89,49 @@ Construct a `Barycentric` rational approximation from interpolation nodes and va
 - `node_index::Vector{Bool}` or `::Vector{<:Integer}`: index indicating interpolation nodes
 
 # Returns
-- `::Barycentric`: a barycentric rational approximation function
+- `::BarycentricInterpolant`: a barycentric rational approximation function
 
 # Notes
 For good approximations, use `approximate`, which applies the AAA algorithm, instead of this constructor.
 """
-function Barycentric(points::AbstractVector, values::AbstractVector, nodeidx::AbstractVector{Bool})
+function BarycentricInterpolant(points::AbstractVector, values::AbstractVector, nodeidx::AbstractVector{Bool})
     sampleidx = .!nodeidx
     nodes, vals = points[nodeidx], values[nodeidx]
     L = loewner(nodes, vals, points[sampleidx], values[sampleidx])
-    return Barycentric(nodes, vals, L)
+    return BarycentricInterpolant(nodes, vals, L)
 end
 
-function Barycentric(points::AbstractVector, values::AbstractVector, nodeidx::AbstractVector{<:Integer})
+function BarycentricInterpolant(points::AbstractVector, values::AbstractVector, nodeidx::AbstractVector{<:Integer})
     idx = falses(length(points))
     idx[nodeidx] .= true
-    return Barycentric(points, values, idx)
+    return BarycentricInterpolant(points, values, idx)
 end
 
-Base.copy(r::Barycentric) =
-    Barycentric(copy(r.nodes), copy(r.values), copy(r.weights), copy(r.w_times_f))
+Base.copy(r::BarycentricInterpolant) =
+    BarycentricInterpolant(copy(r.nodes), copy(r.values), copy(r.weights), copy(r.w_times_f))
 
 # Convert the numeric type:
-function Base.convert(::Type{F}, r::Barycentric{T,S}) where {F<:AbstractFloat,T,S<:Real}
-    return Barycentric{F,F}( F.(nodes(r)), F.(values(r)), F.(weights(r)), F.(r.w_times_f) )
+function Base.convert(::Type{F}, r::BarycentricInterpolant{T,S}) where {F<:AbstractFloat,T,S<:Real}
+    return BarycentricInterpolant{F,F}( F.(nodes(r)), F.(values(r)), F.(weights(r)), F.(r.w_times_f) )
 end
 
-function Base.convert(::Type{F}, r::Barycentric{T,S}) where {F<:AbstractFloat,T,S<:Complex}
+function Base.convert(::Type{F}, r::BarycentricInterpolant{T,S}) where {F<:AbstractFloat,T,S<:Complex}
     CF = complex(F)
-    return Barycentric{F,CF}( CF.(nodes(r)), CF.(values(r)), CF.(weights(r)), CF.(r.w_times_f) )
+    return BarycentricInterpolant{F,CF}( CF.(nodes(r)), CF.(values(r)), CF.(weights(r)), CF.(r.w_times_f) )
 end
 
 # convenience accessors and overloads
-nodes(r::Barycentric) = r.nodes
-Base.values(r::Barycentric) = r.values
-weights(r::Barycentric) = r.weights
-degrees(r::Barycentric) = (length(r.nodes) - 1, length(r.nodes) - 1)
-degree(r::Barycentric) = length(r.nodes) - 1
-Base.isreal(r::Barycentric) = isreal(r.values) && isreal(r.nodes) && isreal(r.weights)
+nodes(r::BarycentricInterpolant) = r.nodes
+Base.values(r::BarycentricInterpolant) = r.values
+weights(r::BarycentricInterpolant) = r.weights
+degrees(r::BarycentricInterpolant) = (length(r.nodes) - 1, length(r.nodes) - 1)
+degree(r::BarycentricInterpolant) = length(r.nodes) - 1
+Base.isreal(r::BarycentricInterpolant) = isreal(r.values) && isreal(r.nodes) && isreal(r.weights)
 
-const AAA = Barycentric    # alias for nostalgia
+const AAA = BarycentricInterpolant                  # historical alias
+const Barycentric = BarycentricInterpolant          # backward compatibility
+
+BarycentricInterpolant() = BarycentricInterpolant(Float64[], Float64[], Float64[])
 
 """
     r(z)
@@ -136,9 +139,9 @@ const AAA = Barycentric    # alias for nostalgia
 
 Evaluate the rational function at `z`.
 """
-(r::Barycentric)(z) = evaluate(r, z)
+(r::BarycentricInterpolant)(z) = evaluate(r, z)
 
-function evaluate(r::Barycentric, z::Number)
+function evaluate(r::BarycentricInterpolant, z::Number)
     if isinf(z)
         return sum(r.w_times_f) / sum(r.weights)
     end
@@ -155,12 +158,12 @@ function evaluate(r::Barycentric, z::Number)
 end
 
 # faster version for evaluation on an array
-function evaluate(r::Barycentric, z::AbstractArray{<:Number})
+function evaluate(r::BarycentricInterpolant, z::AbstractArray{<:Number})
     u = similar(z, eltype(r.values))
     return evaluate!(u, r, z)
 end
 
-function evaluate!(u::AbstractArray, r::Barycentric, z::AbstractArray{<:Number})
+function evaluate!(u::AbstractArray, r::BarycentricInterpolant, z::AbstractArray{<:Number})
     num = @. r.w_times_f[1] / (z - r.nodes[1])
     den = @. r.weights[1] / (z - r.nodes[1])
     safe = trues(size(z))
@@ -179,13 +182,13 @@ function evaluate!(u::AbstractArray, r::Barycentric, z::AbstractArray{<:Number})
     return u
 end
 
-function _evaluate_numden(r::Barycentric, z::Number)
+function _evaluate_numden(r::BarycentricInterpolant, z::Number)
     C = @. 1 / (z - r.nodes)
     return sum(C .* r.w_times_f), sum(C .* r.weights)
 end
 
 # Evaluate when given Cauchy matrix
-function evaluate!(u::AbstractArray, r::Barycentric, C::AbstractMatrix)
+function evaluate!(u::AbstractArray, r::BarycentricInterpolant, C::AbstractMatrix)
     n = length(r.nodes)
     for (i, idx) in enumerate(eachindex(u))
         u[idx] = sum(C[i, j] * r.w_times_f[j] for j in 1:n) / sum(C[i, j] * r.weights[j] for j in 1:n)
@@ -193,7 +196,7 @@ function evaluate!(u::AbstractArray, r::Barycentric, C::AbstractMatrix)
     return nothing
 end
 
-function _derivative_setup(::Type{Barycentric}, z::AbstractVector, ζ::Number, order::Integer)
+function _derivative_setup(::Type{BarycentricInterpolant}, z::AbstractVector, ζ::Number, order::Integer)
     T = promote_type(eltype(z), typeof(ζ))
     δ = Vector{T}(undef, length(z))
     space = Tuple(Vector{T}(undef, order + 1) for _ in 1:5)
@@ -235,19 +238,19 @@ function _derivative!(ζ, w, y, z, order, δ, Nk, Dk, Ñ, D̃, rval)
     end
 end
 
-function derivative(r::Barycentric{T,S}, order::Integer=1) where {T,S}
+function derivative(r::BarycentricInterpolant{T,S}, order::Integer=1) where {T,S}
     f = derivative(r, [order])
     return ζ -> only(f(ζ))
 end
 
-function derivative(r::Barycentric{T,S}, orders::AbstractVector{<:Integer}) where {T,S}
+function derivative(r::BarycentricInterpolant{T,S}, orders::AbstractVector{<:Integer}) where {T,S}
     w, y, z = weights(r), values(r), nodes(r)
     # screen out zero weights
     nonzero = @. !iszero(w)
     w, y, z = w[nonzero], y[nonzero], z[nonzero]
     order = maximum(orders)
     index = orders .+ 1
-    δ, space = _derivative_setup(Barycentric, z, zero(complex(eltype(z))), order)
+    δ, space = _derivative_setup(BarycentricInterpolant, z, zero(complex(eltype(z))), order)
     return function(ζ)
         d = _derivative!(ζ, w, y, z, order, δ, space...)
         if isreal(ζ) && isreal(r)
@@ -262,7 +265,7 @@ end
 
 Return the poles of the rational function `r`.
 """
-function poles(r::Barycentric{T,S}) where {T,S}
+function poles(r::BarycentricInterpolant{T,S}) where {T,S}
     w = weights(r)
     nonzero = @. !iszero(w)
     z, w = nodes(r)[nonzero], w[nonzero]
@@ -280,7 +283,7 @@ function poles(r::Barycentric{T,S}) where {T,S}
     return pol
 end
 
-function residues(r::Barycentric)
+function residues(r::BarycentricInterpolant)
     ζ = poles(r)
     res = similar( complex(ζ) )
     z, y, w = nodes(r), values(r), weights(r)
@@ -297,7 +300,7 @@ end
 
 Return the roots (zeros) of the rational function `r`.
 """
-function roots(r::Barycentric)
+function roots(r::BarycentricInterpolant)
     wf = r.w_times_f
     m = length(wf)
     ty = eltype(nodes(r))
@@ -324,8 +327,8 @@ function loewner(nodes, node_values, samples, sample_values)
     return L
 end
 
-# add new nodes to an existing Barycentric function
-function add_node!(r::Barycentric, C, L, new_σ, new_fσ, τ, fτ, idx_test, idx_new_test)
+# add new nodes to an existing BarycentricInterpolant function
+function add_node!(r::BarycentricInterpolant, C, L, new_σ, new_fσ, τ, fτ, idx_test, idx_new_test)
     σ =  [r.nodes;   new_σ]
     fσ = [r.values; new_fσ]
     n = length(σ)
@@ -353,7 +356,7 @@ function add_node!(r::Barycentric, C, L, new_σ, new_fσ, τ, fτ, idx_test, idx
         A = reshape(view(L, I), :, n)
     end
 
-    return Barycentric(σ, fσ, A)
+    return BarycentricInterpolant(σ, fσ, A)
 end
 
 function _allocate(num_ref, max_iter, σ, fσ, path)
@@ -377,9 +380,9 @@ function _initialize!(τ, fτ, C, L, f, σ, fσ, idx_test)
 end
 
 # TODO: This should probably enforce parameters S and T
-approximate(::Type{Barycentric{S,T}}, args...; kw...) where {S,T} = approximate(Barycentric, args...; kw...)
+approximate(::Type{BarycentricInterpolant{S,T}}, args...; kw...) where {S,T} = approximate(BarycentricInterpolant, args...; kw...)
 
-function approximate(::Type{Barycentric},
+function approximate(::Type{BarycentricInterpolant},
     f::Function, d::ComplexCurveOrPath;
     float_type::Type = promote_type(real_type(d), typeof(float(1))),
     tol::Real = 1000*eps(float_type),
@@ -402,7 +405,7 @@ function approximate(::Type{Barycentric},
     fmax = maximum(abs, view(fτ, idx_test))        # scale of f
 
     # Initialize rational approximation
-    r = Barycentric(σ, fσ, reshape(view(L, idx_test, 1:numnodes), :, numnodes))
+    r = BarycentricInterpolant(σ, fσ, reshape(view(L, idx_test, 1:numnodes), :, numnodes))
     history = [IterationRecord(r, NaN, missing)]
 
     # Main iteration
@@ -455,7 +458,7 @@ function approximate(::Type{Barycentric},
     return ContinuumApproximation(f, d, r, allowed, path, history)
 end
 
-function approximate(::Type{Barycentric},
+function approximate(::Type{BarycentricInterpolant},
     y::AbstractVector{T}, z::AbstractVector{S};
     float_type::Type = promote_type(real_type(eltype(z)), typeof(float(1))),
     tol::AbstractFloat = 1000*eps(float_type),
@@ -479,7 +482,7 @@ function approximate(::Type{Barycentric},
         C[i, 1] = 1 / (z[i] - z[i₀])
         L[i, 1] = (y[i] - y[i₀]) * C[i, 1]
     end
-    r = Barycentric([z[i₀]], [y[i₀]], view(L, idx_test, 1:1))
+    r = BarycentricInterpolant([z[i₀]], [y[i₀]], view(L, idx_test, 1:1))
     history = [IterationRecord(r, NaN, missing)]
     n = 1    # iteration counter
     while count(idx_test) > 0
@@ -514,14 +517,14 @@ end
 
 # Operations with scalars that can be done quickly.
 
-function Base.:+(r::Barycentric, s::Number)
-    return Barycentric(r.nodes, r.values .+ s, r.weights)
+function Base.:+(r::BarycentricInterpolant, s::Number)
+    return BarycentricInterpolant(r.nodes, r.values .+ s, r.weights)
 end
 
-function Base.:-(r::Barycentric)
-    return Barycentric(r.nodes, -r.values, r.weights, -r.w_times_f)
+function Base.:-(r::BarycentricInterpolant)
+    return BarycentricInterpolant(r.nodes, -r.values, r.weights, -r.w_times_f)
 end
 
-function Base.:*(r::Barycentric, s::Number)
-    return Barycentric(r.nodes, r.values .* s, r.weights, r.w_times_f .* s)
+function Base.:*(r::BarycentricInterpolant, s::Number)
+    return BarycentricInterpolant(r.nodes, r.values .* s, r.weights, r.w_times_f .* s)
 end

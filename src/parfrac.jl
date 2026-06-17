@@ -1,6 +1,6 @@
 # Partial fraction expansion of a rational function.
 """
-    PartialFractions (type)
+    PartialFractionExpansion (type)
 
 Well-conditioned representation for polynomials on a discrete point set.
 
@@ -9,17 +9,17 @@ Well-conditioned representation for polynomials on a discrete point set.
 - `poles::Vector`: poles
 - `residues::Vector`: residues (i.e., coefficients of the partial fractions)
 """
-struct PartialFractions{S} <: AbstractRationalFunction{S}
+struct PartialFractionExpansion{S} <: AbstractRationalFunction{S}
     polynomial::ArnoldiPolynomial{S}
     poles::Vector{S}
     residues::Vector{S}
-    function PartialFractions{S}(p::ArnoldiPolynomial{S}, poles::AbstractVector{S}, residues::AbstractVector{S}) where {S}
+    function PartialFractionExpansion{S}(p::ArnoldiPolynomial{S}, poles::AbstractVector{S}, residues::AbstractVector{S}) where {S}
         @assert length(poles) == length(residues)
         return new{S}(p, poles, residues)
     end
 end
 
-function PartialFractions(
+function PartialFractionExpansion(
     p::ArnoldiPolynomial = ArnoldiPolynomial(),
     poles::AbstractVector = ComplexF64[],
     residues::AbstractVector = ComplexF64[]
@@ -31,26 +31,26 @@ function PartialFractions(
     T = promote_type(eltype(p), eltype(poles), eltype(residues))
     poles = convert.(T, poles)
     residues = convert.(T, residues)
-    return PartialFractions{T}(ArnoldiPolynomial{T}(p), poles, residues)
+    return PartialFractionExpansion{T}(ArnoldiPolynomial{T}(p), poles, residues)
 end
 
-function PartialFractions(z::AbstractVector, y::AbstractVector, ζ::AbstractVector, degree::Int)
+function PartialFractionExpansion(z::AbstractVector, y::AbstractVector, ζ::AbstractVector, degree::Int)
     B = ArnoldiBasis(z, degree)
     C = [1 / (z - zp) for z in z, zp in ζ]
     c = isempty(C) ? vectors(B) \ y : [vectors(B) C] \ y
     p = ArnoldiPolynomial(c[1:degree+1], B)
-    return PartialFractions(p, ζ, c[degree+2:end])
+    return PartialFractionExpansion(p, ζ, c[degree+2:end])
 end
 
-function degrees(r::PartialFractions)
+function degrees(r::PartialFractionExpansion)
     d = degree(r.polynomial)
     n = length(r.poles)
     return d + n, n
 end
-degree(r::PartialFractions) = length(r.poles)
+degree(r::PartialFractionExpansion) = length(r.poles)
 
-(f::PartialFractions)(z) = evaluate(f, z)
-function evaluate(r::PartialFractions, z::Number)
+(f::PartialFractionExpansion)(z) = evaluate(f, z)
+function evaluate(r::PartialFractionExpansion, z::Number)
     u = r.polynomial(z)
     for (r, p) in zip(r.residues, r.poles)
         u += r / (z - p)
@@ -60,13 +60,13 @@ end
 
 # Can't use gradient with mutation in ArnoldiPolynomial.
 # TODO: not working
-# derivative(r::PartialFractions) = z -> conj(Zygote.forwarddiff(real ∘ r, complex(z))[1])
+# derivative(r::PartialFractionExpansion) = z -> conj(Zygote.forwarddiff(real ∘ r, complex(z))[1])
 
-poles(r::PartialFractions) = r.poles
-residues(r::PartialFractions) = (r.poles, r.residues)
+poles(r::PartialFractionExpansion) = r.poles
+residues(r::PartialFractionExpansion) = (r.poles, r.residues)
 
 # COV_EXCL_START
-function Base.show(io::IO, mimetype::MIME"text/plain", r::PartialFractions{T}) where {T}
+function Base.show(io::IO, mimetype::MIME"text/plain", r::PartialFractionExpansion{T}) where {T}
     ioc = IOContext(io,:compact=>get(io, :compact, true))
     print(ioc, "$T partial fraction expansion of type $(degrees(r))")
     if length(r.poles) > 0
@@ -111,7 +111,7 @@ function refine_by_singularity(d::ComplexCurveOrPath, ζ::AbstractVector;
     return path
 end
 
-function approximate(::Type{PartialFractions},
+function approximate(::Type{PartialFractionExpansion},
     f::Function, d::ComplexCurveOrPath, ζ::AbstractVector;
     degree = max(1, div(length(ζ), 2)),
     init =  max(400, length(d) * 100),
@@ -121,19 +121,19 @@ function approximate(::Type{PartialFractions},
     path = refine_by_singularity(d, ζ; refinement, init)
     _, σ = collect(path, :nodes)
     fσ = f.(σ)
-    r = PartialFractions(σ, fσ, ζ, degree)
+    r = PartialFractionExpansion(σ, fσ, ζ, degree)
     return ContinuumApproximation(f, d, r, true, path, nothing)
 end
 
-function approximate(::Type{PartialFractions},
+function approximate(::Type{PartialFractionExpansion},
     y::AbstractVector, z::AbstractVector, ζ::AbstractVector;
     degree = max(1, div(length(ζ), 2)),
     )
-    r = PartialFractions(z, y, ζ, degree)
+    r = PartialFractionExpansion(z, y, ζ, degree)
     return DiscreteApproximation(y, z, r, trues(length(y)), true, nothing)
 end
 
-function Base.convert(::Type{PartialFractions}, r::Union{Barycentric, Thiele})
+function Base.convert(::Type{PartialFractionExpansion}, r::Union{BarycentricInterpolant, ContinuedFractionInterpolant})
     zp, res = residues(r)
     m, n = degrees(r)
     d = m - n    # degree of the polynomial part
@@ -144,5 +144,7 @@ function Base.convert(::Type{PartialFractions}, r::Union{Barycentric, Thiele})
     else
         p = ArnoldiPolynomial([0], ArnoldiBasis([1], 0))
     end
-    return PartialFractions(p, zp, res)
+    return PartialFractionExpansion(p, zp, res)
 end
+
+const PartialFractions = PartialFractionExpansion    # backward compatibility

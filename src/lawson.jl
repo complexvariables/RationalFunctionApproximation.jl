@@ -26,7 +26,7 @@ function lawson(test, ftest, node, fnode, weight, nsteps)
 end
 
 """
-    minimax(r::Barycentric, f::Function, nsteps::Integer=20)
+    minimax(r::BarycentricInterpolant, f::Function, nsteps::Integer=20)
     minimax(r::Approximation, nsteps::Integer=20)
 
 Compute an approximately minimax rational approximation to a function `f` on the nodes of a
@@ -50,25 +50,25 @@ julia> check(r̂);
 [ Info: Max error is 1.40e-03
 ```
 """
-function minimax(r::Barycentric, f::Function, nsteps::Integer=20)
+function minimax(r::BarycentricInterpolant, f::Function, nsteps::Integer=20)
     node, val, weight = nodes(r), values(r), weights(r)
     test = sort(refine(node, 20))
     ⍺, β = lawson(test, f.(test), node, val, weight, nsteps)
-    return Barycentric(node, ⍺ ./ β, β, ⍺)
+    return BarycentricInterpolant(node, ⍺ ./ β, β, ⍺)
 end
 
-function minimax(r::ContinuumApproximation{S,T,R}, nsteps::Integer=20) where {S,T,R<:Barycentric}
+function minimax(r::ContinuumApproximation{S,T,R}, nsteps::Integer=20) where {S,T,R<:BarycentricInterpolant}
     p = DiscretizedPath(r.path, 20)
     _, test = collect(p, :test)
     ftest = r.original.(test)
     ⍺, β = lawson(test, ftest, nodes(r.fun), values(r.fun), weights(r.fun), nsteps)
-    r̂ = Barycentric(nodes(r.fun), ⍺ ./ β, β, ⍺)
+    r̂ = BarycentricInterpolant(nodes(r.fun), ⍺ ./ β, β, ⍺)
     return ContinuumApproximation(r.original, r.domain, r̂, r.allowed, r.path)
 end
 
-function minimax(r::DiscreteApproximation{S,T,R}, nsteps::Integer=20) where {S,T,R<:Barycentric}
+function minimax(r::DiscreteApproximation{S,T,R}, nsteps::Integer=20) where {S,T,R<:BarycentricInterpolant}
     ⍺, β = lawson(test, ftest, nodes(r.fun), values(r.fun), weights(r.fun), nsteps)
-    r̂ = Barycentric(nodes(r.fun), ⍺ ./ β, β, ⍺)
+    r̂ = BarycentricInterpolant(nodes(r.fun), ⍺ ./ β, β, ⍺)
     return ContinuumApproximation(r.original, r.domain, r̂, r.allowed, r.path)
 end
 # just for some experimentation
@@ -103,7 +103,7 @@ function brasil(r::ContinuumApproximation{T}; tol=1000*eps(T), σmax=0.1, τ=0.1
         ℓ = c .* diff(t)
         t = [0; cumsum(ℓ) / sum(ℓ)]
         z = point(p, t[idx])
-        fun, _ = approximate(r.original.(z), z; method=Thiele, allowed=r.allowed)
+        fun, _ = approximate(ContinuedFractionInterpolant, r.original.(z), z; allowed=r.allowed)
         @show maximum(δ) / minimum(δ) - 1, extrema(δ)
         iter += 1
     end

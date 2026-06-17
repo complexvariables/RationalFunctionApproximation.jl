@@ -150,7 +150,7 @@ Adaptively compute a rational interpolant on a continuous or discrete domain.
 - `z::AbstractVector`: domain point set
 
 # Keywords
-- `method::Type`: type of rational interpolant to use (`AAA` default, `TCF`, `PartialFractions`)
+- `method::Type`: type of rational interpolant to use (deprecated keyword; pass as positional arg instead)
 - `max_iter::Integer=150`: maximum number of iterations on node addition
 - `float_type::Type`: floating point type to use for the computation¹
 - `tol::Real=1000*eps(float_type)`: relative tolerance for stopping
@@ -171,7 +171,7 @@ See also [`ContinuumApproximation`](@ref), [`DiscreteApproximation`](@ref), [`ch
 julia> f = x -> tanh( 40*(x - 0.15) );
 
 julia> r = approximate(f, unit_interval)
-Barycentric{Float64, Float64} rational function of type (22, 22) on the domain: Path{Float64} with 1 curve
+ContinuedFractionInterpolant{Float64, Float64} rational function of type (22, 22) on the domain: Path{Float64} with 1 curve
 
 julia> ( r(0.3), f(0.3) )
 (0.9999877116508015, 0.9999877116507956)
@@ -213,7 +213,7 @@ julia> f = tanh;
 julia> ζ = 1im*[-π/2, π/2];
 
 julia> r = approximate(f, unit_interval, ζ; degree=10)
-PartialFractions{ComplexF64} rational function of type (12, 2) on the domain: Segment(-1.0,1.0)
+PartialFractionExpansion{ComplexF64} rational function of type (12, 2) on the domain: Segment(-1.0,1.0)
 
 julia> ( r(0.3), f(0.3) )
 (0.2913126124509021 + 1.1102230246251565e-16im, 0.2913126124515909)
@@ -228,22 +228,60 @@ approximate(f::Function, domain, ζ::AbstractVector)
 ##### Dispatch
 #####
 
-# Each rational type implements methods based on dispatch of Type for the first argument.
-# Here, we can call those based on a method= keyword argument instead, giving a default.
-function approximate(f::Function, domain::ComplexCurveOrPath; method::Type=Barycentric, kw...)
-     approximate(method, f, domain; kw...)
+# Primary instance-dispatch API: pass an instance of the desired type as the last argument.
+function approximate(f::Function, domain::ComplexCurveOrPath, ::BarycentricInterpolant; kw...)
+    approximate(BarycentricInterpolant, f, domain; kw...)
+end
+function approximate(f::Function, domain::ComplexCurveOrPath, ::ContinuedFractionInterpolant; kw...)
+    approximate(ContinuedFractionInterpolant, f, domain; kw...)
+end
+function approximate(y::AbstractVector, z::AbstractVector, ::BarycentricInterpolant; kw...)
+    approximate(BarycentricInterpolant, y, z; kw...)
+end
+function approximate(y::AbstractVector, z::AbstractVector, ::ContinuedFractionInterpolant; kw...)
+    approximate(ContinuedFractionInterpolant, y, z; kw...)
+end
+function approximate(f::Function, domain::ComplexCurveOrPath, poles::AbstractVector, ::PartialFractionExpansion; kw...)
+    approximate(PartialFractionExpansion, f, domain, poles; kw...)
+end
+function approximate(y::AbstractVector, z::AbstractVector, poles::AbstractVector, ::PartialFractionExpansion; kw...)
+    approximate(PartialFractionExpansion, y, z, poles; kw...)
 end
 
-function approximate(y::AbstractVector, z::AbstractVector; method::Type=Barycentric, kw...)
-     approximate(method, y, z; kw...)
+# Internal type-dispatch route for AbstractRegion (used by arithmetic operators).
+function approximate(M::Type, f::Function, R::ComplexRegions.AbstractRegion; kw...)
+    r = approximate(M, f, R.boundary; allowed=z->!in(z,R), kw...)
+    return ContinuumApproximation(f, R, r.fun, r.allowed, r.path, r.history)
+end
+
+# Defaults (no type hint): ContinuedFractionInterpolant for plain approximation, PartialFractionExpansion when poles given.
+# The `method` keyword is retained for backward compatibility but deprecated.
+function approximate(f::Function, domain::ComplexCurveOrPath; method=nothing, kw...)
+    if method !== nothing
+        Base.depwarn("The `method` keyword is deprecated; pass the type as a positional argument, e.g. `approximate(f, domain, $(method)())`.", :approximate)
+        return approximate(method, f, domain; kw...)
+    end
+    approximate(ContinuedFractionInterpolant, f, domain; kw...)
+end
+
+function approximate(y::AbstractVector, z::AbstractVector; method=nothing, kw...)
+    if method !== nothing
+        Base.depwarn("The `method` keyword is deprecated; pass the type as a positional argument, e.g. `approximate(y, z, $(method)())`.", :approximate)
+        return approximate(method, y, z; kw...)
+    end
+    approximate(ContinuedFractionInterpolant, y, z; kw...)
 end
 
 function approximate(
     f::Function, domain::ComplexCurveOrPath, ζ::AbstractVector;
-    method::Type=PartialFractions,
+    method=nothing,
     kw...
     )
-    approximate(method, f, domain, ζ; kw...)
+    if method !== nothing
+        Base.depwarn("The `method` keyword is deprecated; pass the type as a positional argument, e.g. `approximate(f, domain, ζ, $(method)())`.", :approximate)
+        return approximate(method, f, domain, ζ; kw...)
+    end
+    approximate(PartialFractionExpansion, f, domain, ζ; kw...)
 end
 
 # Each rational type recognizes two signatures:
@@ -259,6 +297,16 @@ function approximate(f::Function, R::ComplexRegions.AbstractRegion; kw...)
     return ContinuumApproximation(f, R, r.fun, r.allowed, r.path, r.history)
 end
 
+function approximate(f::Function, R::ComplexRegions.AbstractRegion, ::BarycentricInterpolant; kw...)
+    r = approximate(BarycentricInterpolant, f, R.boundary; allowed=z->!in(z,R), kw...)
+    return ContinuumApproximation(f, R, r.fun, r.allowed, r.path, r.history)
+end
+
+function approximate(f::Function, R::ComplexRegions.AbstractRegion, ::ContinuedFractionInterpolant; kw...)
+    r = approximate(ContinuedFractionInterpolant, f, R.boundary; allowed=z->!in(z,R), kw...)
+    return ContinuumApproximation(f, R, r.fun, r.allowed, r.path, r.history)
+end
+
 # ::Function, ::AbstractVector
 # Evaluate the function to call a fully discrete approximation.
 function approximate(
@@ -271,14 +319,24 @@ function approximate(
     return DiscreteApproximation(y, z, r.fun, r.test_index, r.allowed, r.history)
 end
 
+# Internal type-dispatch route for f::Function, z::AbstractVector (used by arithmetic operators).
+function approximate(M::Type, f::Function, z::AbstractVector; allowed=true, kw...)
+    y = f.(z)
+    r = approximate(M, y, z; allowed, kw...)
+    return DiscreteApproximation(y, z, r.fun, r.test_index, r.allowed, r.history)
+end
+
 # ::Function,::AbstractVector, ::AbstractVector
 function approximate(
     f::Function, z::AbstractVector, ζ::AbstractVector;
-    method = PartialFractions,
+    method = nothing,
     kw...
     )
+    if method !== nothing
+        Base.depwarn("The `method` keyword is deprecated; pass the type as a positional argument.", :approximate)
+    end
     y = f.(z)
-    r = approximate(method, y, z, ζ; kw...)
+    r = approximate(something(method, PartialFractionExpansion), y, z, ζ; kw...)
     return DiscreteApproximation(y, z, r.fun, r.test_index, true, r.history)
 end
 
@@ -317,10 +375,10 @@ Rewind a rational approximation to a state encountered during an iteration.
 # Examples
 ```jldoctest
 julia> r = approximate(x -> cos(20x), unit_interval)
-Barycentric{Float64, Float64} rational interpolant of type (24, 24) on the domain: Path{Float64} with 1 curve
+ContinuedFractionInterpolant{Float64, Float64} rational interpolant of type (24, 24) on the domain: Path{Float64} with 1 curve
 
 julia> rewind(r, 10)
-Barycentric{Float64, Float64} rational interpolant of type (10, 10) on the domain: Path{Float64} with 1 curve
+ContinuedFractionInterpolant{Float64, Float64} rational interpolant of type (10, 10) on the domain: Path{Float64} with 1 curve
 ```
 """
 function rewind(r::AbstractApproximation, idx::Integer)
@@ -477,9 +535,8 @@ end
 Create an approximation of the derivative of `r` on the same domain.
 """
 function derivative(r::AbstractApproximation, order=1; kwargs...)
-    # TODO: This ought to be handled by dispatch on a type parameter.
     return if isa(get_function(r), AbstractRationalInterpolant)
-        approximate(derivative(get_function(r), order), domain(r); method=typeof(get_function(r)), kwargs...)
+        approximate(typeof(get_function(r)), derivative(get_function(r), order), domain(r); kwargs...)
     else
         @error("Not supported. Take the derivative of the `.fun` field.")
     end
@@ -496,7 +553,7 @@ end
 
 function Base.:+(r::AbstractApproximation, g::Function)
     f(z) = r(z) + g(z)
-    return approximate(f, domain(r); method=typeof(get_function(r)))
+    return approximate(typeof(get_function(r)), f, domain(r))
 end
 
 function Base.:+(r::ContinuumApproximation, s::Number)
@@ -537,7 +594,7 @@ end
 
 function Base.:*(r::AbstractApproximation, g::Function)
     f(z) = r(z) * g(z)
-    return approximate(f, domain(r); method=typeof(get_function(r)))
+    return approximate(typeof(get_function(r)), f, domain(r))
 end
 
 function Base.:*(r::ContinuumApproximation, s::Number)
@@ -561,12 +618,12 @@ end
 
 function Base.:/(r::AbstractApproximation, g::Function)
     f(z) = r(z) / g(z)
-    return approximate(f, domain(r); method=typeof(get_function(r)))
+    return approximate(typeof(get_function(r)), f, domain(r))
 end
 
 function Base.:/(r::Function, s::AbstractApproximation)
     f(z) = r(z) / s.fun(z)
-    return approximate(f, domain(s); method=typeof(s.fun))
+    return approximate(typeof(s.fun), f, domain(s))
 end
 
 Base.:/(r::AbstractApproximation, s::Number) = iszero(s) ? throw(DomainError("Division by zero")) : r * (1 / s)
@@ -575,5 +632,5 @@ Base.:/(r::Number, s::AbstractApproximation) = (z -> r) / s
 # composition
 function Base.:∘(f::Function, g::AbstractApproximation)
     # No domain checking is attempted.
-    return approximate(f ∘ g.fun, g.domain; method=typeof(g.fun))
+    return approximate(typeof(g.fun), f ∘ g.fun, g.domain)
 end

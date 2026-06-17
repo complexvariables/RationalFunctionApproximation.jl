@@ -20,11 +20,13 @@ include("abstract-rational.jl")
 export approximate, get_function, domain, check, rewind, get_history, test_points
 include("approximation.jl")
 
-export Barycentric, AAA, Thiele, TCF, derivative, evaluate
+export BarycentricInterpolant, Barycentric, AAA, derivative, evaluate
 include("barycentric.jl")
+
+export ContinuedFractionInterpolant, Thiele, TCF
 include("thiele.jl")
 
-export ArnoldiBasis, ArnoldiPolynomial, PartialFractions
+export ArnoldiBasis, ArnoldiPolynomial, PartialFractionExpansion, PartialFractions
 include("parfrac.jl")
 
 # legacy implementation of AAA
@@ -37,12 +39,12 @@ include("lawson.jl")
 @setup_workload begin
     x_interval = range(-1, 1, 200)
     @compile_workload begin
-        for method in (Barycentric, Thiele)
-            approximate(sin, unit_circle; method)
+        for tag in (BarycentricInterpolant(), ContinuedFractionInterpolant())
+            approximate(sin, unit_circle, tag)
             for domain in (unit_interval, x_interval)
-                approximate(sin, domain; method)
-                approximate(cis, domain; method)
-                approximate(x -> 1/(x^2 + 4), domain, [2im, -2im])
+                approximate(sin, domain, tag)
+                approximate(cis, domain, tag)
+                approximate(x -> 1/(x^2 + 4), domain, [2im, -2im], PartialFractionExpansion())
             end
         end
     end

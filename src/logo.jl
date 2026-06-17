@@ -1,7 +1,7 @@
 @usingany CairoMakie, Colors
 ff(x) = sqrt(x^2-1)
 # r = approximate(z->log(z+0.05+0.05im), unit_interval)
-r = approximate(ff, Segment{Double64}(101//100+1/20im,3//2+1/20im); method=Thiele, allowed=true, tol=1e-30)
+r = approximate(ff, Segment{Double64}(101//100+1/20im,3//2+1/20im), ContinuedFractionInterpolant(); allowed=true, tol=1e-30)
 jgreen = RGB(0.22, 0.596, 0.149)
 jred = RGB(0.796,0.235,0.2)
 jpurple = RGB(0.584, 0.345, 0.698)
