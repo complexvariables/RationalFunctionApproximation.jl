@@ -6,6 +6,7 @@ export RFA
 using LinearAlgebra, Statistics, GenericLinearAlgebra, ComplexRegions, GenericSchur, ArnoldiVandermonde
 using PyFormattedStrings
 using PrecompileTools
+import ArnoldiVandermonde: degree
 
 export unit_interval, unit_circle, unit_disk, DiscretizedPath
 include("utils.jl")
