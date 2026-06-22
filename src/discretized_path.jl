@@ -6,9 +6,9 @@ struct NaNException <: Exception
     msg::String
 end
 
-mutable struct DiscretizedPath{T,F}
+mutable struct DiscretizedPath{T,F,P}
     path::T              # original Curve or Path
-    points::Matrix       # first column = active points, others are refinements
+    points::Matrix{P}    # first column = active points, others are refinements
     params::Matrix{F}    # first column = active points, others are refinements
     nref::Int            # number of refinements between nodes
     next::Vector{Int}    # next[i] = index of the next point in the path
@@ -46,7 +46,7 @@ function DiscretizedPath(path::ComplexCurveOrPath, s::AbstractVector; refinement
     end
     next = [collect(2:n-1); 0]
     sizehint!(next, maxpoints)
-    return DiscretizedPath{typeof(path),F}(path, points, params, refinement, next)
+    return DiscretizedPath{typeof(path),F,eltype(points)}(path, points, params, refinement, next)
 end
 
 function DiscretizedPath(path::ComplexCurveOrPath=ComplexRegions.Circle(0,1), n::Integer=0; kwargs...)
