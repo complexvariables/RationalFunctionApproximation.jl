@@ -49,8 +49,29 @@ end
 
 const TCF = Thiele    # alias
 
+# Strategy singletons selecting which recurrence Thiele uses; they let external/test code
+# A/B the two algorithms. The `default_*_method` selectors return singletons, so they
+# constant-fold and the production paths stay static, allocation-free calls. Redefine a
+# selector (see `set_eval_method` / `set_weight_method`) to switch globally.
+abstract type ThieleMethod end
+struct OneDiv  <: ThieleMethod end   # numerator/denominator recurrence
+struct Classic <: ThieleMethod end   # backward continued fraction
+
+default_eval_method()   = OneDiv()    # point evaluation
+default_weight_method() = Classic()   # new-weight computation in `add_node!`
+
+"""
+    set_eval_method(m::ThieleMethod)
+    set_weight_method(m::ThieleMethod)
+
+Globally select the recurrence used for Thiele point evaluation / new-weight computation
+(`OneDiv()` or `Classic()`). Intended for testing; each call recompiles the affected path.
+"""
+set_eval_method(m::ThieleMethod)   = (@eval default_eval_method()   = $m; m)
+set_weight_method(m::ThieleMethod) = (@eval default_weight_method() = $m; m)
+
 # Evaluation at a point
-function evaluate(r::Thiele, z::Number)
+function evaluate(r::Thiele, z::Number, method::ThieleMethod=default_eval_method())
     return if isinf(z)
         if isodd(length(r.nodes))
             sum(r.weights[1:2:end])
@@ -60,7 +81,7 @@ function evaluate(r::Thiele, z::Number)
     elseif isnan(z)
         NaN
     else
-        _evaluator(r, z)
+        _evaluate(r, z, method)
     end
 end
 
@@ -71,14 +92,20 @@ function evaluate(r::Thiele, z::AbstractArray{<:Number})
 end
 
 function evaluate!(t::AbstractArray, r::Thiele, z::AbstractArray{<:Number})
+    return evaluate!(t, r, z, similar(t), similar(t))
+end
+
+# In-place evaluation with caller-supplied scratch `a`, `b` (same shape as `t`),
+# so a hot loop can reuse them instead of allocating on every call.
+function evaluate!(t::AbstractArray, r::Thiele, z::AbstractArray{<:Number},
+    a::AbstractArray, b::AbstractArray)
     # use 3-term pair recurrence to avoid division until the end
     n = length(r.weights)
     if n == 1
         t .= r.weights[1]
     else
-        a = similar(t)
         a .= r.weights[n]
-        b = z .- r.nodes[n-1]
+        b .= z .- r.nodes[n-1]
         @inbounds for k in n-1:-1:2
             t .= b
             axpy!(r.weights[k], a, t)
@@ -109,7 +136,8 @@ function _evaluate_onediv(r::Thiele, z::Number)
     end
 end
 
-_evaluator = _evaluate_onediv    # default choice
+_evaluate(r::Thiele, z, ::OneDiv)  = _evaluate_onediv(r, z)
+_evaluate(r::Thiele, z, ::Classic) = _evaluate_classic(r, z)
 
 function _evaluate_numden(r::Thiele, z::Number)
     # use 3-term pair recurrence to avoid division until the end
@@ -271,8 +299,8 @@ function Thiele(x::AbstractVector, y::AbstractVector)
 end
 
 # update in-place the nodes and weights
-function add_node!(r::Thiele, z_new, y_new)
-    w = _new_weight(r.nodes, r.weights, z_new, y_new)
+function add_node!(r::Thiele, z_new, y_new, method::ThieleMethod=default_weight_method())
+    w = _new_weight(method, r.nodes, r.weights, z_new, y_new)
     if isnan(w)
         throw(NaNException("Adding node at $z_new caused NaN weight"))
         @debug("Adding node at $z_new caused NaN weight")
@@ -313,7 +341,52 @@ function _new_weight_classic(z, w, z_new, y_new)
     return u
 end
 
-_new_weight = _new_weight_classic   # default choice
+_new_weight(::OneDiv,  z, w, z_new, y_new) = _new_weight_onediv(z, w, z_new, y_new)
+_new_weight(::Classic, z, w, z_new, y_new) = _new_weight_classic(z, w, z_new, y_new)
+
+# Per-iteration kernels for the continuum `approximate` loop below, gathered under one name.
+# They are kept as separate functions so each specializes on the concrete element types of its
+# array arguments: even though `DiscretizedPath.points` is parameterized, ComplexRegions' curve
+# evaluation (`point(d, ·)` / `path(t)`) infers as `Any`, so `σ`, `fσ`, and everything derived
+# from them (`fτ`, `rbuf`, `zbuf`) have non-inferable element types inside `approximate`. Inline
+# per-element loops over them would dispatch dynamically on every element; routing through these
+# barriers replaces that with one dispatch per call plus a type-stable loop.
+
+# Evaluate r at the active test points (reusing the scratch buffers) and return the maximum
+# error and the index (into `active`) of the worst point; mirrors `findmax` (NaN wins).
+function _sweep!(rbuf, zbuf, abuf, bbuf, r::Thiele, τ, fτ, active)
+    m = length(active)
+    resize!(rbuf, m); resize!(zbuf, m); resize!(abuf, m); resize!(bbuf, m)
+    @inbounds for i in 1:m
+        zbuf[i] = τ[active[i]]
+    end
+    evaluate!(rbuf, r, zbuf, abuf, bbuf)
+    @inbounds for i in 1:m       # array evaluation skips the underflow check
+        isnan(rbuf[i]) && (rbuf[i] = r(zbuf[i]))
+    end
+    err_max = abs(fτ[active[1]] - rbuf[1])
+    kmax = 1
+    @inbounds for k in 2:m
+        e = abs(fτ[active[k]] - rbuf[k])
+        if isnan(e) || e > err_max
+            err_max, kmax = e, k
+            isnan(e) && break
+        end
+    end
+    return err_max, kmax
+end
+
+# Sample f at the points indexed by `idx`, storing into `fτ`; return max |f| over them.
+function _sweep!(fτ, f::Function, τ, idx)
+    fmax = abs(zero(eltype(fτ)))
+    @inbounds for i in idx
+        v = f(τ[i])
+        fτ[i] = v
+        a = abs(v)
+        (a > fmax) && (fmax = a)
+    end
+    return fmax
+end
 
 # TODO: This should probably enforce parameters S and T
 approximate(::Type{Thiele{S,T}}, args...; kw...) where {S,T} = approximate(Thiele, args...; kw...)
@@ -333,14 +406,37 @@ function approximate(::Type{Thiele},
     σ = [point(d, 0)]
     fσ = f.(σ)         # f at nodes
 
-    # Arrays of test points have one row per node (except the last)
+    # Test points have one matrix row per node (except the last). `active` holds *linear*
+    # indices of the currently live test points; it need not be rectangular. We grow it
+    # incrementally (each accepted node appends one row's worth of test points) and only
+    # rebuild it wholesale when the path is re-discretized in the initial phase. Linear
+    # integer indexing is much cheaper here than CartesianIndex indexing, which dominated
+    # the per-point loops below via `to_indices`.
+    # `path.points` is concretely typed at runtime, but inference here can't prove it (its
+    # element type flows from `point(d, ·)`, which infers as `Any`), so the per-point work
+    # goes through the kernel barriers above rather than relying on the type in this scope.
     τ = path.points
-    idx_test = CartesianIndices((1:1, 2:num_ref+1))
-    idx_new_test = idx_test
+    R = size(τ, 1)        # rows; linear index of (i, j) is (j-1)*R + i
+    active = Int[]
+    sizehint!(active, max_iter * refinement)
+    for j in 2:num_ref+1
+        push!(active, (j - 1) * R + 1)       # row 1, columns 2:num_ref+1
+    end
     fτ = Matrix{eltype(fσ)}(undef, size(τ))        # f at test points
-    rτ = similar(complex(fτ))                               # r at test points
-    fτ[idx_test] .= f.(τ[idx_test])
-    fmax = maximum(abs, view(fτ, idx_test))        # scale of f
+    fmax = _sweep!(fτ, f, τ, active)        # sample f; fmax is the scale of f
+
+    # Reusable scratch, aligned with `active`: the gathered test points `zbuf`, r there
+    # (`rbuf`), and the two work arrays the recurrence in `evaluate!` would otherwise
+    # allocate on every call. Gathering into a dense `zbuf` lets `evaluate!` run on
+    # contiguous vectors. Use the natural recurrence type (values promoted with the
+    # nodes/points) so real problems stay real-valued instead of paying for complex
+    # arithmetic, while complex domains (e.g. an imaginary interval) still get a wide
+    # enough buffer.
+    S = promote_type(eltype(fσ), eltype(σ))
+    zbuf = Vector{eltype(σ)}()
+    rbuf = S[]
+    abuf = S[]
+    bbuf = S[]
 
     # Initialize rational approximation
     r = Thiele(σ, fσ)
@@ -349,10 +445,7 @@ function approximate(::Type{Thiele},
     # Main iteration
     n = 1       # iteration counter
     while true
-        # test_actual = view(fτ, idx_test)      # f at test points
-        evaluate!(view(rτ, idx_test), r, view(τ, idx_test))     # r at test points
-        err = abs.(view(fτ, idx_test) - view(rτ, idx_test))
-        err_max, idx_max = findmax(err)
+        err_max, idx_max = _sweep!(rbuf, zbuf, abuf, bbuf, r, τ, fτ, active)
         history[n].error = err_max
 
         status = quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
@@ -363,7 +456,7 @@ function approximate(::Type{Thiele},
         (status != 0) && break
 
         # Add node to approximant
-        idx_new = idx_test[idx_max]      # location of worst test point
+        idx_new = active[idx_max]      # location of worst test point
         try
             add_node!(r, τ[idx_new], fτ[idx_new])
             push!(history, IterationRecord(r, NaN, missing))
@@ -376,9 +469,10 @@ function approximate(::Type{Thiele},
             break
         end
 
-        # Add node to path
+        # Add node to path (needs the (row, column) form of the worst point)
+        local idx_new_test
         try
-            idx_new_test = add_node!(path, idx_new)
+            idx_new_test = add_node!(path, CartesianIndices(τ)[idx_new])
         catch
             # look for the best acceptable case
             status = quitting_check(history, stagnation, tol, fmax, 1, allowed)
@@ -393,13 +487,18 @@ function approximate(::Type{Thiele},
             num_ref = max(refinement, num_ref - 1)    # gradually decrease refinement level
             s = first(collect(path))
             reset!(path, s; refinement=num_ref)
-            idx_test = CartesianIndices((1:n, 2:num_ref+1))
-            @. fτ[idx_test] = f(τ[idx_test])
-            fmax = maximum(abs, view(fτ, idx_test))
+            empty!(active)
+            for j in 2:num_ref+1, i in 1:n
+                push!(active, (j - 1) * R + i)
+            end
+            fmax = _sweep!(fτ, f, τ, active)
         else
-            # At new test points only, evaluate f.
-            @. fτ[idx_new_test] = f(τ[idx_new_test])
-            idx_test = CartesianIndices((1:n, 2:num_ref+1))
+            # Evaluate f at the new test points only, and extend `active` by the new row.
+            _sweep!(fτ, f, τ, idx_new_test)
+            new_row = idx_new_test[end][1]
+            for j in 2:num_ref+1
+                push!(active, (j - 1) * R + new_row)
+            end
         end
     end
     return ContinuumApproximation(f, d, r, allowed, path, history)

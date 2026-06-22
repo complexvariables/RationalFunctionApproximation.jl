@@ -21,6 +21,7 @@ export approximate, get_function, domain, check, rewind, get_history, test_point
 include("approximation.jl")
 
 export Barycentric, AAA, Thiele, TCF, derivative, evaluate
+export ThieleMethod, OneDiv, Classic, set_eval_method, set_weight_method
 include("barycentric.jl")
 include("thiele.jl")
 
