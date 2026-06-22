@@ -26,7 +26,7 @@ using RationalFunctionApproximation
 r = approximate(f, unit_interval)
 ```
 
-The value of `unit_interval` is defined by the package to be the interval $[-1, 1]$. The result `r` is a type (19,19) rational approximant that can be evaluated like a function:
+The value of `unit_interval` is defined by the package to be the interval $[-1, 1]$. The result `r` is a type (19,18) rational approximant that can be evaluated like a function:
 
 ```@repl interval
 f(0.5) - r(0.5)

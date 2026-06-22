@@ -11,7 +11,7 @@
         T = Float64
         tol = 3000*eps(T)
         pts = test_points[T]
-        approx(f; kw...) = approximate(f, domain[T]; method, kw...)
+        approx(f; kw...) = approximate(f, domain[T], method(); kw...)
         @testset "Function $iter" for (iter, f) in enumerate((
             exp,
             cis,
@@ -41,10 +41,10 @@
         T = Float64
         pts = test_points[T]
         f = x -> sin(40x) * exp(-8x^2)
-        r = approximate(f, domain[T], method=Thiele)
+        r = approximate(f, domain[T], Thiele())
         @test isapprox(f.(pts), r(pts), norm=u->maximum(abs, u), rtol=2e-11)
         f = x -> cis(16x)
-        r = approximate(f, domain[T], method=Thiele)
+        r = approximate(f, domain[T], Thiele())
         @test isapprox(f.(pts), r(pts), norm=u->maximum(abs, u), rtol=2e-11)
     end
 
@@ -52,7 +52,7 @@
         T = Double64
         tol = 2000*eps(T)
         pts = test_points[T]
-        approx(f; kw...) = approximate(f, domain[T]; method, kw...)
+        approx(f; kw...) = approximate(f, domain[T], method(); kw...)
         @testset "Function $iter" for (iter, f) in enumerate((
             x -> cis(x),
             x -> exp(x),
@@ -70,12 +70,12 @@
 
     @testset "Float type conversion for $method" for method in (Barycentric, Thiele)
         f = z -> abs(z - 1im)
-        r = approximate(f, unit_interval; method)
+        r = approximate(f, unit_interval, method())
         r32 = convert(Float32, r.fun)
         @test r32 isa method{Float32,Float32}
 
         f = z -> cis(z)
-        r = approximate(f, unit_interval; method)
+        r = approximate(f, unit_interval, method())
         r32 = convert(Float32, r.fun)
         @test r32 isa method{Float32,ComplexF32}
     end
@@ -84,7 +84,7 @@
         T = Float64
         method = Barycentric
         pts = test_points[T]
-        approx(f; kw...) = approximate(f, domain[T]; method, kw...)
+        approx(f; kw...) = approximate(f, domain[T], method(); kw...)
         f = x -> exp(3x);
         r = approx(f, tol=1e-5)
         @test !pass(f, r, pts, atol=1e-7)
@@ -94,7 +94,7 @@
     end
 
     @testset "Nodes, values, degree for Barycentric" begin
-        r = approximate(exp, unit_interval; method=Barycentric)
+        r = approximate(exp, unit_interval, Barycentric())
         @test length(nodes(r)) == 6
         @test length(weights(r)) == 6
         @test minimum(nodes(r)) ≈ -1
@@ -106,14 +106,14 @@
         deg, err, zp, allowed, best = get_history(r)
         @test deg[end] == degree(r)
         @test length(deg) == length(err) == length(allowed)
-        r = approximate(exp, unit_interval; method=Barycentric, allowed=true)
+        r = approximate(exp, unit_interval, Barycentric(); allowed=true)
         deg, err, zp, allowed, best = get_history(r)
         @test deg[end] == degree(r)
         @test length(deg) == length(err) == length(allowed)
     end
 
     @testset "Nodes, values, degree for Thiele" begin
-        r = approximate(exp, unit_interval; method=Thiele)
+        r = approximate(exp, unit_interval, Thiele())
         @test length(nodes(r)) == 11
         @test length(weights(r)) == 11
         @test minimum(nodes(r)) ≈ -1
@@ -125,14 +125,14 @@
         deg, err, zp, allowed, best = get_history(r)
         @test deg[end] == degree(r)
         @test length(deg) == length(err) == length(allowed)
-        r = approximate(exp, unit_interval; method=Barycentric, allowed=true)
+        r = approximate(exp, unit_interval, Barycentric(); allowed=true)
         deg, err, zp, allowed, best = get_history(r)
         @test deg[end] == degree(r)
         @test length(deg) == length(err) == length(allowed)
     end
 
     @testset "Poles, zeros, residues in $T for Barycentric" for T in (Float64, Double64)
-        approx(f; kw...) = approximate(f, domain[T]; method=Barycentric, kw...)
+        approx(f; kw...) = approximate(f, domain[T], Barycentric(); kw...)
         f = z -> (z+1) * (z+2) / ((z+3) * (z+4))
         r = approx(f)
         pol = poles(r)
@@ -156,7 +156,7 @@
     end
 
     @testset "Poles, zeros, residues for Thiele" begin
-        approx(f; kw...) = approximate(f, domain[Float64]; method=Thiele, kw...)
+        approx(f; kw...) = approximate(f, domain[Float64], Thiele(); kw...)
         f = z -> (z+1) * (z+2) / ((z+3) * (z+4))
         r = approx(f)
         pol = poles(r)
@@ -186,7 +186,7 @@
 
     @testset "Vertical scaling in $T" for T in (Float64, Double64)
         pts = test_points[T]
-        approx(f; kw...) = approximate(f, domain[T]; method=Barycentric, kw...)
+        approx(f; kw...) = approximate(f, domain[T], Barycentric(); kw...)
         f = x -> T(10)^50 * sin(x); @test pass(f, approx(f), pts, rtol=2000*eps(T))
         f = x -> T(10)^(-50) * cos(x); @test pass(f, approx(f), pts, rtol=2000*eps(T))
         # TODO: Horizontal scaling is broken, because pole computation uses 1
@@ -199,7 +199,7 @@
         T = Float64
         tol = 2000*eps(T)
         pts = test_points[T]
-        approx(f; kw...) = approximate(f, domain[T]; method=Barycentric, kw...)
+        approx(f; kw...) = approximate(f, domain[T], Barycentric(); kw...)
         f = x -> 0; @test pass(f, approx(f, max_iter=1), pts, atol=tol)
         f = x -> x; @test pass(f, approx(f, max_iter=2), pts, atol=tol)
         f = x -> 1im*x; @test pass(f, approx(f, max_iter=2), pts, atol=tol)
@@ -213,7 +213,7 @@
 
     @testset "Interval [$a, $b]" for (a, b) in ((-2, 3), (0, 4), (-2e-4, 0), (-3e3, 5e6))
         pts = range(a, b, 1000)
-        approx(f; kw...) = approximate(f, Segment(a, b); method=Barycentric, kw...)
+        approx(f; kw...) = approximate(f, Segment(a, b), Barycentric(); kw...)
         toler(f) = 1000 * eps() * max(b - a, abs(f(a)), abs(f(b)))
         f = x -> 1 / sin(a + (b-a)*1.05im - x); @test pass(f, approx(f), pts, atol=toler(f))
         f = x -> exp(-10/(a + 1.1*(b-a) - x)); @test pass(f, approx(f), pts, atol=toler(f))

@@ -13,7 +13,7 @@
                 (x -> log(1.1 - x), x -> -1 / (1.1 - x), x -> -1 / (1.1 - x)^2),
                 (sin, cos, x -> -sin(x)),
             ))
-                r = approximate(f, domain; method)
+                r = approximate(f, domain, method())
                 @test isapprox(derivative(r; allowed=true), df, atol=sqrt(eps()))
                 @test isapprox(derivative(r, 2; allowed=true), d2f, atol=50sqrt(eps()))
                 vals = derivative(r.fun, 0:2)(0.25)
@@ -26,12 +26,12 @@
 
     @testset "Arithmetic with $method" verbose=true for method in (Barycentric, Thiele)
         @testset "Domain $iter" for (iter, domain) in enumerate((unit_interval, Shapes.square))
-            e = approximate(exp, domain; method)
-            t = approximate(tan, domain; method)
+            e = approximate(exp, domain, method())
+            t = approximate(tan, domain, method())
             @test (e / e) ≈ 1
             @test (3im * t - 2im * t) ≈ 1im * t
             c = cis
-            ec = approximate(exp, unit_circle; method)
+            ec = approximate(exp, unit_circle, method())
             @testset "$(op)" for op in (+, -, *, /)
                 @test values(op(e, 3.14im)) ≈ op.(values(e), 3.14im)
                 @test nodes(op(e, 3.14im)) ≈ nodes(e)
@@ -49,7 +49,7 @@
     end
 
     @testset "Arithmetic with zero for $method" verbose=true for method in (Barycentric, Thiele)
-        r = approximate(exp, unit_interval; method)
+        r = approximate(exp, unit_interval, method())
         @test r + 0 ≈ r
         @test r - 0 ≈ r
         @test r * 0 ≈ 0

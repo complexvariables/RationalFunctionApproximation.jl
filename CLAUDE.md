@@ -55,10 +55,10 @@ ext/
 
 ### Concrete rational function types
 
-**`Barycentric{T,S}`** (barycentric.jl:13) — default method; alias `AAA = Barycentric`  
+**`Barycentric{T,S}`** (barycentric.jl:13) — alias `AAA = Barycentric`  
 Fields: `nodes`, `values`, `weights`, `w_times_f`
 
-**`Thiele{T,S}`** (thiele.jl) — continued fraction representation; alias `TCF = Thiele`  
+**`Thiele{T,S}`** (thiele.jl) — default method; continued fraction representation; alias `TCF = Thiele`  
 Fields: `nodes`, `values`, `weights`  
 Two evaluation strategies: classic and numerically stable `onediv`.
 
@@ -79,8 +79,8 @@ Fields: `polynomial::ArnoldiPolynomial`, `poles`, `residues`
 ## Public API
 
 ### Approximation construction
-- `approximate(f, domain; method, max_iter, tol, allowed, refinement, stagnation)` — main entry point
-- `approximate(f, domain, poles)` — least-squares with prescribed poles
+- `approximate(f, domain, method=Thiele(); max_iter, tol, allowed, refinement, stagnation)` — main entry point; `method` is an instance (`Thiele()` default, `Barycentric()`) passed as the last positional argument
+- `approximate(f, domain, poles)` — least-squares with prescribed poles (selectable via `PartialFractions()` as the last positional argument)
 - `aaa(y, z; kwargs...)` — legacy discrete AAA (deprecated)
 
 ### Rational function queries
@@ -157,7 +157,7 @@ Fields: `polynomial::ArnoldiPolynomial`, `poles`, `residues`
 ## Design Decisions
 
 1. **Two-parameter type system**: `T` for float precision, `S` for value type — supports generic arithmetic.
-2. **Barycentric as default**: most efficient/stable; aliased `AAA` for historical compatibility.
+2. **Thiele as default**: continued-fraction method used when no selector is given; `Barycentric` (aliased `AAA`) remains available and selectable.
 3. **Continuum vs. Discrete split**: `ContinuumApproximation` and `DiscreteApproximation` reflect fundamentally different strategies.
 4. **Adaptive path discretization**: `DiscretizedPath` stores multiple refinement levels in matrix form.
 5. **`allowed` parameter**: generic function to filter pole locations; enables multiply-connected domains.

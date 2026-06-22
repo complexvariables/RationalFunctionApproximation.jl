@@ -10,9 +10,9 @@ const SUITE = BenchmarkGroup()
 SUITE["approximate"] = BenchmarkGroup()
 for (name, method) in (("aaa", Barycentric), ("thiele", Thiele))
     g = SUITE["approximate"][name] = BenchmarkGroup()
-    g["exp_interval"] = @benchmarkable approximate(exp, $unit_interval; method = $method, allowed = true)
-    g["tanh_steep"]   = @benchmarkable approximate(x -> tanh(50x), $unit_interval; method = $method, allowed = true)
-    g["abs_circle"]   = @benchmarkable approximate(z -> abs(z - 1.0001im), $unit_circle; method = $method, allowed = true)
+    g["exp_interval"] = @benchmarkable approximate(exp, $unit_interval, $method(); allowed = true)
+    g["tanh_steep"]   = @benchmarkable approximate(x -> tanh(50x), $unit_interval, $method(); allowed = true)
+    g["abs_circle"]   = @benchmarkable approximate(z -> abs(z - 1.0001im), $unit_circle, $method(); allowed = true)
 end
 
 # --- construction cost on a discrete point set ---
@@ -23,19 +23,19 @@ end
 SUITE["approximate_discrete"] = BenchmarkGroup()
 for (name, method) in (("aaa", Barycentric), ("thiele", Thiele))
     g = SUITE["approximate_discrete"][name] = BenchmarkGroup()
-    g["tanh_steep"]  = @benchmarkable approximate(x -> tanh(100x), $DISCRETE_PTS; method = $method, allowed = true)
-    g["abs_shift"]   = @benchmarkable approximate(x -> abs(x + 0.5 + 0.01im), $DISCRETE_PTS; method = $method, allowed = true)
-    g["sin_recip"]   = @benchmarkable approximate(x -> sin(1 / (1.05 - x)), $DISCRETE_PTS; method = $method, allowed = true)
+    g["tanh_steep"]  = @benchmarkable approximate(x -> tanh(100x), $DISCRETE_PTS, $method(); allowed = true)
+    g["abs_shift"]   = @benchmarkable approximate(x -> abs(x + 0.5 + 0.01im), $DISCRETE_PTS, $method(); allowed = true)
+    g["sin_recip"]   = @benchmarkable approximate(x -> sin(1 / (1.05 - x)), $DISCRETE_PTS, $method(); allowed = true)
 end
 
 # --- evaluation cost on a fixed approximant ---
 SUITE["evaluate"] = BenchmarkGroup()
-let r = approximate(x -> tanh(50x), unit_interval, method = Barycentric, allowed = true),
+let r = approximate(x -> tanh(50x), unit_interval, Barycentric(); allowed = true),
     z = collect(range(-1, 1, 1000))
 
     SUITE["evaluate"]["bary_vector"] = @benchmarkable $r.($z)
 end
-let r = approximate(x -> tanh(50x), unit_interval; method = Thiele, allowed = true),
+let r = approximate(x -> tanh(50x), unit_interval, Thiele(); allowed = true),
     z = collect(range(-1, 1, 1000))
 
     SUITE["evaluate"]["thiele_vector"] = @benchmarkable $r.($z)
@@ -43,6 +43,6 @@ end
 
 # --- pole solve ---
 SUITE["poles"] = BenchmarkGroup()
-let r = approximate(x -> 1 / sqrt(x^2 + 0.01), unit_interval; method = Thiele)
+let r = approximate(x -> 1 / sqrt(x^2 + 0.01), unit_interval, Thiele())
     SUITE["poles"]["thiele"] = @benchmarkable poles($r)
 end

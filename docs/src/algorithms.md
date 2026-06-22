@@ -94,11 +94,11 @@ However, AAA is an $O(n^4)$ algorithm, so venturing into higher degrees can beco
 
 The TCF algorithm [SalazarCelisNumericalContinued2024](@cite) is much newer than AAA and less thoroughly battle-tested, even though it's based on a continued fraction representation of rational functions that is over a century old. Like AAA, it uses iterative greedy node selection, and the effects of that ordering look good in experiments so far but are poorly understood theoretically. In TCF's favor are its $O(n^3)$ complexity requirement and an algorithmic simplicity that requires nothing more than basic arithmetic.
 
-To try greedy TCF, use `method=Thiele` or `method=TCF` as an argument to `approximate`.
+To try greedy TCF, pass `Thiele()` (or its alias `TCF()`) as the last positional argument to `approximate`.
 
 ```@example convergence
 f = x -> cos(41x - 5) * exp(-10x^2)
-r = approximate(f, unit_interval; method=TCF)
+r = approximate(f, unit_interval, TCF())
 convergenceplot(r)
 ```
 
@@ -109,7 +109,7 @@ Because TCF uses only addition, multiplication, and division, it is easy to use 
 ```@example convergence
 f = x -> atan(1e5*(x - 1//2))
 domain = Segment{BigFloat}(-1, 1)
-@elapsed r = approximate(f, domain; method=TCF, max_iter=400, allowed=true, stagnation=40)
+@elapsed r = approximate(f, domain, TCF(); max_iter=400, allowed=true, stagnation=40)
 ```
 
 ```@example convergence
