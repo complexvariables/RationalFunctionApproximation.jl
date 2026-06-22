@@ -1,3 +1,13 @@
+"""
+    Thiele (type)
+
+Thiele continued-fraction representation of a rational function. Aliased as `TCF`.
+
+# Fields
+- `nodes`: interpolation nodes of the rational function
+- `values`: values at the nodes
+- `weights`: continued-fraction (inverse-difference) coefficients
+"""
 struct Thiele{T,S} <: AbstractRationalInterpolant{T,S}
     nodes::Vector{S}
     values::Vector{S}
@@ -85,12 +95,20 @@ default_weight_method() = Classic()   # new-weight computation in `add_node!`
 
 """
     set_eval_method(m::ThieleMethod)
-    set_weight_method(m::ThieleMethod)
 
-Globally select the recurrence used for Thiele point evaluation / new-weight computation
-(`OneDiv()` or `Classic()`). Intended for testing; each call recompiles the affected path.
+Globally select the recurrence used for Thiele point evaluation (`OneDiv()` or `Classic()`).
+Intended for testing; each call recompiles the affected path. See also
+[`set_weight_method`](@ref).
 """
 set_eval_method(m::ThieleMethod)   = (@eval default_eval_method()   = $m; m)
+
+"""
+    set_weight_method(m::ThieleMethod)
+
+Globally select the recurrence used for Thiele new-weight computation in `add_node!`
+(`OneDiv()` or `Classic()`). Intended for testing; each call recompiles the affected path.
+See also [`set_eval_method`](@ref).
+"""
 set_weight_method(m::ThieleMethod) = (@eval default_weight_method() = $m; m)
 
 # Evaluation at a point
