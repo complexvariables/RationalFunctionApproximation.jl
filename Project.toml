@@ -1,6 +1,6 @@
 name = "RationalFunctionApproximation"
 uuid = "c92886a3-cb30-4e18-b84f-372dde475ecc"
-version = "0.3.6"
+version = "0.3.7"
 authors = ["Toby Driscoll <driscoll@udel.edu> and contributors"]
 
 [deps]
@@ -32,7 +32,7 @@ RFAZygoteExt = "Zygote"
 
 [compat]
 ArnoldiVandermonde = "0.1.0"
-ComplexRegions = "0.3"
+ComplexRegions = "0.3.9"
 ComplexValues = "0.3"
 ForwardDiff = "1"
 GenericLinearAlgebra = "0.3, 0.4"
