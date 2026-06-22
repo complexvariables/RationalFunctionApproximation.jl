@@ -49,13 +49,36 @@ end
 
 const TCF = Thiele    # alias
 
-# Strategy singletons selecting which recurrence Thiele uses; they let external/test code
-# A/B the two algorithms. The `default_*_method` selectors return singletons, so they
-# constant-fold and the production paths stay static, allocation-free calls. Redefine a
-# selector (see `set_eval_method` / `set_weight_method`) to switch globally.
+"""
+    ThieleMethod
+
+Abstract supertype for the recurrence strategies a [`Thiele`](@ref) can use, namely
+[`OneDiv`](@ref) and [`Classic`](@ref). Pass an instance to `evaluate(r, z, method)` or
+`add_node!(r, z, y, method)` for a one-off choice, or set the global default with
+[`set_eval_method`](@ref) / [`set_weight_method`](@ref).
+
+These let external or test code A/B the two algorithms. The default selectors return
+singletons, so they constant-fold and the production paths stay static, allocation-free calls.
+"""
 abstract type ThieleMethod end
-struct OneDiv  <: ThieleMethod end   # numerator/denominator recurrence
-struct Classic <: ThieleMethod end   # backward continued fraction
+
+"""
+    OneDiv() <: ThieleMethod
+
+Evaluate a [`Thiele`](@ref) via the numerator/denominator pair recurrence, deferring the
+single division to the end. Faster and the default for point evaluation; falls back to
+[`Classic`](@ref) if the denominator underflows to zero.
+"""
+struct OneDiv  <: ThieleMethod end
+
+"""
+    Classic() <: ThieleMethod
+
+Evaluate a [`Thiele`](@ref) by the textbook backward continued-fraction recurrence (one
+division per node). Slower than [`OneDiv`](@ref) but the default for new-weight computation in
+`add_node!`.
+"""
+struct Classic <: ThieleMethod end
 
 default_eval_method()   = OneDiv()    # point evaluation
 default_weight_method() = Classic()   # new-weight computation in `add_node!`
