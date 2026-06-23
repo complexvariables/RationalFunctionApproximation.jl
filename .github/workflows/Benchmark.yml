@@ -24,7 +24,7 @@ jobs:
       - uses: julia-actions/setup-julia@v3
         with:
           version: "1"
-      - uses: julia-actions/cache@v2
+      - uses: julia-actions/cache@v3
       - name: Extract package name from Project.toml
         id: extract-package-name
         run: |
