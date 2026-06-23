@@ -45,6 +45,7 @@
         f = x -> cis(x);  @test pass(f, approx(f), pts, atol=6e-13)
         f = z -> tan(π*z);  @test pass(f, approx(f), pts, rtol=2e-13)
         f = z -> tanh(100z); @test pass(f, approx(f), pts, rtol=2e-13)
+        f = z -> abs(z + 1.05); @test pass(f, approx(f), pts, rtol=1e-10)
     end
 
     @testset "Discrete interval, low accuracy" begin
