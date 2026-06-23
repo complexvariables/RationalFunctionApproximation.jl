@@ -563,12 +563,15 @@ function approximate(::Type{Thiele},
     z_test = copy(collect(z))
     deleteat!(y_test, idx_min)
     deleteat!(z_test, idx_min)
-    r_test = similar(y_test)
+    r_test = similar(y_test, promote_type(S, T))
 
     history = [IterationRecord(r, NaN, missing)]
     n = 1    # iteration counter
     while length(z) > 0
         evaluate!(r_test, r, z_test)
+        @inbounds for i in eachindex(r_test)   # array evaluation skips the underflow check
+            isnan(r_test[i]) && (r_test[i] = r(z_test[i]))
+        end
         r_test .-= y_test
         err_max, idx_max = findmax(abs(e) for e in r_test)
         history[n].error = err_max
