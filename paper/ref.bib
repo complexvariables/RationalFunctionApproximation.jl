@@ -116,19 +116,6 @@
   langid = {english}
 }
 
-@article{rodriguezPAAAAlgorithm2022,
-  title = {The P-{{AAA}} Algorithm for Data-Driven Modeling of Parametric Dynamical Systems},
-  author = {Rodriguez, Andrea Carracedo and Balicki, Linus and Gugercin, Serkan},
-  year = {2023},
-  journal = {SIAM Journal on Scientific Computing},
-  volume = {45},
-  number = {3},
-  eprint = {https://doi.org/10.1137/20M1322698},
-  pages = {A1332-A1358},
-  doi = {10.1137/20M1322698},
-  abstract = {Abstract. The AAA algorithm has become a popular tool for data-driven rational approximation of single-variable functions, such as transfer functions of a linear dynamical system. In the setting of parametric dynamical systems appearing in many prominent applications, the underlying (transfer) function to be modeled is a multivariate function. With this in mind, we develop the AAA framework for approximating multivariate functions where the approximant is constructed in the multivariate barycentric form. The method is data driven, in the sense that it does not require access to the full state-space model and requires only function evaluations. We discuss an extension to the case of matrix-valued functions, i.e., multi-input/multi-output dynamical systems, and provide a connection to the tangential interpolation theory. Several numerical examples illustrate the effectiveness of the proposed approach.}
-}
-
 @article{driscollAAARational2024,
   title = {{{AAA}} Rational Approximation on a Continuum},
   author = {Driscoll, T. A. and Nakatsukasa, Y. and Trefethen, L. N.},
@@ -281,7 +268,7 @@
   author = {Lampert, J.},
   year = {2024},
   month = jun,
-  howpublished = {\url{https://dx.doi.org/10.5281/zenodo.12599880}},
+  doi = {10.5281/zenodo.12599880},
   annotation = {10.5281/zenodo.12599880}
 }
 
@@ -341,6 +328,23 @@
   abstract = {We introduce a new algorithm for approximation by rational functions on a real or complex set of points, implementable in 40 lines of MATLAB and requiring no user input parameters.  Even on a disk or interval the algorithm may outperform existing methods, and on more complicated domains it is especially competitive.  The core ideas are (1) representation of the rational approximant in barycentric form with interpolation at certain support points and (2) greedy selection of the support points to avoid exponential instabilities.  The name AAA stands for ``adaptive Antoulas--Anderson'' in honor of the authors who introduced a scheme based on (1).  We present the core algorithm with a MATLAB code and nine applications and describe variants targeted at problems of different kinds. Comparisons are made with vector fitting, RKFIT, and other existing methods for rational approximation.}
 }
 
+@article{NakatsukasaApplicationsAAA2026,
+  title = {Applications of {{AAA}} Rational Approximation},
+  author = {Nakatsukasa, Yuji and Trefethen, Lloyd N.},
+  year = 2026,
+  month = jul,
+  journal = {Acta Numerica},
+  volume = {35},
+  pages = {459--601},
+  issn = {0962-4929, 1474-0508},
+  doi = {10.1017/S0962492925100263},
+  urldate = {2026-06-29},
+  abstract = {The AAA algorithm for rational approximation is employed to illustrate applications of rational functions all across numerical analysis. For example, rational functions enable strikingly effective methods for numerical differentiation and integration; interpolation of equispaced data; locating zeros, poles, and branch points; analytic continuation; computation of inverse functions; imputation of missing data; computation of nonlinear eigenvalues and resonances; model order reduction/reduced order modelling; solution of Wiener--Hopf and Hilbert transform problems; conformal mapping; and solution of the two-dimensional Laplace, biharmonic and Helmholtz equations. The paper also surveys various improvements and generalizations of the AAA algorithm that have developed since its original appearance in 2018.},
+  langid = {english},
+  keywords = {30B40,41A20,65D15,65N35},
+  file = {/Users/driscoll/Dropbox/library/Nakatsukasa and Trefethen_2026_Applications of AAA rational approximation.pdf}
+}
+
 @article{newmanRationalApproximation1964,
   title = {Rational Approximation to {\textbar}x{\textbar}},
   author = {Newman, D. J.},
@@ -356,6 +360,7 @@
   title = {A Practical Framework for Infinite-Dimensional Linear Algebra},
   booktitle = {Proceedings of the 1st {{Workshop}} for {{High Performance Technical Computing}} in {{Dynamic Languages}} -- {{HPTCDL}} `14},
   author = {Olver, S. and Townsend, A.},
+  doi = {10.1109/HPTCDL.2014.10},
   year = {2014}
 }
 
@@ -387,9 +392,7 @@
   issn = {1064-8275},
   doi = {10.1137/20M1322698},
   urldate = {2025-06-13},
-  abstract = {Numerical simulation of large-scale dynamical systems plays a fundamental role in studying a wide range of complex physical phenomena; however, the inherent large-scale nature of the models often leads to unmanageable demands on computational resources. Model reduction aims to reduce this computational burden by generating reduced models that are faster and cheaper to simulate, yet accurately represent the original large-scale system behavior. Model reduction of linear, nonparametric dynamical systems has reached a considerable level of maturity, as reflected by several survey papers and books. However, parametric model reduction has emerged only more recently as an important and vibrant research area, with several recent advances making a survey paper timely. Thus, this paper aims to provide a resource that draws together recent contributions in different communities to survey the state of the art in parametric model reduction methods. Parametric model reduction targets the broad class of problems for which the equations governing the system behavior depend on a set of parameters. Examples include parameterized partial differential equations and large-scale systems of parameterized ordinary differential equations. The goal of parametric model reduction is to generate low-cost but accurate models that characterize system response for different values of the parameters. This paper surveys state-of-the-art methods in projection-based parametric model reduction, describing the different approaches within each class of methods for handling parametric variation and  providing a comparative discussion that lends insights to potential advantages and disadvantages in applying each of the methods. We highlight the important role played by parametric model reduction in design, control, optimization, and uncertainty quantification---settings that require repeated model evaluations over different parameter values.},
-  file = {/Users/driscoll/Dropbox/library/Approximation/Rodriguez et al. - 2023 - The p-AAA Algorithm for Data-Driven Modeling of Parametric Dynamical Systems.pdf}
-}
+  }
 
 @misc{saadRationalApproximation2020,
   title = {A Rational Approximation Method for the Nonlinear Eigenvalue Problem},
