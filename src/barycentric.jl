@@ -417,7 +417,7 @@ function approximate(::Type{Barycentric},
 
         status = quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
         if status > 0
-            @warn("Stopping with estimated error $(round(history[status].error, sigdigits=4)) after $n iterations")
+            @info("Stopping with estimated error $(round(history[status].error, sigdigits=4)) after $n iterations")
             r = history[status].interpolant
         end
         (status != 0) && break
@@ -431,7 +431,7 @@ function approximate(::Type{Barycentric},
             # look for the best acceptable case
             status = quitting_check(history, stagnation, tol, fmax, 1, allowed)
             r = history[status].interpolant
-            @warn("Unable to add new node; stopping with estimated error $(round(history[status].error, sigdigits=4))")
+            @info("Unable to add new node; stopping with estimated error $(round(history[status].error, sigdigits=4))")
             break
         end
 
@@ -498,7 +498,7 @@ function approximate(::Type{Barycentric},
 
         status = quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
         if status > 0
-            @warn("Stopping with estimated error $(round(history[status].error, sigdigits=4)) after $n iterations")
+            @info("Stopping with estimated error $(round(history[status].error, sigdigits=4)) after $n iterations")
             r = history[status].interpolant
         end
         (status != 0) && break
