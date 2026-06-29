@@ -491,7 +491,7 @@ function approximate(::Type{Thiele},
 
         status = quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
         if status > 0
-            @warn("Stopping with estimated error $(round(history[status].error, sigdigits=4)) after $n iterations")
+            @info("Stopping with estimated error $(round(history[status].error, sigdigits=4)) after $n iterations")
             r = history[status].interpolant
         end
         (status != 0) && break
@@ -505,7 +505,7 @@ function approximate(::Type{Thiele},
             # look for the best acceptable case
             status = quitting_check(history, stagnation, tol, fmax, 1, allowed)
             r = history[status].interpolant
-            @warn("NaN weight encountered; stopping with estimated error $(round(history[status].error, sigdigits=4))")
+            @info("NaN weight encountered; stopping with estimated error $(round(history[status].error, sigdigits=4))")
             @debug("Error $e")
             break
         end
@@ -518,7 +518,7 @@ function approximate(::Type{Thiele},
             # look for the best acceptable case
             status = quitting_check(history, stagnation, tol, fmax, 1, allowed)
             r = history[status].interpolant
-            @warn("Maximum path refinement exceeded; stopping with estimated error $(round(history[status].error, sigdigits=4))")
+            @info("Maximum path refinement exceeded; stopping with estimated error $(round(history[status].error, sigdigits=4))")
             break
         end
 
@@ -579,10 +579,10 @@ function approximate(::Type{Thiele},
         status = quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
         if status > 0
             if isinf(err_max)
-                @warn("Used all sample values without convergence")
+                @info("Used all sample values without convergence")
                 status = max_iter
             else
-                @warn("Stopping with estimated error $(round(history[status].error, sigdigits=4)) after $n iterations")
+                @info("Stopping with estimated error $(round(history[status].error, sigdigits=4)) after $n iterations")
             end
             r = history[status].interpolant
         end
@@ -599,7 +599,7 @@ function approximate(::Type{Thiele},
             # look for the best acceptable case
             status = quitting_check(history, stagnation, tol, fmax, 1, allowed)
             r = history[status].interpolant
-            @warn("Adding node failed; stopping with estimated error $(round(history[status].error, sigdigits=4))")
+            @info("Adding node failed; stopping with estimated error $(round(history[status].error, sigdigits=4))")
             @debug("Error $e")
             break
         end

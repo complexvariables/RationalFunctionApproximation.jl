@@ -107,7 +107,7 @@ function refine_by_singularity(d::ComplexCurveOrPath, ζ::AbstractVector;
         end
         add_node!(path, (idx[1], idx[2]+1))
     end
-    @warn "Refinement was not successful"
+    @info "Refinement was not successful"
     return path
 end
 

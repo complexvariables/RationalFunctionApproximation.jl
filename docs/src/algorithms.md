@@ -33,7 +33,7 @@ convergenceplot(r)
 
 (The plots in this documentation are made using `CairoMakie`, but the same functions are made available for `Plots`.)  In the plot above, the markers show the estimated max-norm error of the AAA rational approximant over the domain as a function of the denominator degree; each iteration adds one degree to both the numerator and denominator. The gold halo indicates the final approximation chosen by the algorithm.
 
-The red dots in the convergence plot indicate that a genuine pole—that is, one with residue larger than machine precision—of the rational approximant lies in the approximation domain. We can verify this fact here by using `rewind` to recover the approximation from iteration 9:
+The red dots in the convergence plot indicate that a genuine pole—that is, one with residue larger than machine precision—of the rational approximant lies in the approximation domain.[^genuine] We can verify this fact here by using `rewind` to recover the approximation from iteration 9:
 
 ```@repl convergence
 r9 = rewind(r, 9)
@@ -54,6 +54,8 @@ filter(<(-0.75), test_points(r9))
 ```
 
 That's why the reported error is not very large. It's worth keeping in mind that the convergence plot shows the algorithm's estimate of the error, not the true error. Guarantees are hard to come by; no matter how carefully we told the algorithm to look within the interval, some cases would fall through the cracks. Fortunately, both the pole check and the overall error indicate that the approximation is not yet fully baked, and the iteration continues.
+
+[^genuine]: The notion of a "genuine" pole is not well-posed. Both pole locations and residue magnitudes could be reclassified after arbitrarily small perturbations, and thus the label is sensitive to roundoff.
 
 It is possible for the iteration to stagnate with bad poles if the original function has a singularity very close to the domain.
 

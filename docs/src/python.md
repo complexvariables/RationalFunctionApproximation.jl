@@ -2,7 +2,7 @@
 
 You can call the functions in this package from Python using the [`PythonCall`/`JuliaCall`](https://juliapy.github.io/PythonCall.jl/stable/) package. 
 
-## Installation
+## Installation for Python
 
 It's recommended to create a new virtual environment to try this out. In Python, you need to install `juliacall` via
 

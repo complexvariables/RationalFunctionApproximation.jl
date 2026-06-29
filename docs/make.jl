@@ -19,6 +19,7 @@ makedocs(;
     ),
     pages=[
         "Introduction" => "index.md",
+        "Installation" => "install.md",
         "Algorithms" => "algorithms.md",
         "Domains" => "domains.md",
         "Discrete data" => "discrete.md",

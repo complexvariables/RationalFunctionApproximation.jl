@@ -2,9 +2,11 @@
 
 *Documentation for [RationalFunctionApproximation.jl](https://github.com/complexvariables/RationalFunctionApproximation.jl).*
 
-This package computes rational approximations of a function or data given in the complex plane. For background reading, see [NakatsukasaAAAAlgorithm2018](@cite), [DriscollAAARational2024](@cite) (or the related arXiv version [DriscollAAARational2023a](@cite)), [CostaAAAleastSquares2023](@cite), and [SalazarCelisNumericalContinued2024](@cite).
+This package computes rational approximations of a function or data given in a domain in the complex plane (including real intervals).
 
-A rational function is a ratio of two polynomials. Rational functions are capable of very high accuracy, usually requiring fewer degrees of freedom than polynomial approximations. They are an especially good choice for approximating functions with singularities near the domain of approximation. However, they do not depend linearly on the data, which has historically made them difficult to compute and work with, but breakthroughs in algorithms over the last decade have changed that.
+A rational function is a ratio of two polynomials. Rational functions are capable of very high accuracy, usually requiring fewer degrees of freedom than polynomial approximations. They are an especially good choice for approximating functions with singularities near the domain of approximation. Rational functions have applications to finding singularities and roots, computing derivatives, continuation across boundaries, solving PDEs, and more; for a survey of applications, see [NakatsukasaApplicationsAAA2026](@cite). For background on the algorithms in this package, see [NakatsukasaAAAAlgorithm2018](@cite), [DriscollAAARational2024](@cite) (or the related arXiv version [DriscollAAARational2023a](@cite)), [CostaAAAleastSquares2023](@cite), and [SalazarCelisNumericalContinued2024](@cite).
+
+## Basic walkthrough
 
 Here's a smooth, gentle function on the interval $[-1, 1]$:
 
@@ -108,6 +110,7 @@ scatter(sort(abs.(z)), axis=(ylabel="| node |", yscale=log10,))
 
 ## Contents
 
+* [Installation](@ref) describes the algorithms available for rational approximation.
 * [Algorithms](@ref) describes the algorithms available for rational approximation.
 * [Approximation on domains](@ref) shows how to approximate functions on different domains.
 * [Discrete data](@ref) shows how to approximate data given as points and values rather than as functions.
