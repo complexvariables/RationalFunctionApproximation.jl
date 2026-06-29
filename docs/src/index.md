@@ -108,6 +108,7 @@ scatter(sort(abs.(z)), axis=(ylabel="| node |", yscale=log10,))
 
 ## Contents
 
+* [Installation](@ref) describes the algorithms available for rational approximation.
 * [Algorithms](@ref) describes the algorithms available for rational approximation.
 * [Approximation on domains](@ref) shows how to approximate functions on different domains.
 * [Discrete data](@ref) shows how to approximate data given as points and values rather than as functions.
