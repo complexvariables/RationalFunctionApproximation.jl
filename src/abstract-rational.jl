@@ -78,9 +78,9 @@ abstract type AbstractRationalInterpolant{T,S} <: AbstractRationalFunction{S} en
 # COV_EXCL_START
 # Interface stubs
 "nodes(r) returns a vector of the interpolation nodes of the rational interpolant."
-nodes(::AbstractRationalInterpolant) = error("`nodes` not implemented for $(typeof(r))")
+nodes(r::AbstractRationalInterpolant) = error("`nodes` not implemented for $(typeof(r))")
 "values(r) returns a vector of the nodal values of the rational interpolant `r`."
-Base.values(::AbstractRationalInterpolant) = error("`values` not implemented for $(typeof(r))")
+Base.values(r::AbstractRationalInterpolant) = error("`values` not implemented for $(typeof(r))")
 Base.length(r::AbstractRationalInterpolant) = length(nodes(r))
 # COV_EXCL_STOP
 

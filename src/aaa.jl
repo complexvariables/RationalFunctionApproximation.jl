@@ -203,16 +203,14 @@ function aaa(
         y, w = real(y), real(w)
     end
 
+    r = Barycentric(x, y, w)
     if stats
         if isreal(w) && isreal(y)
             weights = real.(weights)
             vals = real.(vals)
         end
-        st = ConvergenceStats(bestm-1, err, nbad, nodes, vals, weights, pol)
-        r = Barycentric(x, y, w; stats=st)
+        return r, (; bestindex=bestm-1, err, nbad, nodes, vals, weights, poles=pol)
     else
-        r = Barycentric(x, y, w)
+        return r
     end
-
-    return r
 end
