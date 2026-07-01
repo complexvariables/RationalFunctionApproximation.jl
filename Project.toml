@@ -32,7 +32,7 @@ RFAZygoteExt = "Zygote"
 
 [compat]
 ArnoldiVandermonde = "0.1.0"
-ComplexRegions = "0.3.9"
+ComplexRegions = "0.3.9, 0.4"
 ComplexValues = "0.3"
 ForwardDiff = "1"
 GenericLinearAlgebra = "0.3, 0.4"
