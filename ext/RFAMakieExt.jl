@@ -13,9 +13,9 @@ function RFA.convergenceplot!(target, r::RFA.AbstractApproximation; show_best=tr
             ))
     end
     attr = merge(attr, Makie.Attributes(; kwargs...))
-    out1 = scatterlines!(target, deg, err; attr...)
+    out1 = scatter!(target, deg, err; attr...)
     out2 = if show_best
-        scatterlines!(target, deg[best], err[best],
+        scatter!(target, deg[best], err[best],
                 color=RGBAf(1,1,1,0), strokecolor=:gold, strokewidth=3, markersize=13 )
     else
         nothing
