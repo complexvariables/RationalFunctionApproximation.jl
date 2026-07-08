@@ -8,8 +8,7 @@ function RFA.convergenceplot!(target, r::RFA.AbstractApproximation; show_best=tr
     attr = Makie.Attributes(; markersize=8)
     if r.allowed != true
         attr = merge(attr, Makie.Attributes(
-            markercolor= [all(b) ? :darkblue : :red for b in allowed],
-            color=RGBAf(0, 0, 0, 0.5)
+            color= [all(b) ? :darkblue : :red for b in allowed]
             ))
     end
     attr = merge(attr, Makie.Attributes(; kwargs...))
