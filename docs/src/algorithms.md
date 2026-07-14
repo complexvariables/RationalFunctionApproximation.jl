@@ -102,9 +102,9 @@ r = approximate(f, unit_interval; method=TCF)
 convergenceplot(r)
 ```
 
-The $x$-axis of the convergence plot shows the degree of the denominator polynomial. Because the Thiele method alternates between interpolants of type $(n, n)$ and $(n+1, n)$, there are two dots in the plot for each degree.
+The $x$-axis of the convergence plot shows the degree of the denominator polynomial. Because the Thiele method alternates between interpolants of type $(n, n)$ and $(n+1, n)$, there are two dots in the plot for each degree. The dots corresponding to approximations of the diagonal and superdiagonal rational type are connected by lines; sometimes, they could be viewed as separate convergence curves.
 
-Because TCF uses only addition, multiplication, and division, it is easy to use in extended precision arithmetic. Here, we use `allowed=true` to disable checking for poles, which requires solving an eigenvalue problem that is far more expensive than the iteration itself:
+Because TCF uses only addition, multiplication, and division, it is easy to use in extended precision arithmetic. Here, we use `allowed=true` to disable checking for poles, because doing so requires solving an eigenvalue problem that is far more expensive than the iteration itself.
 
 ```@example convergence
 f = x -> atan(1e5*(x - 1//2))
