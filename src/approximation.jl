@@ -452,7 +452,7 @@ function quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
     if (n >= max_iter) || stagnant
         # Look for the best acceptable approximation:
         if (allowed === true)
-            n = argmin(err)
+            n = argmin(i -> err[i], (i for i in eachindex(err) if !isnan(err[i])))
         else
             for k in sortperm(err)
                 history[k].poles = @coalesce history[k].poles poles(history[k].interpolant)
