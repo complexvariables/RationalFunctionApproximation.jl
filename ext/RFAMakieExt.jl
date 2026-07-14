@@ -1,7 +1,27 @@
 module RFAMakieExt
 
 using RationalFunctionApproximation, Makie, ComplexRegions, Printf
-RFA = RationalFunctionApproximation
+const ThieleApproximation = Union{RFA.ContinuumApproximation{T,S,R},RFA.DiscreteApproximation{T,S,R}} where {T, S, R<:Thiele}
+
+function RFA.convergenceplot!(target, r::ThieleApproximation; show_best=true, kwargs...)
+    deg, err, _, allowed, best = get_history(r)
+    attr = Makie.Attributes(; markersize = 8)
+    if r.allowed != true
+        attr = merge(attr, Makie.Attributes(
+            color = [all(b) ? :darkblue : :red for b in allowed]
+        ))
+    end
+    attr = merge(Makie.Attributes(; kwargs...), attr)
+    out1a = scatterlines!(target, deg[1:2:end], err[1:2:end]; attr...)
+    out1b = scatterlines!(target, deg[2:2:end], err[2:2:end]; attr...)
+    out2 = if show_best
+        scatter!(target, deg[best], err[best],
+            color = RGBAf(1, 1, 1, 0), strokecolor = :gold, strokewidth = 3, markersize = 13)
+    else
+        nothing
+    end
+    return out1a, out1b, out2
+end
 
 function RFA.convergenceplot!(target, r::RFA.AbstractApproximation; show_best=true, kwargs...)
     deg, err, _, allowed, best = get_history(r)
@@ -11,8 +31,8 @@ function RFA.convergenceplot!(target, r::RFA.AbstractApproximation; show_best=tr
             color= [all(b) ? :darkblue : :red for b in allowed]
             ))
     end
-    attr = merge(attr, Makie.Attributes(; kwargs...))
-    out1 = scatter!(target, deg, err; attr...)
+    attr = merge(Makie.Attributes(; kwargs...), attr)
+    out1 = scatterlines!(target, deg, err; attr...)
     out2 = if show_best
         scatter!(target, deg[best], err[best],
                 color=RGBAf(1,1,1,0), strokecolor=:gold, strokewidth=3, markersize=13 )
