@@ -1,6 +1,6 @@
 # Usage from Python
 
-You can call the functions in this package from Python using the [`PythonCall`/`JuliaCall`](https://juliapy.github.io/PythonCall.jl/stable/) package. 
+There are two ways to use this package from Python. Below are instructions for calling the Julia package directly from Python code using the [`PythonCall`/`JuliaCall`](https://juliapy.github.io/PythonCall.jl/stable/) package. Alternatively, the PyPI package [pyratapprox](https://complexvariables.github.io/pyratapprox/) gives a fully Pythonic interface to a large subset of the Julia package.
 
 ## Installation for Python
 
