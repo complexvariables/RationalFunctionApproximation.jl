@@ -6,14 +6,18 @@ const ThieleApproximation = Union{RFA.ContinuumApproximation{T,S,R},RFA.Discrete
 function RFA.convergenceplot!(target, r::ThieleApproximation; show_best=true, kwargs...)
     deg, err, _, allowed, best = get_history(r)
     attr = Makie.Attributes(; markersize = 8)
-    if r.allowed != true
-        attr = merge(attr, Makie.Attributes(
-            color = [all(b) ? :darkblue : :red for b in allowed]
-        ))
-    end
     attr = merge(Makie.Attributes(; kwargs...), attr)
-    out1a = scatterlines!(target, deg[1:2:end], err[1:2:end]; attr...)
-    out1b = scatterlines!(target, deg[2:2:end], err[2:2:end]; attr...)
+    # Make separate curves for the diagonal and off-diagonal cases:
+    if r.allowed != true
+        # Color according to disallowed poles:
+        color = [all(b) ? :darkblue : :red for b in allowed]
+        attra = merge(attr, Makie.Attributes(color = :black, markercolor = color[1:2:end]))
+        attrb = merge(attr, Makie.Attributes(color = :black, markercolor = color[2:2:end]))
+    else
+        attra = attrb = attr
+    end
+    out1a = scatterlines!(target, deg[1:2:end], err[1:2:end]; attra...)
+    out1b = scatterlines!(target, deg[2:2:end], err[2:2:end]; attrb...)
     out2 = if show_best
         scatter!(target, deg[best], err[best],
             color = RGBAf(1, 1, 1, 0), strokecolor = :gold, strokewidth = 3, markersize = 13)
@@ -26,12 +30,12 @@ end
 function RFA.convergenceplot!(target, r::RFA.AbstractApproximation; show_best=true, kwargs...)
     deg, err, _, allowed, best = get_history(r)
     attr = Makie.Attributes(; markersize=8)
+    attr = merge(Makie.Attributes(; kwargs...), attr)
     if r.allowed != true
         attr = merge(attr, Makie.Attributes(
-            color= [all(b) ? :darkblue : :red for b in allowed]
+            color = :black, markercolor= [all(b) ? :darkblue : :red for b in allowed]
             ))
     end
-    attr = merge(Makie.Attributes(; kwargs...), attr)
     out1 = scatterlines!(target, deg, err; attr...)
     out2 = if show_best
         scatter!(target, deg[best], err[best],
