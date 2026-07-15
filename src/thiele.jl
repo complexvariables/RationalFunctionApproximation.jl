@@ -222,6 +222,11 @@ function _derivative!(ζ, w, z, order, A, B, vals)
             B[m+1] = d * A[m+1] + (m > 0 ? m * A[m] : 0)
             A[m+1] = t
         end
+        if any(x -> abs(x) < 1e-100, A)
+            A .*= 1e100
+            B .*= 1e100
+            @debug "scaling to avoid underflow at " ζ
+        end
     end
     # numer derivs = w[1] * A + B
     # denom derivs = A
