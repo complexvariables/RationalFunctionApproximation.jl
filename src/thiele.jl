@@ -180,6 +180,7 @@ end
 _evaluate(r::Thiele, z, ::OneDiv)  = _evaluate_onediv(r, z)
 _evaluate(r::Thiele, z, ::Classic) = _evaluate_classic(r, z)
 
+guard(z) = !iszero(z) && abs(real(z)) < 1e-100 && abs(imag(z)) < 1e-100
 function _evaluate_numden(r::Thiele, z::Number)
     # use 3-term pair recurrence to avoid division until the end
     @assert isfinite(z)
@@ -193,7 +194,7 @@ function _evaluate_numden(r::Thiele, z::Number)
             t = r.weights[k] * a + b
             b = a * (z - r.nodes[k-1])
             a = t
-            if abs2(a) < 1e-200   # prevent underflow
+            if guard(a)    # prevent underflow
                 @debug "scaling to avoid underflow at " z
                 a *= 1e100
                 b *= 1e100
@@ -222,9 +223,9 @@ function _derivative!(ζ, w, z, order, A, B, vals)
             B[m+1] = d * A[m+1] + (m > 0 ? m * A[m] : 0)
             A[m+1] = t
         end
-        if any(x -> abs(x) < 1e-100, A)
-            A .*= 1e100
-            B .*= 1e100
+        if any(guard, A)
+            A .*= 1e50
+            B .*= 1e50
             @debug "scaling to avoid underflow at " ζ
         end
     end
