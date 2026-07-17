@@ -107,6 +107,9 @@ function Barycentric(points::AbstractVector, values::AbstractVector, nodeidx::Ab
     return Barycentric(points, values, idx)
 end
 
+# Empty instance, used only as a method selector in `approximate`.
+Barycentric() = Barycentric(Float64[], Float64[], Float64[])
+
 Base.copy(r::Barycentric) =
     Barycentric(copy(r.nodes), copy(r.values), copy(r.weights), copy(r.w_times_f))
 
@@ -376,11 +379,8 @@ function _initialize!(τ, fτ, C, L, f, σ, fσ, idx_test)
     return nothing
 end
 
-# TODO: This should probably enforce parameters S and T
-approximate(::Type{Barycentric{S,T}}, args...; kw...) where {S,T} = approximate(Barycentric, args...; kw...)
-
-function approximate(::Type{Barycentric},
-    f::Function, d::ComplexCurveOrPath;
+function approximate(
+    f::Function, d::ComplexCurveOrPath, ::Barycentric;
     float_type::Type = promote_type(real_type(d), typeof(float(1))),
     tol::Real = 1000*eps(float_type),
     allowed::Union{Function,Bool} = z -> dist(z, d) > tol,
@@ -455,8 +455,8 @@ function approximate(::Type{Barycentric},
     return ContinuumApproximation(f, d, r, allowed, path, history)
 end
 
-function approximate(::Type{Barycentric},
-    y::AbstractVector{T}, z::AbstractVector{S};
+function approximate(
+    y::AbstractVector{T}, z::AbstractVector{S}, ::Barycentric;
     float_type::Type = promote_type(real_type(eltype(z)), typeof(float(1))),
     tol::AbstractFloat = 1000*eps(float_type),
     allowed::Union{Function,Bool} = true,

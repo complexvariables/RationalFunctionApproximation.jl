@@ -111,6 +111,9 @@ See also [`set_eval_method`](@ref).
 """
 set_weight_method(m::ThieleMethod) = (@eval default_weight_method() = $m; m)
 
+# Empty instance, used only as a method selector in `approximate`.
+Thiele() = Thiele(Float64[], Float64[], Float64[])
+
 # Evaluation at a point
 function evaluate(r::Thiele, z::Number, method::ThieleMethod=default_eval_method())
     return if isinf(z)
@@ -435,11 +438,8 @@ function _sweep!(fτ, f::Function, τ, idx)
     return fmax
 end
 
-# TODO: This should probably enforce parameters S and T
-approximate(::Type{Thiele{S,T}}, args...; kw...) where {S,T} = approximate(Thiele, args...; kw...)
-
-function approximate(::Type{Thiele},
-    f::Function, d::Union{ComplexPath,ComplexCurve};
+function approximate(
+    f::Function, d::Union{ComplexPath,ComplexCurve}, ::Thiele;
     float_type::Type = promote_type(real_type(d), typeof(float(1))),
     tol::Real = 1000*eps(float_type),
     allowed::Union{Function,Bool} = z -> dist(z, d) > tol,
@@ -551,8 +551,8 @@ function approximate(::Type{Thiele},
     return ContinuumApproximation(f, d, r, allowed, path, history)
 end
 
-function approximate(::Type{Thiele},
-    y::AbstractVector{T}, z::AbstractVector{S};
+function approximate(
+    y::AbstractVector{T}, z::AbstractVector{S}, ::Thiele;
     float_type::Type = promote_type(real_type(eltype(z)), typeof(float(1))),
     tol::AbstractFloat = 1000*eps(float_type),
     allowed::Union{Function,Bool} = true,
