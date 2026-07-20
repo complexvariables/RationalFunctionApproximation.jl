@@ -55,7 +55,7 @@ We define the linearized residual
     \label{eq:residual}
     \delta(z) = \sum_{j=1}^n \frac{y_j\, w_j}{z - z_j} - f(z) \sum_{j=1}^n \frac{w_j}{z - z_j}.
 \end{equation}
-Given test points $t_1, \ldots, t_m$ in the domain of $f$, we can express the evaluation of $d$ at those points as
+Given test points $t_1, \ldots, t_m$ in the domain of $f$, we can express the evaluation of $\delta$ at those points as
 \begin{equation}
     \label{eq:residuals}
     \begin{bmatrix} \delta(t_1) \\ \delta(t_2) \\ \vdots \\ \delta(t_m) \end{bmatrix} = \bm{L} \begin{bmatrix} w_1 \\ w_2 \\ \vdots \\ w_n \end{bmatrix},
@@ -159,7 +159,7 @@ Each following concrete realization of one of these abstract types also implemen
 
 \subsubsection{Barycentric}
 
-Barycentric is a concrete subtype of AbstractRationalInterpolant that implements the barycentric representation of a rational interpolant, as described in \autoref{sec:aaa}. It stores the nodes, values, and weights, and provides implementations for the methods shown in \autoref{tab:ratinterp_methods}. When precision beyond standard \verb|Float64| is detected, the pole computation relies on GenericSchur from \textsf{GenericLinearAlgebra} to perform the necessary generalized eigenvalue computation. T
+Barycentric is a concrete subtype of AbstractRationalInterpolant that implements the barycentric representation of a rational interpolant, as described in \autoref{sec:aaa}. It stores the nodes, values, and weights, and provides implementations for the methods shown in \autoref{tab:ratinterp_methods}. When precision beyond standard \verb|Float64| is detected, the pole computation relies on GenericSchur from \textsf{GenericLinearAlgebra} to perform the necessary generalized eigenvalue computation.
 
 \subsubsection{Thiele}
 
