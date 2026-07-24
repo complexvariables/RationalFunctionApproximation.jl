@@ -108,6 +108,12 @@ z = filter(>(0), nodes(r))
 scatter(sort(abs.(z)), axis=(ylabel="| node |", yscale=log10,))
 ```
 
+## Feedback and contributions
+
+If you encounter problems or want to make suggestions, feel free to [file an issue on GitHub](https://github.com/complexvariables/RationalFunctionApproximation.jl/issues).
+
+If you want to contribute to the package, please see [the guidelines](https://github.com/complexvariables/RationalFunctionApproximation.jl/blob/main/CONTRIBUTING.md).
+
 ## Contents
 
 * [Installation](@ref) describes the algorithms available for rational approximation.
