@@ -6,6 +6,6 @@ authors:
   orcid: "https://orcid.org/0000-0002-1490-2545"
 title: "RationalFunctionApproximation.jl: Approximation by rational functions on intervals and domains in the complex plane"
 version: 0.1.0
-doi: 10.5281/zenodo.8355791
+doi: 10.5281/zenodo.8355790
 date-released: 2023-09-18
 url: "https://github.com/complexvariables/RationalFunctionApproximation.jl"
