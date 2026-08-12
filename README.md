@@ -2,7 +2,7 @@
 
 [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://complexvariables.github.io/RationalFunctionApproximation.jl/stable/)
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://complexvariables.github.io/RationalFunctionApproximation.jl/dev/)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15446359.svg)](https://doi.org/10.5281/zenodo.15446359)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.8355790.svg)](https://doi.org/10.5281/zenodo.8355790)
 [![codecov](https://codecov.io/gh/complexvariables/RationalFunctionApproximation.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/complexvariables/RationalFunctionApproximation.jl)
 
 ![logo](logo-sm.png)
