@@ -241,7 +241,7 @@ end
 # Each rational type implements a method that dispatches on an instance of the type
 # (e.g. `Barycentric()`, `Thiele()`, `PartialFractions()`) passed as the last positional
 # argument. The methods here supply the default selector when none is given.
-function approximate(f::Function, domain::ComplexCurveOrPath; kw...)
+function approximate(f::Function, domain::ComplexCurveOrPath=Segment(-1, 1); kw...)
      approximate(f, domain, Thiele(); kw...)
 end
 

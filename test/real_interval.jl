@@ -238,4 +238,9 @@
         r_ab = approximate(f, 0.5..2.5)
         @test RFA.domain(r_ab) == Segment(0.5, 2.5)
     end
+
+    @testset "Single-argument call for -1..1" begin
+        r = approximate(exp)
+        @test RFA.domain(r) == Segment(-1.0, 1.0)
+    end
 end
