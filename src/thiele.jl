@@ -442,11 +442,16 @@ function approximate(
     f::Function, d::Union{ComplexPath,ComplexCurve}, ::Thiele;
     float_type::Type = promote_type(real_type(d), typeof(float(1))),
     tol::Real = 1000*eps(float_type),
-    allowed::Union{Function,Bool} = z -> dist(z, d) > tol,
+    allowed = true,
     max_iter::Int = 240,
     refinement::Int = 3,
     stagnation::Int = 5
     )
+
+    if allowed == :strict
+        # only allow poles off the curve
+        allowed = z -> dist(z, d) > tol
+    end
 
     num_ref = 15    # initial number of test points between nodes; decreases to `refinement`
     path = DiscretizedPath(d, [0, 1]; refinement=num_ref, maxpoints=max_iter * refinement)

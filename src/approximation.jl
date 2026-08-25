@@ -158,12 +158,11 @@ Adaptively compute a rational interpolant on a continuous or discrete domain.
 - `max_iter::Integer=150`: maximum number of iterations on node addition
 - `float_type::Type`: floating point type to use for the computation¹
 - `tol::Real=1000*eps(float_type)`: relative tolerance for stopping
-- `allowed::Function`: function to determine if a pole is allowed²
+- `allowed`: no checking poles if `true`, must be outside domain if `:strict`, or use provided function
 - `refinement::Integer=3`: number of test points between adjacent nodes (continuum only)
 - `stagnation::Integer=5`: number of iterations to determine stagnation
 
 ¹Default of `float_type` is the promotion of `float(1)` and the float type of the domain.
-²Default is to disallow poles on the curve or in the interior of a continuous domain, or to accept all poles on a discrete domain. Use `allowed=true` to allow all poles.
 
 # Returns
 - `r::Approximation`: the rational interpolant
@@ -260,12 +259,16 @@ end
 # We fill in other convenience cases here.
 
 # ::Function, ::AbstractRegion, [selector]
-# Given a region as domain, we interpret poles as not being allowed in that region.
 function approximate(
     f::Function, R::ComplexRegions.AbstractRegion, method::AbstractRationalFunction=Thiele();
+    allowed=true,
     kw...
     )
-    r = approximate(f, R.boundary, method; allowed=z->!in(z,R), kw...)
+    if allowed == :strict
+        # only allow poles outside the region
+        allowed = z -> !in(z,R)
+    end
+    r = approximate(f, R.boundary, method; allowed, kw...)
     return ContinuumApproximation(f, R, r.fun, r.allowed, r.path, r.history)
 end
 
