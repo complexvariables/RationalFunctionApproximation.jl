@@ -155,7 +155,7 @@ Adaptively compute a rational interpolant on a continuous or discrete domain.
   argument (`Thiele()` default, `Barycentric()`); e.g. `approximate(f, domain, Barycentric())`
 
 # Keywords
-- `max_iter::Integer=150`: maximum number of iterations on node addition
+- `max_degree::Integer=100`: maximum (denominator) degree of the approximation
 - `float_type::Type`: floating point type to use for the computation¹
 - `tol::Real=1000*eps(float_type)`: relative tolerance for stopping
 - `allowed`: no checking poles if `true`, must be outside domain if `:strict`, or use provided function

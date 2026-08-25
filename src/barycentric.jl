@@ -384,7 +384,8 @@ function approximate(
     float_type::Type = promote_type(real_type(d), typeof(float(1))),
     tol::Real = 1000*eps(float_type),
     allowed::Union{Function,Bool} = z -> dist(z, d) > tol,
-    max_iter::Int = 150,
+    max_degree::Int = 100,
+    max_iter = max_degree,
     refinement::Int = 3,
     stagnation::Int = 5
     )
@@ -460,7 +461,8 @@ function approximate(
     float_type::Type = promote_type(real_type(eltype(z)), typeof(float(1))),
     tol::AbstractFloat = 1000*eps(float_type),
     allowed::Union{Function,Bool} = true,
-    max_iter::Int = 100,
+    max_degree::Int = min(length(y), 100),
+    max_iter = max_degree,
     stagnation::Int = 5,
     ) where {T<:Number,S<:Number}
 
