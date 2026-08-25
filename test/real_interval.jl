@@ -218,4 +218,24 @@
         f = x -> 1 / sin(a + (b-a)*1.05im - x); @test pass(f, approx(f), pts, atol=toler(f))
         f = x -> exp(-10/(a + 1.1*(b-a) - x)); @test pass(f, approx(f), pts, atol=toler(f))
     end
+
+    @testset "ClosedInterval from IntervalSets" begin
+        pts = test_points[Float64]
+        f = x -> exp(x)
+        r = approximate(f, -1..1)
+        @test RFA.domain(r) == Segment(-1.0, 1.0)
+        @test pass(f, r, pts, rtol=3000*eps())
+
+        r_bary = approximate(f, -1..1, Barycentric())
+        @test RFA.domain(r_bary) == Segment(-1.0, 1.0)
+        @test pass(f, r_bary, pts, rtol=3000*eps())
+
+        g = x -> 1 / (x^2 + 4)
+        r_pf = approximate(g, -1..1, [2im, -2im])
+        @test RFA.domain(r_pf) == Segment(-1.0, 1.0)
+        @test pass(g, r_pf, pts, rtol=3000*eps())
+
+        r_ab = approximate(f, 0.5..2.5)
+        @test RFA.domain(r_ab) == Segment(0.5, 2.5)
+    end
 end

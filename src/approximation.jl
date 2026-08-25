@@ -143,7 +143,8 @@ Adaptively compute a rational interpolant on a continuous or discrete domain.
 # Arguments
 ## Continuous domain
 - `f::Function`: function to approximate
-- `domain`: curve, path, or region from ComplexRegions
+- `domain`: curve, path, or region from ComplexRegions, or an `IntervalSets.ClosedInterval`
+  (e.g. `-1..1`), which is converted to a `Segment`
 
 ## Discrete domain
 - `f::Function` or `y::AbstractVector`: function or discrete values to approximate
@@ -230,6 +231,12 @@ approximate(f::Function, domain, ζ::AbstractVector)
 #####
 ##### Dispatch
 #####
+
+# Convert an `IntervalSets.ClosedInterval` (e.g. `a..b` from IntervalSets/Makie) to a
+# `Segment`, so users can write `approximate(f, -1..1)` in place of `approximate(f, Segment(-1, 1))`.
+function approximate(f::Function, I::ClosedInterval{<:Real}, args...; kw...)
+    return approximate(f, Segment(leftendpoint(I), rightendpoint(I)), args...; kw...)
+end
 
 # Each rational type implements a method that dispatches on an instance of the type
 # (e.g. `Barycentric()`, `Thiele()`, `PartialFractions()`) passed as the last positional
