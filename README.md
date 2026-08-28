@@ -5,6 +5,8 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.8355790.svg)](https://doi.org/10.5281/zenodo.8355790)
 [![codecov](https://codecov.io/gh/complexvariables/RationalFunctionApproximation.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/complexvariables/RationalFunctionApproximation.jl)
 
+[![Paper](https://proceedings.juliacon.org/papers/10.21105/jcon.00208/status.svg)](https://doi.org/10.21105/jcon.00208)
+
 ![logo](logo-sm.png)
 
 This Julia package adaptively computes rational approximations (i.e., ratios of polynomials) for functions on intervals and other domains in the complex plane.
