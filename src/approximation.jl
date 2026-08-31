@@ -231,6 +231,23 @@ approximate(f::Function, domain, ζ::AbstractVector)
 ##### Dispatch
 #####
 
+# Deprecation shim: the pre-rename API accepted `method` as a keyword argument holding
+# a type (e.g. `method=AAA`, `method=Thiele`). The current API takes an instance as the
+# last positional argument. Extract the kwarg, warn, and return the instance + remaining
+# kwargs so callers can forward positionally.
+@noinline function _pop_deprecated_method_kw(kw)
+    m = kw[:method]
+    inst = m isa Type ? m() : m
+    Base.depwarn(
+        "Passing `method` as a keyword argument to `approximate` is deprecated. " *
+        "Pass an instance as the last positional argument instead, e.g. `approximate(f, domain, $(nameof(typeof(inst)))())`.",
+        :approximate;
+        force = true    # otherwise silent under Julia's default --depwarn=no
+    )
+    rest = Base.structdiff(NamedTuple(kw), NamedTuple{(:method,)})
+    return inst, rest
+end
+
 # Convert an `IntervalSets.ClosedInterval` (e.g. `a..b` from IntervalSets/Makie) to a
 # `Segment`, so users can write `approximate(f, -1..1)` in place of `approximate(f, Segment(-1, 1))`.
 function approximate(f::Function, I::ClosedInterval{<:Real}, args...; kw...)
@@ -241,14 +258,26 @@ end
 # (e.g. `Barycentric()`, `Thiele()`, `PartialFractions()`) passed as the last positional
 # argument. The methods here supply the default selector when none is given.
 function approximate(f::Function, domain::ComplexCurveOrPath=Segment(-1, 1); kw...)
-     approximate(f, domain, Thiele(); kw...)
+    if haskey(kw, :method)
+        m, rest = _pop_deprecated_method_kw(kw)
+        return approximate(f, domain, m; rest...)
+    end
+    approximate(f, domain, Thiele(); kw...)
 end
 
 function approximate(y::AbstractVector, z::AbstractVector; kw...)
-     approximate(y, z, Thiele(); kw...)
+    if haskey(kw, :method)
+        m, rest = _pop_deprecated_method_kw(kw)
+        return approximate(y, z, m; rest...)
+    end
+    approximate(y, z, Thiele(); kw...)
 end
 
 function approximate(f::Function, domain::ComplexCurveOrPath, ζ::AbstractVector; kw...)
+    if haskey(kw, :method)
+        m, rest = _pop_deprecated_method_kw(kw)
+        return approximate(f, domain, ζ, m; rest...)
+    end
     approximate(f, domain, ζ, PartialFractions(); kw...)
 end
 
@@ -264,6 +293,10 @@ function approximate(
     allowed=true,
     kw...
     )
+    if haskey(kw, :method)
+        m, rest = _pop_deprecated_method_kw(kw)
+        return approximate(f, R, m; allowed, rest...)
+    end
     if allowed == :strict
         # only allow poles outside the region
         allowed = z -> !in(z,R)
@@ -279,6 +312,10 @@ function approximate(
     allowed = true,
     kw...
     )
+    if haskey(kw, :method)
+        m, rest = _pop_deprecated_method_kw(kw)
+        return approximate(f, z, m; allowed, rest...)
+    end
     y = f.(z)
     r = approximate(y, z, method; allowed, kw...)
     return DiscreteApproximation(y, z, r.fun, r.test_index, r.allowed, r.history)
@@ -289,6 +326,10 @@ function approximate(
     f::Function, z::AbstractVector, ζ::AbstractVector, method::AbstractRationalFunction=PartialFractions();
     kw...
     )
+    if haskey(kw, :method)
+        m, rest = _pop_deprecated_method_kw(kw)
+        return approximate(f, z, ζ, m; rest...)
+    end
     y = f.(z)
     r = approximate(y, z, ζ, method; kw...)
     return DiscreteApproximation(y, z, r.fun, r.test_index, true, r.history)

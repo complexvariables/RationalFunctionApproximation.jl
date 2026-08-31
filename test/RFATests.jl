@@ -16,5 +16,6 @@ include("circle.jl")
 include("custom.jl")
 include("operations.jl")
 include("parfrac.jl")
+include("deprecated.jl")
 
 end
