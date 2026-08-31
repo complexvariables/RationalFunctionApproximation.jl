@@ -10,7 +10,7 @@ The domain `unit_circle` is predefined. Here's a function approximated on the un
 using RationalFunctionApproximation, CairoMakie, DomainColoring
 const shg = current_figure
 
-f = z -> (z^3 - 1) / sin(z - 0.9 - 1im)
+f(z) = (z^3 - 1) / sin(z - 0.9 - 1im)
 r = approximate(f, unit_circle)
 ```
 
@@ -23,7 +23,6 @@ errorplot(r)
 Here is how the approximation looks in the complex plane (using a black cross to mark the pole):
 
 ```@example shapes
-using ComplexRegions
 domaincolor(r, 1.5, abs=true)
 lines!(unit_circle, color=:white, linewidth=4)
 scatter!(poles(r), markersize=16, color=:black, marker=:xcross)
@@ -36,25 +35,26 @@ Above, you can also see the zeros at roots of unity.
 This next function has infinitely many poles and an essential singularity inside the unit disk:
 
 ```@example shapes
-f = z -> tan(1 / z^4)
+f(z) = tan(1 / z^4)
 r = approximate(f, unit_circle)
 domaincolor(r, 1.5, abs=true)
 lines!(unit_circle, color=:white, linewidth=4)
 shg()
 ```
 
-We can request an approximation that is analytic in a region. In this case, it would not make sense to request one on the unit disk, since the singularities are necessary:
+We can request an approximation that is analytic in a region. The keyword `allowed=:strict` prevents the iteration from accepting a rational function with poles inside the domain. In this case, since it does not make sense to request one free of poles in the unit disk, the iteration fails:
 
 ```@example shapes
-r = approximate(f, unit_disk)
+r = approximate(f, unit_disk; allowed=:strict)
 ```
 
 In the result above, the approximation is simply a constant function, as the algorithm could do no better. However, if we request analyticity in the region exterior to the circle, everything works out:
 
 ```@example shapes
-r = approximate(f, exterior(unit_circle))
-max_err = maximum(abs, check(r, quiet=true)[2])
-println("Max error: ", max_err)
+using ComplexRegions
+r = approximate(f, exterior(unit_circle); allowed=:strict)
+maxerr = maximum(abs, check(r, quiet=true)[2])
+println("Max error: ", maxerr)
 ```
 
 ## Other shapes
@@ -63,7 +63,7 @@ We are not limited to intervals and circles! There are other shapes available in
 
 ```@example shapes
 import ComplexRegions.Shapes
-r = approximate(z -> log(0.35 + 0.4im - z), interior(Shapes.cross))
+r = approximate(z -> log(0.35 + 0.4im - z), interior(Shapes.cross); allowed=:strict)
 domaincolor(r, 1.5, abs=true)
 lines!(boundary(r.domain), color=:white, linewidth=4)
 shg()
@@ -71,7 +71,7 @@ shg()
 
 ```@example shapes
 c = Shapes.hypo(5)
-r = approximate(z -> (z+4)^(-3.5), interior(c))
+r = approximate(z -> (z+4)^(-3.5), interior(c); allowed=:strict)
 domaincolor(r, 5, abs=true)
 lines!(c, color=:white, linewidth=4)
 shg()
@@ -100,13 +100,13 @@ shg()
 It's also possible to approximate on domains with an unbounded boundary curve, but this capability is not yet automated. For example, the function
 
 ```@example shapes
-f = z -> 1 / sqrt(z - (-1 + 3im))
+f(z) = 1 / sqrt(z - (-1 + 3im))
 ```
 
 is analytic on the right half of the complex plane. In order to produce an approximation on that domain, we can transplant it to the unit disk via a Möbius transformation $\phi$:
 
 ```@example shapes
-z = cispi.(range(-1, 1, length=90))           # points on the unit circle
+z = cispi.(range(-1, 1, 90))                  # points on the unit circle
 φ = Mobius( [-1, -1im, 1], [1im, 0, -1im])    # unit circle ↦ imag axis
 extrema(real, φ.(z))
 ```
@@ -114,7 +114,7 @@ extrema(real, φ.(z))
 By composing $f$ with $\phi$, we can approximate within the disk while $f$ is evaluated only on its native domain:
 
 ```@example shapes
-r = approximate(f ∘ φ, interior(unit_circle))
+r = approximate(f ∘ φ, interior(unit_circle); allowed=:strict)
 domaincolor(r, 2, abs=true)
 lines!(unit_circle, color=:white, linewidth=4)
 scatter!(nodes(r.fun), color=:black, markersize=8)

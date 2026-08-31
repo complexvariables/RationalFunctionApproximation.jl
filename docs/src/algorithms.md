@@ -26,8 +26,8 @@ The AAA algorithm is the best-known and most widely used method for rational app
 The `convergenceplot` function shows the errors of the approximants found during the AAA iteration.
 
 ```@example convergence
-f = x -> cos(exp(3x))
-r = approximate(f, unit_interval)
+f(x) = cos(exp(3x))
+r = approximate(f, -1..1, AAA())
 convergenceplot(r)
 ```
 
@@ -60,8 +60,8 @@ That's why the reported error is not very large. It's worth keeping in mind that
 It is possible for the iteration to stagnate with bad poles if the original function has a singularity very close to the domain.
 
 ```@example convergence
-f = x -> tanh(500*(x - 1//4))
-r = approximate(f, unit_interval)
+f(x) = tanh(500*(x - 1//4))
+r = approximate(f, -1..1, AAA())
 convergenceplot(r)
 ```
 
@@ -69,22 +69,22 @@ This effect is thought to be mainly due to roundoff and conditioning of the prob
 
 ```@example convergence
 using DoubleFloats, ComplexRegions
-r = approximate(f, Segment{Double64}(-1, 1))
+r = approximate(f, Double64(-1)..1, AAA())
 convergenceplot(r)
 ```
 
 In the extreme case of a function with a singularity on the domain, the convergence can be substantially affected:
 
 ```@example convergence
-f = x -> abs(x - 1/8)
-r = approximate(f, unit_interval)
+f(x) = abs(x - 1/8)
+r = approximate(f, -1..1, AAA())
 convergenceplot(r)
 ```
 
 In such a case, we might get improvement by increasing the number of allowed consecutive failures via the `stagnation` keyword argument:
 
 ```@example convergence
-r = approximate(f, unit_interval, stagnation=50)
+r = approximate(f, -1..1, AAA(); stagnation=50)
 convergenceplot(r)
 ```
 
@@ -92,24 +92,24 @@ However, AAA is an $O(n^4)$ algorithm, so venturing into higher degrees can beco
 
 ## Thiele continued fractions (TCF)
 
-The TCF algorithm [SalazarCelisNumericalContinued2024](@cite) is much newer than AAA and less thoroughly battle-tested, even though it's based on a continued fraction representation of rational functions that is over a century old. Like AAA, it uses iterative greedy node selection, and the effects of that ordering look good in experiments so far but are poorly understood theoretically. In TCF's favor are its $O(n^3)$ complexity requirement and an algorithmic simplicity that requires nothing more than basic arithmetic.
+The greedy TCF algorithm [SalazarCelisNumericalContinued2024](@cite) is much newer than AAA despite being based on a continued fraction representation of rational functions that is over a century old. Like AAA, it uses iterative greedy node selection, and the effects of that ordering look very good in experiments. In TCF's favor are its $O(n^3)$ complexity requirement and an algorithmic simplicity that requires nothing more than basic arithmetic.
 
-To try greedy TCF, pass `Thiele()` (or its alias `TCF()`) as the last positional argument to `approximate`.
+As of version 0.4 of the package, TCF is the default method used by `approximation`. You can also select it manually by passing `Thiele()` (or its alias `TCF()`) as the third positional argument.
 
 ```@example convergence
-f = x -> cos(41x - 5) * exp(-10x^2)
-r = approximate(f, unit_interval, TCF())
+f(x) = cos(41x - 5) * exp(-10x^2)
+r = approximate(f)    # -1..1 and TCF() by default
 convergenceplot(r)
 ```
 
-The $x$-axis of the convergence plot shows the degree of the denominator polynomial. Because the Thiele method alternates between interpolants of type $(n, n)$ and $(n+1, n)$, there are two dots in the plot for each degree. The dots corresponding to approximations of the diagonal and superdiagonal rational type are connected by lines; sometimes, they could be viewed as separate convergence curves.
+The $x$-axis of the convergence plot shows the degree of the denominator polynomial. Because the Thiele method alternates between interpolants of type $(n, n)$ and $(n+1, n)$, there are two dots in the plot for each degree, and line segments connect the dots sharing the same rational type, giving two convergence curves.
 
-Because TCF uses only addition, multiplication, and division, it is easy to use in extended precision arithmetic. Here, we use `allowed=true` to disable checking for poles, because doing so requires solving an eigenvalue problem that is far more expensive than the iteration itself.
+Because TCF uses only addition, multiplication, and division, it is easy to use in extended precision arithmetic. 
 
 ```@example convergence
-f = x -> atan(1e5*(x - 1//2))
-domain = Segment{BigFloat}(-1, 1)
-@elapsed r = approximate(f, domain, TCF(); max_iter=400, allowed=true, stagnation=40)
+f(x) = atan(1e5*(x - 1//2))
+domain = big(-1)..1    # use BigFloats
+@elapsed r = approximate(f, domain; max_degree=150, stagnation=40)
 ```
 
 ```@example convergence
@@ -129,9 +129,9 @@ When posed on a discrete set of test points, this is a linear least-squares prob
 There is no iteration on the degree of the polynomial or rational parts of the approximant. In the continuum variant, though, the discretization of the boundary of the domain is refined iteratively until either the max-norm error is below a specified threshold or has stopped improving.
 
 ```@example convergence
-f = x -> tanh(x)
+f(x) = tanh(x)
 ζ = 1im * π * [-1/2, 1/2, -3/2, 3/2]
-r = approximate(f, Segment(-2, 2), ζ)
+r = approximate(f, -2..2, ζ)
 ```
 
 ```@example convergence
@@ -142,7 +142,7 @@ println("Max error: $(max_err(r))")
 To get greater accuracy, we can increase the degree of the polynomial part.
 
 ```@example convergence
-r = approximate(f, Segment(-2, 2), ζ; degree=20)
+r = approximate(f, -2..2, ζ; degree=20)
 max_err(r)
 ```
 
@@ -152,16 +152,16 @@ Note that the residues, which are all equal to 1 for the exact function, may not
 Pair.(residues(r)...)
 ```
 
-Suppose now we approximate $|x|$ using AAA. We can extract the poles of the result.
+Suppose now we approximate $|x|$ using TCF. We can extract the poles of the result, filtering out those that lie on the real axis.
 
 ```@example convergence
-r = approximate(abs, unit_interval, tol=1e-9)
-ζ = poles(r)
+r = approximate(abs; tol=1e-9, stagnation=30)
+ζ = filter(z -> abs(imag(z)) > 1e-8, poles(r))
 ```
 
-To what extent might these poles be suitable for a different function that has the same singularity?
+These poles might be suitable for a different function that has the same singularity:
 
 ```@example convergence
-s = approximate(x -> exp(abs(x)), unit_interval, ζ; degree=20)
+s = approximate(x -> exp(abs(x)), -1..1, ζ; degree=20)
 max_err(r)
 ```
