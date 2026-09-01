@@ -497,16 +497,20 @@ function approximate(
 
     # Main iteration
     n = 1       # iteration counter
+    stop = nothing
     while true
         err_max, idx_max = _sweep!(rbuf, zbuf, abuf, bbuf, r, τ, fτ, active)
         history[n].error = err_max
 
-        status = quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
-        if status > 0
-            @info("Stopping with estimated error $(round(history[status].error, sigdigits=4)) after $n iterations")
-            r = history[status].interpolant
+        reason, best = quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
+        if reason !== :iterating
+            if reason !== :converged
+                @info("Stopping with estimated error $(round(history[best].error, sigdigits=4)) after $n iterations")
+                r = history[best].interpolant
+            end
+            stop = ConvergenceStatus(reason, best, history)
+            break
         end
-        (status != 0) && break
 
         # Add node to approximant
         idx_new = active[idx_max]      # location of worst test point
@@ -515,9 +519,10 @@ function approximate(
             push!(history, IterationRecord(r, NaN, missing))
         catch(e)
             # look for the best acceptable case
-            status = quitting_check(history, stagnation, tol, fmax, 1, allowed)
-            r = history[status].interpolant
-            @info("NaN weight encountered; stopping with estimated error $(round(history[status].error, sigdigits=4))")
+            best = best_acceptable(history, allowed)
+            r = history[best].interpolant
+            stop = ConvergenceStatus(:nan_weight, best, history)
+            @info("NaN weight encountered; stopping with estimated error $(round(history[best].error, sigdigits=4))")
             @debug("Error $e")
             break
         end
@@ -528,9 +533,10 @@ function approximate(
             idx_new_test = add_node!(path, CartesianIndices(τ)[idx_new])
         catch
             # look for the best acceptable case
-            status = quitting_check(history, stagnation, tol, fmax, 1, allowed)
-            r = history[status].interpolant
-            @info("Maximum path refinement exceeded; stopping with estimated error $(round(history[status].error, sigdigits=4))")
+            best = best_acceptable(history, allowed)
+            r = history[best].interpolant
+            stop = ConvergenceStatus(:refinement, best, history)
+            @info("Maximum path refinement exceeded; stopping with estimated error $(round(history[best].error, sigdigits=4))")
             break
         end
 
@@ -554,7 +560,7 @@ function approximate(
             end
         end
     end
-    return ContinuumApproximation(f, d, r, allowed, path, history)
+    return ContinuumApproximation(f, d, r, allowed, path, history, stop)
 end
 
 function approximate(
@@ -579,6 +585,7 @@ function approximate(
 
     history = [IterationRecord(r, NaN, missing)]
     n = 1    # iteration counter
+    stop = nothing
     while length(z) > 0
         evaluate!(r_test, r, z_test)
         @inbounds for i in eachindex(r_test)   # array evaluation skips the underflow check
@@ -588,17 +595,21 @@ function approximate(
         err_max, idx_max = findmax(abs(e) for e in r_test)
         history[n].error = err_max
 
-        status = quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
-        if status > 0
-            if isinf(err_max)
-                @info("Used all sample values without convergence")
-                status = max_iter
-            else
-                @info("Stopping with estimated error $(round(history[status].error, sigdigits=4)) after $n iterations")
+        reason, best = quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
+        if reason !== :iterating
+            if reason !== :converged
+                # An infinite error estimate means there is nothing left to test against.
+                if isinf(err_max)
+                    reason, best = :exhausted, lastindex(history)
+                    @info("Used all sample values without convergence")
+                else
+                    @info("Stopping with estimated error $(round(history[best].error, sigdigits=4)) after $n iterations")
+                end
+                r = history[best].interpolant
             end
-            r = history[status].interpolant
+            stop = ConvergenceStatus(reason, best, history)
+            break
         end
-        (status != 0) && break
 
         # Add new node:
         try
@@ -609,15 +620,16 @@ function approximate(
             deleteat!(r_test, idx_max)
         catch(e)
             # look for the best acceptable case
-            status = quitting_check(history, stagnation, tol, fmax, 1, allowed)
-            r = history[status].interpolant
-            @info("Adding node failed; stopping with estimated error $(round(history[status].error, sigdigits=4))")
+            best = best_acceptable(history, allowed)
+            r = history[best].interpolant
+            stop = ConvergenceStatus(:node_failure, best, history)
+            @info("Adding node failed; stopping with estimated error $(round(history[best].error, sigdigits=4))")
             @debug("Error $e")
             break
         end
         n += 1
     end
-    return DiscreteApproximation(y, z, r, idx_test, allowed, history)
+    return DiscreteApproximation(y, z, r, idx_test, allowed, history, stop)
 end
 
 # Operations with scalars that can be done quickly.

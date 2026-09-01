@@ -414,6 +414,7 @@ function approximate(
     # Main iteration
     idx_new_test = nothing
     n = 1       # iteration counter
+    stop = nothing
     while true
         Cmatrix = reshape(view(C, idx_test, 1:numnodes), :, numnodes)
         evaluate!(view(rτ, idx_test), r, Cmatrix)    # r at test points
@@ -421,12 +422,15 @@ function approximate(
         err_max, idx_max = findmax(err)
         history[n].error = err_max
 
-        status = quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
-        if status > 0
-            @info("Stopping with estimated error $(round(history[status].error, sigdigits=4)) after $n iterations")
-            r = history[status].interpolant
+        reason, best = quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
+        if reason !== :iterating
+            if reason !== :converged
+                @info("Stopping with estimated error $(round(history[best].error, sigdigits=4)) after $n iterations")
+                r = history[best].interpolant
+            end
+            stop = ConvergenceStatus(reason, best, history)
+            break
         end
-        (status != 0) && break
 
         ### Refinement
         idx_new = idx_test[idx_max]      # location of worst test point
@@ -435,9 +439,10 @@ function approximate(
             idx_new_test = add_node!(path, idx_new)
         catch
             # look for the best acceptable case
-            status = quitting_check(history, stagnation, tol, fmax, 1, allowed)
-            r = history[status].interpolant
-            @info("Unable to add new node; stopping with estimated error $(round(history[status].error, sigdigits=4))")
+            best = best_acceptable(history, allowed)
+            r = history[best].interpolant
+            stop = ConvergenceStatus(:node_failure, best, history)
+            @info("Unable to add new node; stopping with estimated error $(round(history[best].error, sigdigits=4))")
             break
         end
 
@@ -458,7 +463,7 @@ function approximate(
         n += 1
         numnodes += 1
     end
-    return ContinuumApproximation(f, d, r, allowed, path, history)
+    return ContinuumApproximation(f, d, r, allowed, path, history, stop)
 end
 
 function approximate(
@@ -489,6 +494,7 @@ function approximate(
     r = Barycentric([z[i₀]], [y[i₀]], view(L, idx_test, 1:1))
     history = [IterationRecord(r, NaN, missing)]
     n = 1    # iteration counter
+    stop = nothing
     while count(idx_test) > 0
         evaluate!(view(values, idx_test), r, view(C, idx_test, 1:n))    # r at test points
         idx_max, err_max = 0, -Inf
@@ -503,12 +509,15 @@ function approximate(
         end
         history[n].error = err_max
 
-        status = quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
-        if status > 0
-            @info("Stopping with estimated error $(round(history[status].error, sigdigits=4)) after $n iterations")
-            r = history[status].interpolant
+        reason, best = quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
+        if reason !== :iterating
+            if reason !== :converged
+                @info("Stopping with estimated error $(round(history[best].error, sigdigits=4)) after $n iterations")
+                r = history[best].interpolant
+            end
+            stop = ConvergenceStatus(reason, best, history)
+            break
         end
-        (status != 0) && break
 
         # Add new node:
         idx_test[idx_max] = false
@@ -516,7 +525,8 @@ function approximate(
         push!(history, IterationRecord(r, NaN, missing))
         n += 1
     end
-    return DiscreteApproximation(y, z, r, idx_test, allowed, history)
+    stop = @something stop ConvergenceStatus(:exhausted, lastindex(history), history)
+    return DiscreteApproximation(y, z, r, idx_test, allowed, history, stop)
 end
 
 # Operations with scalars that can be done quickly.

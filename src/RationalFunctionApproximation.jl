@@ -20,6 +20,7 @@ export nodes, weights, degree, degrees, poles, Res, residues, roots
 include("abstract-rational.jl")
 
 export approximate, get_function, domain, check, rewind, get_history, test_points
+export ConvergenceStatus, status, isconverged
 include("approximation.jl")
 
 export Barycentric, AAA, Thiele, TCF, derivative, evaluate

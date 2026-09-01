@@ -19,6 +19,45 @@ function Base.show(io::IO, ::MIME"text/plain", h::IterationRecord)
 end
 # COV_EXCL_STOP
 
+"""
+    ConvergenceStatus (type)
+
+Why an approximation iteration stopped, and which iterate it returned.
+
+# Fields
+- `reason::Symbol`: the cause of termination (see below)
+- `best::Int`: index into the history of the interpolant that was returned
+- `iterations::Int`: number of iterations completed
+- `error::Float64`: estimated error of the returned interpolant
+
+# Reasons
+- `:converged`: the error fell below `tol` with acceptable poles
+- `:stagnated`: the error plateaued for `stagnation` iterations
+- `:max_degree`: the degree budget was exhausted before reaching `tol`
+- `:node_failure`: a new node could not be added
+- `:nan_weight`: a NaN weight was encountered
+- `:refinement`: the path refinement limit was exceeded
+- `:exhausted`: all available sample values were used
+- `:rewound`: the iterate was selected by [`rewind`](@ref), not by the iteration
+
+See also [`isconverged`](@ref), [`get_history`](@ref).
+"""
+struct ConvergenceStatus
+    reason::Symbol
+    best::Int
+    iterations::Int
+    error::Float64
+end
+
+ConvergenceStatus(reason::Symbol, best::Integer, history) =
+    ConvergenceStatus(reason, best, length(history), history[best].error)
+
+# COV_EXCL_START
+function Base.show(io::IO, ::MIME"text/plain", s::ConvergenceStatus)
+    print(io, "stopped by $(s.reason) after $(s.iterations) iterations with estimated error $(round(s.error, sigdigits=4))")
+end
+# COV_EXCL_STOP
+
 abstract type AbstractApproximation{T,S} <: Function end
 
 """
@@ -33,6 +72,7 @@ Approximation of a function on a domain.
 - `allowed`: function to determine if a pole is allowed
 - `path`: a `DiscretizedPath` for the domain boundary
 - `history`: all approximations in the iteration
+- `status`: why the iteration stopped, or `nothing` if not recorded
 """
 struct ContinuumApproximation{T,S,R} <: AbstractApproximation{T,S}
     original::Function
@@ -41,6 +81,7 @@ struct ContinuumApproximation{T,S,R} <: AbstractApproximation{T,S}
     allowed::Union{Bool,Function}
     path::DiscretizedPath
     history::Union{Vector{<:IterationRecord},Nothing}
+    status::Union{ConvergenceStatus,Nothing}
 end
 
 function ContinuumApproximation(
@@ -49,15 +90,17 @@ function ContinuumApproximation(
     fun::R,
     allowed::Union{Bool,Function},
     path::DiscretizedPath,
-    history=nothing
+    history=nothing,
+    status=nothing
     ) where {T,S,R<:AbstractRationalFunction{S}}
-    return ContinuumApproximation{T,S,R}(f, domain, fun, allowed, path, history)
+    return ContinuumApproximation{T,S,R}(f, domain, fun, allowed, path, history, status)
 end
 
 (f::ContinuumApproximation)(z) = f.fun(z)
 domain(r::ContinuumApproximation) = r.domain
 get_function(r::ContinuumApproximation) = r.fun
 history(r::ContinuumApproximation) = r.history
+status(r::ContinuumApproximation) = r.status
 
 """
     DiscreteApproximation (type)
@@ -71,6 +114,7 @@ Approximation of a function on a domain.
 - `test_index`: indicator of which domain points remain as test points
 - `allowed`: function to determine if a pole is allowed
 - `history`: all approximations in the iteration
+- `status`: why the iteration stopped, or `nothing` if not recorded
 """
 struct DiscreteApproximation{T,S,R} <: AbstractApproximation{T,S}
     data::Vector{S}
@@ -79,6 +123,7 @@ struct DiscreteApproximation{T,S,R} <: AbstractApproximation{T,S}
     test_index::BitVector
     allowed::Union{Bool,Function}
     history::Union{Vector{<:IterationRecord},Nothing}
+    status::Union{ConvergenceStatus,Nothing}
     function DiscreteApproximation{T,S,R}(
         data::AbstractVector{S},
         domain::AbstractVector{T},
@@ -95,25 +140,67 @@ function DiscreteApproximation(
     fun::R,
     test_index::BitVector,
     allowed::Union{Bool,Function}=true,
-    history=nothing
+    history=nothing,
+    status=nothing
     ) where {T,S,R<:AbstractRationalFunction}
-    return DiscreteApproximation{T,float(S),typeof(fun)}(float(data), domain, fun, test_index, allowed, history)
+    return DiscreteApproximation{T,float(S),typeof(fun)}(float(data), domain, fun, test_index, allowed, history, status)
 end
 
 (f::DiscreteApproximation)(z) = f.fun(z)
 domain(r::DiscreteApproximation) = r.domain
 get_function(r::DiscreteApproximation) = r.fun
 history(r::DiscreteApproximation) = r.history
+status(r::DiscreteApproximation) = r.status
+
+"""
+    status(r::Approximation)
+
+Return the [`ConvergenceStatus`](@ref) recorded when `r` was constructed, or `nothing`
+if the construction did not record one.
+
+See also [`isconverged`](@ref).
+"""
+status
+
+"""
+    isconverged(s::ConvergenceStatus)
+    isconverged(r::Approximation)
+
+Determine whether an approximation iteration stopped because it reached the requested
+tolerance, as opposed to stagnating, exhausting its degree budget, or failing. Returns
+`false` for an approximation with no recorded status.
+
+# Examples
+```julia-repl
+julia> r = approximate(exp, unit_interval);
+
+julia> isconverged(r)
+true
+```
+
+See also [`status`](@ref), [`ConvergenceStatus`](@ref).
+"""
+isconverged(s::ConvergenceStatus) = s.reason === :converged
+isconverged(r::AbstractApproximation) = isconverged(status(r))
+isconverged(::Nothing) = false
 
 # COV_EXCL_START
 function Base.show(io::IO, ::MIME"text/plain", f::ContinuumApproximation)
     print(io, f.fun)
     print(IOContext(io, :compact=>true), " constructed on: ", f.domain)
+    _show_status(io, f.status)
 end
 
 function Base.show(io::IO, ::MIME"text/plain", f::AbstractApproximation)
     print(io, f.fun)
     print(IOContext(io, :compact=>true), " constructed from $(length(f.domain)) samples")
+    _show_status(io, f.status)
+end
+
+_show_status(io::IO, ::Nothing) = nothing
+function _show_status(io::IO, s::ConvergenceStatus)
+    print(io, "\n  ")
+    show(io, MIME"text/plain"(), s)
 end
 # COV_EXCL_STOP
 
@@ -302,7 +389,7 @@ function approximate(
         allowed = z -> !in(z,R)
     end
     r = approximate(f, R.boundary, method; allowed, kw...)
-    return ContinuumApproximation(f, R, r.fun, r.allowed, r.path, r.history)
+    return ContinuumApproximation(f, R, r.fun, r.allowed, r.path, r.history, r.status)
 end
 
 # ::Function, ::AbstractVector, [selector]
@@ -318,7 +405,7 @@ function approximate(
     end
     y = f.(z)
     r = approximate(y, z, method; allowed, kw...)
-    return DiscreteApproximation(y, z, r.fun, r.test_index, r.allowed, r.history)
+    return DiscreteApproximation(y, z, r.fun, r.test_index, r.allowed, r.history, r.status)
 end
 
 # ::Function, ::AbstractVector, ::AbstractVector, [selector]
@@ -332,7 +419,7 @@ function approximate(
     end
     y = f.(z)
     r = approximate(y, z, ζ, method; kw...)
-    return DiscreteApproximation(y, z, r.fun, r.test_index, true, r.history)
+    return DiscreteApproximation(y, z, r.fun, r.test_index, true, r.history, r.status)
 end
 
 #####
@@ -380,7 +467,8 @@ function rewind(r::AbstractApproximation, idx::Integer)
     if isnothing(r.history)
         @error("No convergence history exists.")
     end
-    return typeof(r)(r.original, r.domain, r.history[idx].interpolant, r.allowed, r.path, r.history)
+    stop = ConvergenceStatus(:rewound, idx, r.history)
+    return typeof(r)(r.original, r.domain, r.history[idx].interpolant, r.allowed, r.path, r.history, stop)
 end
 
 """
@@ -473,23 +561,36 @@ function get_history(r::AbstractApproximation{T,S}; get_poles=!(r.allowed == tru
     return deg, err, zp, allowed, best
 end
 
-# Return values for quitting_check:
-#  -1: success
-#   0: continue
-#   n: iteration number to stop at
+# Index of the lowest-error iterate whose poles are all allowed. If none qualifies,
+# fall back to the final iterate. Callers that stop for their own reasons (a node that
+# could not be added, a NaN weight) use this directly to choose what to return.
+function best_acceptable(history, allowed)
+    err = [h.error for h in history]
+    if (allowed === true)
+        return argmin(i -> err[i], (i for i in eachindex(err) if !isnan(err[i])))
+    end
+    for k in sortperm(err)
+        history[k].poles = @coalesce history[k].poles poles(history[k].interpolant)
+        all(allowed, history[k].poles) && return k
+    end
+    return lastindex(err)
+end
+
+# Decide whether the iteration should stop, and on which iterate. Returns a tuple
+# `(reason, best)`; a reason of `:iterating` means carry on, and leaves `best` at 0.
+# Every other reason is one of those documented for `ConvergenceStatus`.
 function quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
     n = length(history)
     err = [h.error for h in history]
 
     # Check for convergence
     # If allowed === true, do not check for allowed poles
-    status = 0
     if (err[end] <= tol*fmax)
         if (allowed === true)
-            status = -1
+            return (:converged, n)
         else
             zp = history[end].poles = poles(history[end].interpolant)
-            status = all(allowed, zp) ? -1 : 0
+            all(allowed, zp) && return (:converged, n)
         end
     end
 
@@ -501,23 +602,11 @@ function quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
         stagnant = all(plateau < e for e in last(err, stagnation)) || (min_k < n - 2stagnation)
     end
 
-    # Decide on unsuccessful stopping
-    if (n >= max_iter) || stagnant
-        # Look for the best acceptable approximation:
-        if (allowed === true)
-            n = argmin(i -> err[i], (i for i in eachindex(err) if !isnan(err[i])))
-        else
-            for k in sortperm(err)
-                history[k].poles = @coalesce history[k].poles poles(history[k].interpolant)
-                if all(allowed, history[k].poles)
-                    n = k
-                    break
-                end
-            end
-        end
-        status = n
-    end
-    return status
+    # Decide on unsuccessful stopping. Stagnation is tested first, so that a run which
+    # has genuinely plateaued at the last permitted iteration is not blamed on the budget.
+    stagnant && return (:stagnated, best_acceptable(history, allowed))
+    (n >= max_iter) && return (:max_degree, best_acceptable(history, allowed))
+    return (:iterating, 0)
 end
 
 #####
@@ -554,12 +643,12 @@ end
 
 function Base.:+(r::ContinuumApproximation, s::Number)
     rs = get_function(r) + s
-    return ContinuumApproximation(rs, domain(r), rs, r.allowed, r.path, r.history)
+    return ContinuumApproximation(rs, domain(r), rs, r.allowed, r.path, r.history, r.status)
 end
 
 function Base.:+(r::DiscreteApproximation, s::Number)
     rs = get_function(r) + s
-    return DiscreteApproximation(r.data .+ s, domain(r), rs, r.test_index, r.allowed, r.history)
+    return DiscreteApproximation(r.data .+ s, domain(r), rs, r.test_index, r.allowed, r.history, r.status)
 end
 
 Base.:+(s::Union{Function,Number}, r::AbstractApproximation) = r + s
@@ -572,12 +661,12 @@ Base.:-(r::Union{Function,Number}, s::AbstractApproximation) = -s + r
 # unary -
 function Base.:-(r::ContinuumApproximation)
     rs = -get_function(r)
-    return ContinuumApproximation(rs, domain(r), rs, r.allowed, r.path, r.history)
+    return ContinuumApproximation(rs, domain(r), rs, r.allowed, r.path, r.history, r.status)
 end
 
 function Base.:-(r::DiscreteApproximation)
     rs = -get_function(r)
-    return DiscreteApproximation(-r.data, domain(r), rs, r.test_index, r.allowed, r.history)
+    return DiscreteApproximation(-r.data, domain(r), rs, r.test_index, r.allowed, r.history, r.status)
 end
 
 # * and / with 3 levels of generality
@@ -595,12 +684,12 @@ end
 
 function Base.:*(r::ContinuumApproximation, s::Number)
     rs = get_function(r) * s
-    return ContinuumApproximation(rs, domain(r), rs, r.allowed, r.path, r.history)
+    return ContinuumApproximation(rs, domain(r), rs, r.allowed, r.path, r.history, r.status)
 end
 
 function Base.:*(r::DiscreteApproximation, s::Number)
     rs = get_function(r) * s
-    return DiscreteApproximation(r.data * s, domain(r), rs, r.test_index, r.allowed, r.history)
+    return DiscreteApproximation(r.data * s, domain(r), rs, r.test_index, r.allowed, r.history, r.status)
 end
 
 Base.:*(s::Union{Function,Number}, r::AbstractApproximation) = r * s

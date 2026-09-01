@@ -95,6 +95,47 @@
         f = x -> abs(x - 0.95);  @test pass(f, approx(f, stagnation=30, max_degree=150), pts, atol=1e-9)
     end
 
+    @testset "Convergence status" begin
+        T = Float64
+        pts = test_points[T]
+
+        # An easy function reaches the tolerance.
+        for method in (Barycentric, Thiele)
+            r = approximate(exp, domain[T], method())
+            s = status(r)
+            @test s isa ConvergenceStatus
+            @test s.reason == :converged
+            @test isconverged(r) && isconverged(s)
+            @test s.iterations == length(get_history(r)[1])
+            @test s.error == get_history(r)[2][s.best]
+        end
+
+        # `abs` cannot reach the tolerance within the default degree budget, so the
+        # iteration is truncated rather than converged.
+        f = x -> abs(x)
+        r = approximate(f, domain[T], Barycentric(); stagnation=30, max_degree=40)
+        @test status(r).reason == :max_degree
+        @test !isconverged(r)
+        @test status(r).iterations == 40
+        # Raising the budget lets the same problem converge.
+        @test isconverged(approximate(f, domain[T], Barycentric(); stagnation=30, max_degree=150))
+
+        # A rewound approximation did not stop for the reason the iteration did.
+        r = approximate(exp, domain[T], Barycentric())
+        @test status(rewind(r, 3)).reason == :rewound
+        @test status(rewind(r, 3)).best == 3
+        @test !isconverged(rewind(r, 3))
+
+        # Discrete domains report status too.
+        r = approximate(exp, pts, Thiele())
+        @test isconverged(r)
+
+        # Prescribed poles are a direct solve, so there is no iteration to report.
+        r = approximate(x -> 1 / (x^2 + 4), domain[T], [2im, -2im])
+        @test isnothing(status(r))
+        @test !isconverged(r)
+    end
+
     @testset "Nodes, values, degree for Barycentric" begin
         r = approximate(exp, unit_interval, Barycentric())
         @test length(nodes(r)) == 6

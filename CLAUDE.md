@@ -73,6 +73,7 @@ Fields: `polynomial::ArnoldiPolynomial`, `poles`, `residues`
 - **`ContinuumApproximation{T,S,R}`** (approximation.jl:37) — continuous domain wrapper; fields: `original`, `domain`, `fun`, `allowed`, `path`, `history`
 - **`DiscreteApproximation{T,S,R}`** (approximation.jl:75) — discrete point set wrapper; fields: `data`, `domain`, `fun`, `test_index`, `allowed`, `history`
 - **`IterationRecord{R,S,T}`** (approximation.jl:5) — convergence history entry; fields: `interpolant`, `error`, `poles`
+- **`ConvergenceStatus`** (approximation.jl:22) — why an iteration stopped; fields: `reason`, `best`, `iterations`, `error`. `reason` is one of `:converged`, `:stagnated`, `:max_degree`, `:node_failure`, `:nan_weight`, `:refinement`, `:exhausted`, `:rewound`
 
 ---
 
@@ -98,6 +99,8 @@ Fields: `polynomial::ArnoldiPolynomial`, `poles`, `residues`
 - `get_function(r)`, `domain(r)` — extract components
 - `rewind(r, index)` — revert to earlier iteration
 - `get_history(r)` — convergence history
+- `status(r)` — `ConvergenceStatus` for the run, or `nothing` if none was recorded
+- `isconverged(r)` — whether the iteration reached `tol`, as opposed to stagnating or exhausting `max_degree`
 - `test_points(r)` — test point locations
 
 ### Optimization
@@ -162,5 +165,7 @@ Fields: `polynomial::ArnoldiPolynomial`, `poles`, `residues`
 4. **Adaptive path discretization**: `DiscretizedPath` stores multiple refinement levels in matrix form.
 5. **`allowed` parameter**: generic function to filter pole locations; enables multiply-connected domains.
 6. **Convergence history**: optional recording enables `rewind()` and convergence plots.
+   `quitting_check` returns a `(reason, best)` tuple rather than an overloaded integer, and
+   `best_acceptable` is callable on its own so failure paths need not fake a `max_iter`.
 7. **Extension architecture**: plotting and autodiff are optional — no hard dependencies.
 8. **Precompilation workload**: uses `@compile_workload` for fast time-to-first-approximation.
