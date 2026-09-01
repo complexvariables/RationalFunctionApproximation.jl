@@ -107,6 +107,9 @@ function Barycentric(points::AbstractVector, values::AbstractVector, nodeidx::Ab
     return Barycentric(points, values, idx)
 end
 
+# Empty instance, used only as a method selector in `approximate`.
+Barycentric() = Barycentric(Float64[], Float64[], Float64[])
+
 Base.copy(r::Barycentric) =
     Barycentric(copy(r.nodes), copy(r.values), copy(r.weights), copy(r.w_times_f))
 
@@ -376,18 +379,21 @@ function _initialize!(τ, fτ, C, L, f, σ, fσ, idx_test)
     return nothing
 end
 
-# TODO: This should probably enforce parameters S and T
-approximate(::Type{Barycentric{S,T}}, args...; kw...) where {S,T} = approximate(Barycentric, args...; kw...)
-
-function approximate(::Type{Barycentric},
-    f::Function, d::ComplexCurveOrPath;
+function approximate(
+    f::Function, d::ComplexCurveOrPath, ::Barycentric;
     float_type::Type = promote_type(real_type(d), typeof(float(1))),
     tol::Real = 1000*eps(float_type),
-    allowed::Union{Function,Bool} = z -> dist(z, d) > tol,
-    max_iter::Int = 150,
+    allowed = true,
+    max_degree::Int = 100,
+    max_iter = max_degree,
     refinement::Int = 3,
     stagnation::Int = 5
     )
+
+    if allowed == :strict
+        # only allow poles off the curve
+        allowed = z -> dist(z, d) > tol
+    end
 
     num_ref = 15    # initial number of test points between nodes; decreases to `refinement`
     path = DiscretizedPath(d, [0, 1]; refinement=num_ref, maxpoints=max_iter * refinement)
@@ -408,6 +414,7 @@ function approximate(::Type{Barycentric},
     # Main iteration
     idx_new_test = nothing
     n = 1       # iteration counter
+    stop = nothing
     while true
         Cmatrix = reshape(view(C, idx_test, 1:numnodes), :, numnodes)
         evaluate!(view(rτ, idx_test), r, Cmatrix)    # r at test points
@@ -415,12 +422,15 @@ function approximate(::Type{Barycentric},
         err_max, idx_max = findmax(err)
         history[n].error = err_max
 
-        status = quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
-        if status > 0
-            @info("Stopping with estimated error $(round(history[status].error, sigdigits=4)) after $n iterations")
-            r = history[status].interpolant
+        reason, best = quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
+        if reason !== :iterating
+            if reason !== :converged
+                @info("Stopping with estimated error $(round(history[best].error, sigdigits=4)) after $n iterations")
+                r = history[best].interpolant
+            end
+            stop = ConvergenceStatus(reason, best, history)
+            break
         end
-        (status != 0) && break
 
         ### Refinement
         idx_new = idx_test[idx_max]      # location of worst test point
@@ -429,9 +439,10 @@ function approximate(::Type{Barycentric},
             idx_new_test = add_node!(path, idx_new)
         catch
             # look for the best acceptable case
-            status = quitting_check(history, stagnation, tol, fmax, 1, allowed)
-            r = history[status].interpolant
-            @info("Unable to add new node; stopping with estimated error $(round(history[status].error, sigdigits=4))")
+            best = best_acceptable(history, allowed)
+            r = history[best].interpolant
+            stop = ConvergenceStatus(:node_failure, best, history)
+            @info("Unable to add new node; stopping with estimated error $(round(history[best].error, sigdigits=4))")
             break
         end
 
@@ -452,15 +463,16 @@ function approximate(::Type{Barycentric},
         n += 1
         numnodes += 1
     end
-    return ContinuumApproximation(f, d, r, allowed, path, history)
+    return ContinuumApproximation(f, d, r, allowed, path, history, stop)
 end
 
-function approximate(::Type{Barycentric},
-    y::AbstractVector{T}, z::AbstractVector{S};
+function approximate(
+    y::AbstractVector{T}, z::AbstractVector{S}, ::Barycentric;
     float_type::Type = promote_type(real_type(eltype(z)), typeof(float(1))),
     tol::AbstractFloat = 1000*eps(float_type),
     allowed::Union{Function,Bool} = true,
-    max_iter::Int = 100,
+    max_degree::Int = min(length(y), 100),
+    max_iter = max_degree,
     stagnation::Int = 5,
     ) where {T<:Number,S<:Number}
 
@@ -482,6 +494,7 @@ function approximate(::Type{Barycentric},
     r = Barycentric([z[i₀]], [y[i₀]], view(L, idx_test, 1:1))
     history = [IterationRecord(r, NaN, missing)]
     n = 1    # iteration counter
+    stop = nothing
     while count(idx_test) > 0
         evaluate!(view(values, idx_test), r, view(C, idx_test, 1:n))    # r at test points
         idx_max, err_max = 0, -Inf
@@ -496,12 +509,15 @@ function approximate(::Type{Barycentric},
         end
         history[n].error = err_max
 
-        status = quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
-        if status > 0
-            @info("Stopping with estimated error $(round(history[status].error, sigdigits=4)) after $n iterations")
-            r = history[status].interpolant
+        reason, best = quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
+        if reason !== :iterating
+            if reason !== :converged
+                @info("Stopping with estimated error $(round(history[best].error, sigdigits=4)) after $n iterations")
+                r = history[best].interpolant
+            end
+            stop = ConvergenceStatus(reason, best, history)
+            break
         end
-        (status != 0) && break
 
         # Add new node:
         idx_test[idx_max] = false
@@ -509,7 +525,8 @@ function approximate(::Type{Barycentric},
         push!(history, IterationRecord(r, NaN, missing))
         n += 1
     end
-    return DiscreteApproximation(y, z, r, idx_test, allowed, history)
+    stop = @something stop ConvergenceStatus(:exhausted, lastindex(history), history)
+    return DiscreteApproximation(y, z, r, idx_test, allowed, history, stop)
 end
 
 # Operations with scalars that can be done quickly.

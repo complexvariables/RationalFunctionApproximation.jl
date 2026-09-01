@@ -103,7 +103,7 @@ function brasil(r::ContinuumApproximation{T}; tol=1000*eps(T), σmax=0.1, τ=0.1
         ℓ = c .* diff(t)
         t = [0; cumsum(ℓ) / sum(ℓ)]
         z = point(p, t[idx])
-        fun, _ = approximate(r.original.(z), z; method=Thiele, allowed=r.allowed)
+        fun, _ = approximate(r.original.(z), z, Thiele(); allowed=r.allowed)
         @show maximum(δ) / minimum(δ) - 1, extrema(δ)
         iter += 1
     end

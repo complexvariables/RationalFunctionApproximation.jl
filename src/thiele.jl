@@ -111,6 +111,9 @@ See also [`set_eval_method`](@ref).
 """
 set_weight_method(m::ThieleMethod) = (@eval default_weight_method() = $m; m)
 
+# Empty instance, used only as a method selector in `approximate`.
+Thiele() = Thiele(Float64[], Float64[], Float64[])
+
 # Evaluation at a point
 function evaluate(r::Thiele, z::Number, method::ThieleMethod=default_eval_method())
     return if isinf(z)
@@ -435,18 +438,21 @@ function _sweep!(fτ, f::Function, τ, idx)
     return fmax
 end
 
-# TODO: This should probably enforce parameters S and T
-approximate(::Type{Thiele{S,T}}, args...; kw...) where {S,T} = approximate(Thiele, args...; kw...)
-
-function approximate(::Type{Thiele},
-    f::Function, d::Union{ComplexPath,ComplexCurve};
+function approximate(
+    f::Function, d::Union{ComplexPath,ComplexCurve}, ::Thiele;
     float_type::Type = promote_type(real_type(d), typeof(float(1))),
     tol::Real = 1000*eps(float_type),
-    allowed::Union{Function,Bool} = z -> dist(z, d) > tol,
-    max_iter::Int = 240,
+    allowed = true,
+    max_degree = 100,
+    max_iter::Int = 2max_degree,
     refinement::Int = 3,
     stagnation::Int = 5
     )
+
+    if allowed == :strict
+        # only allow poles off the curve
+        allowed = z -> dist(z, d) > tol
+    end
 
     num_ref = 15    # initial number of test points between nodes; decreases to `refinement`
     path = DiscretizedPath(d, [0, 1]; refinement=num_ref, maxpoints=max_iter * refinement)
@@ -491,16 +497,20 @@ function approximate(::Type{Thiele},
 
     # Main iteration
     n = 1       # iteration counter
+    stop = nothing
     while true
         err_max, idx_max = _sweep!(rbuf, zbuf, abuf, bbuf, r, τ, fτ, active)
         history[n].error = err_max
 
-        status = quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
-        if status > 0
-            @info("Stopping with estimated error $(round(history[status].error, sigdigits=4)) after $n iterations")
-            r = history[status].interpolant
+        reason, best = quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
+        if reason !== :iterating
+            if reason !== :converged
+                @info("Stopping with estimated error $(round(history[best].error, sigdigits=4)) after $n iterations")
+                r = history[best].interpolant
+            end
+            stop = ConvergenceStatus(reason, best, history)
+            break
         end
-        (status != 0) && break
 
         # Add node to approximant
         idx_new = active[idx_max]      # location of worst test point
@@ -509,9 +519,10 @@ function approximate(::Type{Thiele},
             push!(history, IterationRecord(r, NaN, missing))
         catch(e)
             # look for the best acceptable case
-            status = quitting_check(history, stagnation, tol, fmax, 1, allowed)
-            r = history[status].interpolant
-            @info("NaN weight encountered; stopping with estimated error $(round(history[status].error, sigdigits=4))")
+            best = best_acceptable(history, allowed)
+            r = history[best].interpolant
+            stop = ConvergenceStatus(:nan_weight, best, history)
+            @info("NaN weight encountered; stopping with estimated error $(round(history[best].error, sigdigits=4))")
             @debug("Error $e")
             break
         end
@@ -522,9 +533,10 @@ function approximate(::Type{Thiele},
             idx_new_test = add_node!(path, CartesianIndices(τ)[idx_new])
         catch
             # look for the best acceptable case
-            status = quitting_check(history, stagnation, tol, fmax, 1, allowed)
-            r = history[status].interpolant
-            @info("Maximum path refinement exceeded; stopping with estimated error $(round(history[status].error, sigdigits=4))")
+            best = best_acceptable(history, allowed)
+            r = history[best].interpolant
+            stop = ConvergenceStatus(:refinement, best, history)
+            @info("Maximum path refinement exceeded; stopping with estimated error $(round(history[best].error, sigdigits=4))")
             break
         end
 
@@ -548,15 +560,15 @@ function approximate(::Type{Thiele},
             end
         end
     end
-    return ContinuumApproximation(f, d, r, allowed, path, history)
+    return ContinuumApproximation(f, d, r, allowed, path, history, stop)
 end
 
-function approximate(::Type{Thiele},
-    y::AbstractVector{T}, z::AbstractVector{S};
+function approximate(
+    y::AbstractVector{T}, z::AbstractVector{S}, ::Thiele;
     float_type::Type = promote_type(real_type(eltype(z)), typeof(float(1))),
     tol::AbstractFloat = 1000*eps(float_type),
     allowed::Union{Function,Bool} = true,
-    max_iter::Int = length(y),
+    max_iter::Int = min(length(y), 200),
     stagnation::Int = 5,
     ) where {T<:Number,S<:Number}
 
@@ -573,6 +585,7 @@ function approximate(::Type{Thiele},
 
     history = [IterationRecord(r, NaN, missing)]
     n = 1    # iteration counter
+    stop = nothing
     while length(z) > 0
         evaluate!(r_test, r, z_test)
         @inbounds for i in eachindex(r_test)   # array evaluation skips the underflow check
@@ -582,17 +595,21 @@ function approximate(::Type{Thiele},
         err_max, idx_max = findmax(abs(e) for e in r_test)
         history[n].error = err_max
 
-        status = quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
-        if status > 0
-            if isinf(err_max)
-                @info("Used all sample values without convergence")
-                status = max_iter
-            else
-                @info("Stopping with estimated error $(round(history[status].error, sigdigits=4)) after $n iterations")
+        reason, best = quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
+        if reason !== :iterating
+            if reason !== :converged
+                # An infinite error estimate means there is nothing left to test against.
+                if isinf(err_max)
+                    reason, best = :exhausted, lastindex(history)
+                    @info("Used all sample values without convergence")
+                else
+                    @info("Stopping with estimated error $(round(history[best].error, sigdigits=4)) after $n iterations")
+                end
+                r = history[best].interpolant
             end
-            r = history[status].interpolant
+            stop = ConvergenceStatus(reason, best, history)
+            break
         end
-        (status != 0) && break
 
         # Add new node:
         try
@@ -603,15 +620,16 @@ function approximate(::Type{Thiele},
             deleteat!(r_test, idx_max)
         catch(e)
             # look for the best acceptable case
-            status = quitting_check(history, stagnation, tol, fmax, 1, allowed)
-            r = history[status].interpolant
-            @info("Adding node failed; stopping with estimated error $(round(history[status].error, sigdigits=4))")
+            best = best_acceptable(history, allowed)
+            r = history[best].interpolant
+            stop = ConvergenceStatus(:node_failure, best, history)
+            @info("Adding node failed; stopping with estimated error $(round(history[best].error, sigdigits=4))")
             @debug("Error $e")
             break
         end
         n += 1
     end
-    return DiscreteApproximation(y, z, r, idx_test, allowed, history)
+    return DiscreteApproximation(y, z, r, idx_test, allowed, history, stop)
 end
 
 # Operations with scalars that can be done quickly.

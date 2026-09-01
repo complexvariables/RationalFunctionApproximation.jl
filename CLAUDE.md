@@ -55,10 +55,10 @@ ext/
 
 ### Concrete rational function types
 
-**`Barycentric{T,S}`** (barycentric.jl:13) — default method; alias `AAA = Barycentric`  
+**`Barycentric{T,S}`** (barycentric.jl:13) — alias `AAA = Barycentric`  
 Fields: `nodes`, `values`, `weights`, `w_times_f`
 
-**`Thiele{T,S}`** (thiele.jl) — continued fraction representation; alias `TCF = Thiele`  
+**`Thiele{T,S}`** (thiele.jl) — default method; continued fraction representation; alias `TCF = Thiele`  
 Fields: `nodes`, `values`, `weights`  
 Two evaluation strategies: classic and numerically stable `onediv`.
 
@@ -73,14 +73,15 @@ Fields: `polynomial::ArnoldiPolynomial`, `poles`, `residues`
 - **`ContinuumApproximation{T,S,R}`** (approximation.jl:37) — continuous domain wrapper; fields: `original`, `domain`, `fun`, `allowed`, `path`, `history`
 - **`DiscreteApproximation{T,S,R}`** (approximation.jl:75) — discrete point set wrapper; fields: `data`, `domain`, `fun`, `test_index`, `allowed`, `history`
 - **`IterationRecord{R,S,T}`** (approximation.jl:5) — convergence history entry; fields: `interpolant`, `error`, `poles`
+- **`ConvergenceStatus`** (approximation.jl:45) — why an iteration stopped; fields: `reason`, `best`, `iterations`, `error`. `reason` is one of `:converged`, `:stagnated`, `:max_degree`, `:node_failure`, `:nan_weight`, `:refinement`, `:exhausted`, `:rewound`
 
 ---
 
 ## Public API
 
 ### Approximation construction
-- `approximate(f, domain; method, max_iter, tol, allowed, refinement, stagnation)` — main entry point
-- `approximate(f, domain, poles)` — least-squares with prescribed poles
+- `approximate(f, domain, method=Thiele(); max_iter, tol, allowed, refinement, stagnation)` — main entry point; `method` is an instance (`Thiele()` default, `Barycentric()`) passed as the last positional argument
+- `approximate(f, domain, poles)` — least-squares with prescribed poles (selectable via `PartialFractions()` as the last positional argument)
 - `aaa(y, z; kwargs...)` — legacy discrete AAA (deprecated)
 
 ### Rational function queries
@@ -98,6 +99,8 @@ Fields: `polynomial::ArnoldiPolynomial`, `poles`, `residues`
 - `get_function(r)`, `domain(r)` — extract components
 - `rewind(r, index)` — revert to earlier iteration
 - `get_history(r)` — convergence history
+- `status(r)` — `ConvergenceStatus` for the run, or `nothing` if none was recorded
+- `isconverged(r)` — whether the iteration reached `tol`, as opposed to stagnating or exhausting `max_degree`
 - `test_points(r)` — test point locations
 
 ### Optimization
@@ -157,10 +160,12 @@ Fields: `polynomial::ArnoldiPolynomial`, `poles`, `residues`
 ## Design Decisions
 
 1. **Two-parameter type system**: `T` for float precision, `S` for value type — supports generic arithmetic.
-2. **Barycentric as default**: most efficient/stable; aliased `AAA` for historical compatibility.
+2. **Thiele as default**: continued-fraction method used when no selector is given; `Barycentric` (aliased `AAA`) remains available and selectable.
 3. **Continuum vs. Discrete split**: `ContinuumApproximation` and `DiscreteApproximation` reflect fundamentally different strategies.
 4. **Adaptive path discretization**: `DiscretizedPath` stores multiple refinement levels in matrix form.
 5. **`allowed` parameter**: generic function to filter pole locations; enables multiply-connected domains.
 6. **Convergence history**: optional recording enables `rewind()` and convergence plots.
+   `quitting_check` returns a `(reason, best)` tuple rather than an overloaded integer, and
+   `best_acceptable` is callable on its own so failure paths need not fake a `max_iter`.
 7. **Extension architecture**: plotting and autodiff are optional — no hard dependencies.
 8. **Precompilation workload**: uses `@compile_workload` for fast time-to-first-approximation.

@@ -13,7 +13,7 @@
         T = Float64
         tol = 8000eps(T)
         pts = test_points[T]
-        approx(f; kw...) = approximate(f, domain[T]; method, kw...)
+        approx(f; kw...) = approximate(f, domain[T], method(); kw...)
         @testset "Function $iter" for (iter, f) in enumerate((
             x -> abs(x - 1//2 + 1im//100),
             x -> sinh(1 / (21//20 - x)),
@@ -34,7 +34,7 @@
         T = Double64
         pts = test_points[T]
         tol = 3000*eps(T)
-        approx(f; kw...) = approximate(f, domain[T]; method, kw...)
+        approx(f; kw...) = approximate(f, domain[T], method(); kw...)
         @testset "Function $iter" for (iter, f) in enumerate((
             x -> abs(x - 1//2 + 1im//100),
             x -> sinh(1 / (21//20 - x)),
@@ -55,7 +55,7 @@
         T = Float64
         method = Barycentric
         pts = test_points[T]
-        approx(f; kw...) = approximate(f, domain[T]; method, kw...)
+        approx(f; kw...) = approximate(f, domain[T], method(); kw...)
         f = x -> exp(3x);
         r = approx(f, tol=1e-5)
         @test !pass(f, r, pts, atol=1e-10)
@@ -65,7 +65,7 @@
     end
 
     @testset "Poles, zeros, residues" for T in (Float64,)
-        approx(f; kw...) = approximate(f, domain[T]; kw...)
+        approx(f; kw...) = approximate(f, domain[T], Barycentric(); kw...)
         f = z -> (z+1) * (z+2) / ((z+3) * (z+4))
         r = approx(f)
         pol = poles(r)
@@ -86,7 +86,7 @@
     end
 
     @testset "Vertical scaling in $T" for T in (Float64, Double64)
-        approx(f; kw...) = approximate(f, domain[T]; method=Barycentric, kw...)
+        approx(f; kw...) = approximate(f, domain[T], Barycentric(); kw...)
         pts = test_points[T]
         f = x -> T(10)^50*sinh(x); @test pass(f, approx(f), pts, rtol=2000*eps(T))
         f = x -> T(10)^(-50)*cosh(x); @test pass(f, approx(f), pts, rtol=2000*eps(T))
@@ -96,7 +96,7 @@
         T = Float64
         pts = test_points[T]
         tol = 2000*eps(T)
-        approx(f; kw...) = approximate(f, domain[T]; method=Barycentric, kw...)
+        approx(f; kw...) = approximate(f, domain[T], Barycentric(); kw...)
         f = x -> 0; @test pass(f, approx(f), pts, atol=2e-13)
         f = x -> x; @test pass(f, approx(f), pts, atol=2e-13)
         f = x -> 1im*x; @test pass(f, approx(f), pts, atol=2e-13)

@@ -4,7 +4,7 @@
         tol = 2000*eps(T)
         z = T(10) .^ range(T(-15), T(0), 500);
         pts = [-reverse(z); 0; z]
-        approx(f; kw...) = approximate(f, pts; method, kw...)
+        approx(f; kw...) = approximate(f, pts, method(); kw...)
         f = x -> abs(x + 1//2 + 1im//100); @test pass(f, approx(f), pts; rtol=tol)
         f = x -> sin(1 / (21//20 - x)); @test pass(f, approx(f), pts; rtol=tol)
         f = x -> 1im*x + exp(-1 / x^2); @test pass(f, approx(f), pts; rtol=tol)
@@ -26,7 +26,7 @@
         tol = 2000*eps(T)
         z = T(10) .^ range(T(-15), T(0), 500);
         pts = [-reverse(z); 0; z]
-        approx(f; kw...) = approximate(f, pts; method, kw...)
+        approx(f; kw...) = approximate(f, pts, method(); kw...)
         f = x -> sin(1 / (21//20 - x)); @test pass(f, approx(f), pts; rtol=tol)
         f = x -> 1im*x + exp(-1 / x^2); @test pass(f, approx(f; stagnation=30), pts; rtol=tol)
         f = x -> x + sin(80x) * exp(-10x^2); @test pass(f, approx(f; stagnation=30), pts; rtol=tol)
@@ -37,7 +37,7 @@
 
     @testset "Discrete circle for $method" for method in (Barycentric, Thiele)
         pts = cispi.(2 * (0:999) / 1000)
-        approx(f; kw...) = approximate(f, pts; method, kw...)
+        approx(f; kw...) = approximate(f, pts, method(); kw...)
         f = z -> sin(10z) * exp(-z^2); @test pass(f, approx(f), pts, rtol=2e-11)
         f = z -> sin(1/(1.1 - z)); @test pass(f, approx(f), pts, rtol=2e-13)
         f = sec; @test pass(f, approx(f), pts, rtol=1e-6)
@@ -50,7 +50,7 @@
 
     @testset "Discrete interval, low accuracy" begin
         pts = range(-1, 1, 1001)
-        approx(f; kw...) = approximate(f, pts; method=Barycentric, kw...)
+        approx(f; kw...) = approximate(f, pts, Barycentric(); kw...)
         f = x -> exp(3x);
         r = approx(f, tol=1e-5)
         @test !pass(f, r, pts, atol=1e-9)
@@ -59,7 +59,7 @@
     end
 
     @testset "Poles, zeros, residues in $T" for T in (Float64,Double64)
-        approx(f; kw...) = approximate(f, range(T(-1), T(1), 1001); method=Barycentric, kw...)
+        approx(f; kw...) = approximate(f, range(T(-1), T(1), 1001), Barycentric(); kw...)
         f = z -> (z+1) * (z+2) / ((z+3) * (z+4))
         r = approx(f)
         pol = poles(r)
@@ -81,7 +81,7 @@
 
     @testset "Vertical scaling in $T" for T in (Float64, Double64)
         pts = range(T(-1), T(1), 1001)
-        approx(f; kw...) = approximate(f, pts; method=Barycentric, kw...)
+        approx(f; kw...) = approximate(f, pts, Barycentric(); kw...)
         f = x -> T(10)^50 * sin(x); @test pass(f, approx(f), pts, rtol=2000*eps(T))
         f = x -> T(10)^(-50) * cos(x); @test pass(f, approx(f), pts, rtol=2000*eps(T))
     end
@@ -90,7 +90,7 @@
     @testset "Polynomials and reciprocals" begin
         pts = range(-1, 1, 1001)
         tol = 2000*eps(Float64)
-        approx(f; kw...) = approximate(f, pts; method=Barycentric, kw...)
+        approx(f; kw...) = approximate(f, pts, Barycentric(); kw...)
         f = x -> 0; @test pass(f, approx(f), pts, atol=tol)
         f = x -> x; @test pass(f, approx(f), pts, atol=tol)
         f = x -> 1im*x; @test pass(f, approx(f), pts, atol=tol)
@@ -105,7 +105,7 @@
     @testset "Limited degree" begin
         tol = 2000*eps(Float64)
         pts = range(-1, 1, 1001)
-        approx(f; kw...) = approximate(f, pts; method=Barycentric, kw...)
+        approx(f; kw...) = approximate(f, pts, Barycentric(); kw...)
         f = x -> 0; @test pass(f, approx(f, max_iter=1), pts, atol=tol)
         f = x -> x; @test pass(f, approx(f, max_iter=2), pts, atol=tol)
         f = x -> 1im*x; @test pass(f, approx(f, max_iter=4), pts, atol=tol)
@@ -123,7 +123,7 @@
 
     @testset "Interval [$a, $b]" for (a, b) in ((-2, 3), (0, 4), (-2e-4, 0), (-3e3, 5e6))
         pts = range(a, b, 1000)
-        approx(f; kw...) = approximate(f, pts; method=Barycentric, kw...)
+        approx(f; kw...) = approximate(f, pts, Barycentric(); kw...)
         toler(f) = 1000 * eps() * max(b - a, abs(f(a)), abs(f(b)))
         f = x -> 1 / sin(a + (b-a)*1.05im - x); @test pass(f, approx(f), pts, atol=toler(f))
         f = x -> exp(-10/(a + 1.1*(b-a) - x)); @test pass(f, approx(f), pts, atol=toler(f))

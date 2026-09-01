@@ -1,6 +1,6 @@
 module RFATests
 
-using RationalFunctionApproximation, ReTest, ComplexRegions, DoubleFloats, Logging
+using RationalFunctionApproximation, ReTest, ComplexRegions, DoubleFloats, IntervalSets, Logging
 const RFA = RationalFunctionApproximation
 
 pass(f, r, z; kw...) = isapprox(f.(z), r.(z), norm=u->maximum(abs, u); kw...)
@@ -16,5 +16,6 @@ include("circle.jl")
 include("custom.jl")
 include("operations.jl")
 include("parfrac.jl")
+include("deprecated.jl")
 
 end
