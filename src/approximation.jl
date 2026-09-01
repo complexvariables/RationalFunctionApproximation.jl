@@ -285,7 +285,7 @@ end
 # - f::Function, domain::ComplexCurveOrPath, [poles::AbstractVector]
 # - values::AbstractVector, test_points::AbstractVector, [poles::AbstractVector]
 
-# We fill in other convenience cases here.
+# Other convenience cases.
 
 # ::Function, ::AbstractRegion, [selector]
 function approximate(
