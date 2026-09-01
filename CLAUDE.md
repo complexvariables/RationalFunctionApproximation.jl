@@ -73,7 +73,7 @@ Fields: `polynomial::ArnoldiPolynomial`, `poles`, `residues`
 - **`ContinuumApproximation{T,S,R}`** (approximation.jl:37) — continuous domain wrapper; fields: `original`, `domain`, `fun`, `allowed`, `path`, `history`
 - **`DiscreteApproximation{T,S,R}`** (approximation.jl:75) — discrete point set wrapper; fields: `data`, `domain`, `fun`, `test_index`, `allowed`, `history`
 - **`IterationRecord{R,S,T}`** (approximation.jl:5) — convergence history entry; fields: `interpolant`, `error`, `poles`
-- **`ConvergenceStatus`** (approximation.jl:22) — why an iteration stopped; fields: `reason`, `best`, `iterations`, `error`. `reason` is one of `:converged`, `:stagnated`, `:max_degree`, `:node_failure`, `:nan_weight`, `:refinement`, `:exhausted`, `:rewound`
+- **`ConvergenceStatus`** (approximation.jl:45) — why an iteration stopped; fields: `reason`, `best`, `iterations`, `error`. `reason` is one of `:converged`, `:stagnated`, `:max_degree`, `:node_failure`, `:nan_weight`, `:refinement`, `:exhausted`, `:rewound`
 
 ---
 
