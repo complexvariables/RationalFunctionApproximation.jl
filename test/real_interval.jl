@@ -89,8 +89,10 @@
         r = approx(f, tol=1e-5)
         @test !pass(f, r, pts, atol=1e-7)
         @test pass(f, r, pts, atol=5e-5)
-        f = x -> abs(x);  @test pass(f, approx(f, stagnation=30), pts, atol=1e-10)
-        f = x -> abs(x - 0.95);  @test pass(f, approx(f, stagnation=30), pts, atol=1e-9)
+        # `abs` converges root-exponentially and needs degree ~116 to reach these
+        # tolerances, so it is given a budget larger than the default max_degree.
+        f = x -> abs(x);  @test pass(f, approx(f, stagnation=30, max_degree=150), pts, atol=1e-10)
+        f = x -> abs(x - 0.95);  @test pass(f, approx(f, stagnation=30, max_degree=150), pts, atol=1e-9)
     end
 
     @testset "Nodes, values, degree for Barycentric" begin
