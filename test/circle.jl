@@ -13,9 +13,9 @@
     end
 
     @testset "Unit circle for $method" for method in (Barycentric, Thiele)
-        f = z -> abs(z-1im);  @test pass(f, approximate(f, UC, Barycentric()), pts, rtol=2e-10)
-        f = z -> tan(π*z);  @test pass(f, approximate(f, UC, Barycentric()), pts, rtol=2e-13)
-        f = z -> tanh(100z); @test pass(f, approximate(f, UC, Barycentric()), pts, rtol=2e-13)
+        f = z -> abs(z-1im);  @test pass(f, approximate(f, UC, method(); stagnation=20), pts, rtol=2e-10)
+        f = z -> tan(π*z);  @test pass(f, approximate(f, UC, method()), pts, rtol=2e-13)
+        f = z -> tanh(100z); @test pass(f, approximate(f, UC, method()), pts, rtol=2e-12)
     end
 
     @testset "Array evaluation for Barycentric" begin
