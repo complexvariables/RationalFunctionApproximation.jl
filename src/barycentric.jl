@@ -167,12 +167,19 @@ function evaluate!(u::AbstractArray, r::Barycentric, z::AbstractArray{<:Number})
     num = @. r.w_times_f[1] / (z - r.nodes[1])
     den = @. r.weights[1] / (z - r.nodes[1])
     safe = trues(size(z))
-    idx = isinf.(num)
+    # Infinite arguments take the same limit as the scalar method.
+    idx = isinf.(z)
+    safe[idx] .= false
+    u[idx] .= sum(r.w_times_f) / sum(r.weights)
+    # A point at a node interpolates exactly. Find it by comparison rather than by
+    # inspecting the quotient: 1/(0+0im) is NaN+NaN*im rather than Inf, and a node whose
+    # value is zero makes the numerator 0/0.
+    idx = z .== r.nodes[1]
     safe[idx] .= false
     u[idx] .= r.values[1]
     @inbounds for k in 2:length(r.nodes)
         c = @. 1 / (z - r.nodes[k])
-        idx = isinf.(c)
+        idx = z .== r.nodes[k]
         safe[idx] .= false
         u[idx] .= r.values[k]
         axpy!(r.w_times_f[k], c, num)

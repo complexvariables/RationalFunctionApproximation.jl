@@ -13,9 +13,24 @@
     end
 
     @testset "Unit circle for $method" for method in (Barycentric, Thiele)
-        f = z -> abs(z-1im);  @test pass(f, approximate(f, UC, Barycentric()), pts, rtol=2e-10)
-        f = z -> tan(π*z);  @test pass(f, approximate(f, UC, Barycentric()), pts, rtol=2e-13)
-        f = z -> tanh(100z); @test pass(f, approximate(f, UC, Barycentric()), pts, rtol=2e-13)
+        f = z -> abs(z-1im);  @test pass(f, approximate(f, UC, method(); stagnation=20), pts, rtol=2e-10)
+        f = z -> tan(π*z);  @test pass(f, approximate(f, UC, method()), pts, rtol=2e-13)
+        f = z -> tanh(100z); @test pass(f, approximate(f, UC, method()), pts, rtol=2e-12)
+    end
+
+    @testset "Array evaluation for Barycentric" begin
+        f = z -> sin(10z) * exp(-z^2)
+        r = approximate(f, UC, Barycentric())
+        @test isapprox(f.(pts), r(pts), norm=u->maximum(abs, u), rtol=2e-11)
+        # array evaluation at a node must interpolate, on or off the real line
+        z = nodes(r)
+        @test r(z) ≈ values(r)
+        @test r([z[1], 0.5]) ≈ [values(r)[1], r(0.5)]
+        # a node whose value is zero makes the numerator 0/0
+        s = Barycentric([0.0, 1.0, 2.0], [0.0, 2.0, 4.0], [1.0, -2.0, 1.0])
+        @test s([0.0, 1.0]) ≈ [0.0, 2.0]
+        # infinite arguments take the same limit as the scalar method
+        @test r([Inf]) ≈ [r(Inf)]
     end
 
     @testset "Array evaluation for Thiele" begin

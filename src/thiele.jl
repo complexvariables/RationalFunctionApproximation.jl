@@ -157,6 +157,8 @@ function evaluate!(t::AbstractArray, r::Thiele, z::AbstractArray{<:Number},
             a .= t
         end
         t .= r.weights[1] .+ b ./ a
+        # retroactively correct at infinite inputs
+        t[isinf.(z)] .= r(Inf)
     end
     return t
 end
