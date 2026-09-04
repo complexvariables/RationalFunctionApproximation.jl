@@ -20,7 +20,7 @@ struct PartialFractions{S} <: AbstractRationalFunction{S}
 end
 
 function PartialFractions(
-    p::ArnoldiPolynomial = ArnoldiPolynomial(),
+    p::ArnoldiPolynomial = ArnoldiPolynomial([0], ArnoldiBasis([1], 0)),
     poles::AbstractVector = ComplexF64[],
     residues::AbstractVector = ComplexF64[]
     )
@@ -111,8 +111,8 @@ function refine_by_singularity(d::ComplexCurveOrPath, ζ::AbstractVector;
     return path
 end
 
-function approximate(::Type{PartialFractions},
-    f::Function, d::ComplexCurveOrPath, ζ::AbstractVector;
+function approximate(
+    f::Function, d::ComplexCurveOrPath, ζ::AbstractVector, ::PartialFractions;
     degree = max(1, div(length(ζ), 2)),
     init =  max(400, length(d) * 100),
     refinement = 3,
@@ -125,8 +125,8 @@ function approximate(::Type{PartialFractions},
     return ContinuumApproximation(f, d, r, true, path, nothing)
 end
 
-function approximate(::Type{PartialFractions},
-    y::AbstractVector, z::AbstractVector, ζ::AbstractVector;
+function approximate(
+    y::AbstractVector, z::AbstractVector, ζ::AbstractVector, ::PartialFractions;
     degree = max(1, div(length(ζ), 2)),
     )
     r = PartialFractions(z, y, ζ, degree)

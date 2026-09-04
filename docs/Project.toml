@@ -15,3 +15,4 @@ RationalFunctionApproximation = {path = ".."}
 [compat]
 Documenter = "1"
 DomainColoring = "2"
+DocumenterCitations = "~1.4"

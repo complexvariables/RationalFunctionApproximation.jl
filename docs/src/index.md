@@ -15,18 +15,18 @@ using CairoMakie
 CairoMakie.update_theme!(size = (600, 400), fontsize=11)
 const shg = current_figure
 
-f = x -> exp(cos(4x) - sin(3x))
+f(x) = exp(cos(4x) - sin(3x))
 lines(-1..1, f)
 ```
 
-To create a rational function that approximates $f$ well on this domain, we make a call to the `approximate` function:
+To create a rational function that approximates $f$, we make a call to the `approximate` function. By default, it uses the real interval $[-1,1]$ as the domain.
 
 ```@repl interval
 using RationalFunctionApproximation
-r = approximate(f, unit_interval)
+r = approximate(f)
 ```
 
-The value of `unit_interval` is defined by the package to be the interval $[-1, 1]$. The result `r` is a type (19,19) rational approximant that can be evaluated like a function:
+The result `r` is a type (19, 18) rational approximant that can be evaluated like a function:
 
 ```@repl interval
 f(0.5) - r(0.5)
@@ -47,30 +47,16 @@ scatter!(x, 0*x, markersize = 8, color=:black)
 shg()
 ```
 
-We could choose to approximate over a wider interval:
-
-```@repl interval
-using ComplexRegions
-r = approximate(f, Segment(-2, 4))
-```
-
-Note that the degree of the rational approximant increased to capture the additional complexity.
-
 One important feature of a rational function is that it can have poles, or infinite value, at the roots of the denominator polynomial. In this case, the poles hint at where the function is most sharply peaked:
 
 ```@example interval
 poleplot(r)
 ```
 
-More typically, however, a function that is well-behaved on the real axis has a singularity structure lurking in the complex plane, and the poles of rational functions provide a unique way to cope with them. For instance, let's try approximating the hyperbolic secant function:
+As another example, the sech function is smooth on the real axis but has poles on the imaginary axis at odd multiples of $i\pi/2$. An approximation over $[-4,4]$ accurately locates the poles closest to the real axis:
 
 ```@example interval
-r = approximate(sech, Segment(-4, 4))
-```
-
-The sech function is smooth on the real axis but has poles on the imaginary axis at odd multiples of $i\pi/2$. The rational approximant automatically locates the poles closest to the domain:
-
-```@example interval
+r = approximate(sech, -4..4)
 2 * poles(r) / π
 ```
 
@@ -87,17 +73,17 @@ shg()
 A meromorphic function such as sech has only those isolated poles as singularities, and getting those right is most of the battle. By contrast, the function $\log(x + 0.05i)$ has a branch point at $x = -0.05i$ necessitating a branch cut connecting it to infinity. A rational approximant uses poles to construct a proxy branch cut:
 
 ```@example interval
-f = x -> log(x + 0.05im)
-r = approximate(f, unit_interval)
+f(x) = log(x + 0.05im)
+r = approximate(f)
 domaincolor(r, 1.2; abs=true)
 lines!(r.domain, linewidth=3, color=:white)
 shg()
 ```
 
-We close this quick introduction with approximation of $|x|$, which has a singularity on the interval. A famous result of Newman in 1964 proved that the best rational approximation of degree $n$ has root-exponential convergence.
+We close this quick introduction with approximation of $|x|$, which has a singularity on the interval. A famous result of Newman in 1964 proved that the best rational approximation of degree $n$ has root-exponential convergence. In order to get the most from the approximation, we need to tell the constructor to be stubborn about declaring the iteration stagnated.
 
 ```@example interval
-r = approximate(abs, unit_interval; tol=1e-12)
+r = approximate(abs; tol=1e-12, stagnation=50)
 convergenceplot(r)
 ```
 
@@ -105,7 +91,7 @@ We find that the nodes of the approximant are also distributed (nearly) root-exp
 
 ```@example interval
 z = filter(>(0), nodes(r))
-scatter(sort(abs.(z)), axis=(ylabel="| node |", yscale=log10,))
+scatter(sort(z), axis=(xlabel="index", ylabel="node location", xscale=sqrt, yscale=log10,))
 ```
 
 ## Feedback and contributions

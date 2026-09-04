@@ -6,6 +6,8 @@ export RFA
 using LinearAlgebra, Statistics, GenericLinearAlgebra, ComplexRegions, GenericSchur, ArnoldiVandermonde
 using PyFormattedStrings
 using PrecompileTools
+using IntervalSets: ClosedInterval, leftendpoint, rightendpoint, (..)
+export ..
 import ArnoldiVandermonde: degree
 
 export unit_interval, unit_circle, unit_disk, DiscretizedPath
@@ -18,6 +20,7 @@ export nodes, weights, degree, degrees, poles, Res, residues, roots
 include("abstract-rational.jl")
 
 export approximate, get_function, domain, check, rewind, get_history, test_points
+export ConvergenceStatus, status, isconverged
 include("approximation.jl")
 
 export Barycentric, AAA, Thiele, TCF, derivative, evaluate
@@ -38,11 +41,11 @@ include("lawson.jl")
 @setup_workload begin
     x_interval = range(-1, 1, 200)
     @compile_workload begin
-        for method in (Barycentric, Thiele)
-            approximate(sin, unit_circle; method)
+        for method in (Barycentric(), Thiele())
+            approximate(sin, unit_circle, method)
             for domain in (unit_interval, x_interval)
-                approximate(sin, domain; method)
-                approximate(cis, domain; method)
+                approximate(sin, domain, method)
+                approximate(cis, domain, method)
                 approximate(x -> 1/(x^2 + 4), domain, [2im, -2im])
             end
         end

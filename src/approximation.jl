@@ -19,6 +19,45 @@ function Base.show(io::IO, ::MIME"text/plain", h::IterationRecord)
 end
 # COV_EXCL_STOP
 
+"""
+    ConvergenceStatus (type)
+
+Why an approximation iteration stopped, and which iterate it returned.
+
+# Fields
+- `reason::Symbol`: the cause of termination (see below)
+- `best::Int`: index into the history of the interpolant that was returned
+- `iterations::Int`: number of iterations completed
+- `error::Float64`: estimated error of the returned interpolant
+
+# Reasons
+- `:converged`: the error fell below `tol` with acceptable poles
+- `:stagnated`: the error plateaued for `stagnation` iterations
+- `:max_degree`: the degree budget was exhausted before reaching `tol`
+- `:node_failure`: a new node could not be added
+- `:nan_weight`: a NaN weight was encountered
+- `:refinement`: the path refinement limit was exceeded
+- `:exhausted`: all available sample values were used
+- `:rewound`: the iterate was selected by [`rewind`](@ref), not by the iteration
+
+See also [`isconverged`](@ref), [`get_history`](@ref).
+"""
+struct ConvergenceStatus
+    reason::Symbol
+    best::Int
+    iterations::Int
+    error::Float64
+end
+
+ConvergenceStatus(reason::Symbol, best::Integer, history) =
+    ConvergenceStatus(reason, best, length(history), history[best].error)
+
+# COV_EXCL_START
+function Base.show(io::IO, ::MIME"text/plain", s::ConvergenceStatus)
+    print(io, "stopped by $(s.reason) after $(s.iterations) iterations with estimated error $(round(s.error, sigdigits=4))")
+end
+# COV_EXCL_STOP
+
 abstract type AbstractApproximation{T,S} <: Function end
 
 """
@@ -33,6 +72,7 @@ Approximation of a function on a domain.
 - `allowed`: function to determine if a pole is allowed
 - `path`: a `DiscretizedPath` for the domain boundary
 - `history`: all approximations in the iteration
+- `status`: why the iteration stopped, or `nothing` if not recorded
 """
 struct ContinuumApproximation{T,S,R} <: AbstractApproximation{T,S}
     original::Function
@@ -41,6 +81,7 @@ struct ContinuumApproximation{T,S,R} <: AbstractApproximation{T,S}
     allowed::Union{Bool,Function}
     path::DiscretizedPath
     history::Union{Vector{<:IterationRecord},Nothing}
+    status::Union{ConvergenceStatus,Nothing}
 end
 
 function ContinuumApproximation(
@@ -49,15 +90,17 @@ function ContinuumApproximation(
     fun::R,
     allowed::Union{Bool,Function},
     path::DiscretizedPath,
-    history=nothing
+    history=nothing,
+    status=nothing
     ) where {T,S,R<:AbstractRationalFunction{S}}
-    return ContinuumApproximation{T,S,R}(f, domain, fun, allowed, path, history)
+    return ContinuumApproximation{T,S,R}(f, domain, fun, allowed, path, history, status)
 end
 
 (f::ContinuumApproximation)(z) = f.fun(z)
 domain(r::ContinuumApproximation) = r.domain
 get_function(r::ContinuumApproximation) = r.fun
 history(r::ContinuumApproximation) = r.history
+status(r::ContinuumApproximation) = r.status
 
 """
     DiscreteApproximation (type)
@@ -71,6 +114,7 @@ Approximation of a function on a domain.
 - `test_index`: indicator of which domain points remain as test points
 - `allowed`: function to determine if a pole is allowed
 - `history`: all approximations in the iteration
+- `status`: why the iteration stopped, or `nothing` if not recorded
 """
 struct DiscreteApproximation{T,S,R} <: AbstractApproximation{T,S}
     data::Vector{S}
@@ -79,6 +123,7 @@ struct DiscreteApproximation{T,S,R} <: AbstractApproximation{T,S}
     test_index::BitVector
     allowed::Union{Bool,Function}
     history::Union{Vector{<:IterationRecord},Nothing}
+    status::Union{ConvergenceStatus,Nothing}
     function DiscreteApproximation{T,S,R}(
         data::AbstractVector{S},
         domain::AbstractVector{T},
@@ -95,25 +140,67 @@ function DiscreteApproximation(
     fun::R,
     test_index::BitVector,
     allowed::Union{Bool,Function}=true,
-    history=nothing
+    history=nothing,
+    status=nothing
     ) where {T,S,R<:AbstractRationalFunction}
-    return DiscreteApproximation{T,float(S),typeof(fun)}(float(data), domain, fun, test_index, allowed, history)
+    return DiscreteApproximation{T,float(S),typeof(fun)}(float(data), domain, fun, test_index, allowed, history, status)
 end
 
 (f::DiscreteApproximation)(z) = f.fun(z)
 domain(r::DiscreteApproximation) = r.domain
 get_function(r::DiscreteApproximation) = r.fun
 history(r::DiscreteApproximation) = r.history
+status(r::DiscreteApproximation) = r.status
+
+"""
+    status(r::Approximation)
+
+Return the [`ConvergenceStatus`](@ref) recorded when `r` was constructed, or `nothing`
+if the construction did not record one.
+
+See also [`isconverged`](@ref).
+"""
+status
+
+"""
+    isconverged(s::ConvergenceStatus)
+    isconverged(r::Approximation)
+
+Determine whether an approximation iteration stopped because it reached the requested
+tolerance, as opposed to stagnating, exhausting its degree budget, or failing. Returns
+`false` for an approximation with no recorded status.
+
+# Examples
+```julia-repl
+julia> r = approximate(exp, unit_interval);
+
+julia> isconverged(r)
+true
+```
+
+See also [`status`](@ref), [`ConvergenceStatus`](@ref).
+"""
+isconverged(s::ConvergenceStatus) = s.reason === :converged
+isconverged(r::AbstractApproximation) = isconverged(status(r))
+isconverged(::Nothing) = false
 
 # COV_EXCL_START
 function Base.show(io::IO, ::MIME"text/plain", f::ContinuumApproximation)
     print(io, f.fun)
     print(IOContext(io, :compact=>true), " constructed on: ", f.domain)
+    _show_status(io, f.status)
 end
 
 function Base.show(io::IO, ::MIME"text/plain", f::AbstractApproximation)
     print(io, f.fun)
     print(IOContext(io, :compact=>true), " constructed from $(length(f.domain)) samples")
+    _show_status(io, f.status)
+end
+
+_show_status(io::IO, ::Nothing) = nothing
+function _show_status(io::IO, s::ConvergenceStatus)
+    print(io, "\n  ")
+    show(io, MIME"text/plain"(), s)
 end
 # COV_EXCL_STOP
 
@@ -143,23 +230,26 @@ Adaptively compute a rational interpolant on a continuous or discrete domain.
 # Arguments
 ## Continuous domain
 - `f::Function`: function to approximate
-- `domain`: curve, path, or region from ComplexRegions
+- `domain`: curve, path, or region from ComplexRegions, or an `IntervalSets.ClosedInterval`
+  (e.g. `-1..1`), which is converted to a `Segment`
 
 ## Discrete domain
 - `f::Function` or `y::AbstractVector`: function or discrete values to approximate
 - `z::AbstractVector`: domain point set
 
+## Method selection
+- `method`: instance selecting the type of rational interpolant, passed as the last positional
+  argument (`Thiele()` default, `Barycentric()`); e.g. `approximate(f, domain, Barycentric())`
+
 # Keywords
-- `method::Type`: type of rational interpolant to use (`AAA` default, `TCF`, `PartialFractions`)
-- `max_iter::Integer=150`: maximum number of iterations on node addition
+- `max_degree::Integer=100`: maximum (denominator) degree of the approximation
 - `float_type::Type`: floating point type to use for the computation¹
 - `tol::Real=1000*eps(float_type)`: relative tolerance for stopping
-- `allowed::Function`: function to determine if a pole is allowed²
+- `allowed`: no checking poles if `true`, must be outside domain if `:strict`, or use provided function
 - `refinement::Integer=3`: number of test points between adjacent nodes (continuum only)
 - `stagnation::Integer=5`: number of iterations to determine stagnation
 
 ¹Default of `float_type` is the promotion of `float(1)` and the float type of the domain.
-²Default is to disallow poles on the curve or in the interior of a continuous domain, or to accept all poles on a discrete domain. Use `allowed=true` to allow all poles.
 
 # Returns
 - `r::Approximation`: the rational interpolant
@@ -171,13 +261,13 @@ See also [`ContinuumApproximation`](@ref), [`DiscreteApproximation`](@ref), [`ch
 julia> f = x -> tanh( 40*(x - 0.15) );
 
 julia> r = approximate(f, unit_interval)
-Barycentric{Float64, Float64} rational function of type (22, 22) on the domain: Path{Float64} with 1 curve
+Thiele{Float64, Float64} rational of type (22, 22) constructed on: Segment(-1.0, 1.0)
 
 julia> ( r(0.3), f(0.3) )
-(0.9999877116508015, 0.9999877116507956)
+(0.9999877116507957, 0.9999877116507956)
 
 julia> check(r);   # accuracy over the domain
-[ Info: Max error is 1.58e-13
+[ Info: Max error is 7.78e-14
 ```
 """
 approximate(f::Function, domain)
@@ -228,58 +318,108 @@ approximate(f::Function, domain, ζ::AbstractVector)
 ##### Dispatch
 #####
 
-# Each rational type implements methods based on dispatch of Type for the first argument.
-# Here, we can call those based on a method= keyword argument instead, giving a default.
-function approximate(f::Function, domain::ComplexCurveOrPath; method::Type=Barycentric, kw...)
-     approximate(method, f, domain; kw...)
-end
-
-function approximate(y::AbstractVector, z::AbstractVector; method::Type=Barycentric, kw...)
-     approximate(method, y, z; kw...)
-end
-
-function approximate(
-    f::Function, domain::ComplexCurveOrPath, ζ::AbstractVector;
-    method::Type=PartialFractions,
-    kw...
+# Deprecation shim: the pre-rename API accepted `method` as a keyword argument holding
+# a type (e.g. `method=AAA`, `method=Thiele`). The current API takes an instance as the
+# last positional argument. Extract the kwarg, warn, and return the instance + remaining
+# kwargs so callers can forward positionally.
+@noinline function _pop_deprecated_method_kw(kw)
+    m = kw[:method]
+    inst = m isa Type ? m() : m
+    Base.depwarn(
+        "Passing `method` as a keyword argument to `approximate` is deprecated. " *
+        "Pass an instance as the last positional argument instead, e.g. `approximate(f, domain, $(nameof(typeof(inst)))())`.",
+        :approximate;
+        force = true    # otherwise silent under Julia's default --depwarn=no
     )
-    approximate(method, f, domain, ζ; kw...)
+    rest = Base.structdiff(NamedTuple(kw), NamedTuple{(:method,)})
+    return inst, rest
+end
+
+# Convert an `IntervalSets.ClosedInterval` (e.g. `a..b` from IntervalSets/Makie) to a
+# `Segment`, so users can write `approximate(f, -1..1)` in place of `approximate(f, Segment(-1, 1))`.
+function approximate(f::Function, I::ClosedInterval{<:Real}, args...; kw...)
+    return approximate(f, Segment(leftendpoint(I), rightendpoint(I)), args...; kw...)
+end
+
+# Each rational type implements a method that dispatches on an instance of the type
+# (e.g. `Barycentric()`, `Thiele()`, `PartialFractions()`) passed as the last positional
+# argument. The methods here supply the default selector when none is given.
+function approximate(f::Function, domain::ComplexCurveOrPath=Segment(-1, 1); kw...)
+    if haskey(kw, :method)
+        m, rest = _pop_deprecated_method_kw(kw)
+        return approximate(f, domain, m; rest...)
+    end
+    approximate(f, domain, Thiele(); kw...)
+end
+
+function approximate(y::AbstractVector, z::AbstractVector; kw...)
+    if haskey(kw, :method)
+        m, rest = _pop_deprecated_method_kw(kw)
+        return approximate(y, z, m; rest...)
+    end
+    approximate(y, z, Thiele(); kw...)
+end
+
+function approximate(f::Function, domain::ComplexCurveOrPath, ζ::AbstractVector; kw...)
+    if haskey(kw, :method)
+        m, rest = _pop_deprecated_method_kw(kw)
+        return approximate(f, domain, ζ, m; rest...)
+    end
+    approximate(f, domain, ζ, PartialFractions(); kw...)
 end
 
 # Each rational type recognizes two signatures:
 # - f::Function, domain::ComplexCurveOrPath, [poles::AbstractVector]
 # - values::AbstractVector, test_points::AbstractVector, [poles::AbstractVector]
 
-# We fill in other convenience cases here.
+# Other convenience cases.
 
-# ::Function, ::AbstractRegion
-# Given a region as domain, we interpret poles as not being allowed in that region.
-function approximate(f::Function, R::ComplexRegions.AbstractRegion; kw...)
-    r = approximate(f, R.boundary; allowed=z->!in(z,R), kw...)
-    return ContinuumApproximation(f, R, r.fun, r.allowed, r.path, r.history)
+# ::Function, ::AbstractRegion, [selector]
+function approximate(
+    f::Function, R::ComplexRegions.AbstractRegion, method::AbstractRationalFunction=Thiele();
+    allowed=true,
+    kw...
+    )
+    if haskey(kw, :method)
+        m, rest = _pop_deprecated_method_kw(kw)
+        return approximate(f, R, m; allowed, rest...)
+    end
+    if allowed == :strict
+        # only allow poles outside the region
+        allowed = z -> !in(z,R)
+    end
+    r = approximate(f, R.boundary, method; allowed, kw...)
+    return ContinuumApproximation(f, R, r.fun, r.allowed, r.path, r.history, r.status)
 end
 
-# ::Function, ::AbstractVector
+# ::Function, ::AbstractVector, [selector]
 # Evaluate the function to call a fully discrete approximation.
 function approximate(
-    f::Function, z::AbstractVector;
+    f::Function, z::AbstractVector, method::AbstractRationalFunction=Thiele();
     allowed = true,
     kw...
     )
+    if haskey(kw, :method)
+        m, rest = _pop_deprecated_method_kw(kw)
+        return approximate(f, z, m; allowed, rest...)
+    end
     y = f.(z)
-    r = approximate(y, z; allowed, kw...)
-    return DiscreteApproximation(y, z, r.fun, r.test_index, r.allowed, r.history)
+    r = approximate(y, z, method; allowed, kw...)
+    return DiscreteApproximation(y, z, r.fun, r.test_index, r.allowed, r.history, r.status)
 end
 
-# ::Function,::AbstractVector, ::AbstractVector
+# ::Function, ::AbstractVector, ::AbstractVector, [selector]
 function approximate(
-    f::Function, z::AbstractVector, ζ::AbstractVector;
-    method = PartialFractions,
+    f::Function, z::AbstractVector, ζ::AbstractVector, method::AbstractRationalFunction=PartialFractions();
     kw...
     )
+    if haskey(kw, :method)
+        m, rest = _pop_deprecated_method_kw(kw)
+        return approximate(f, z, ζ, m; rest...)
+    end
     y = f.(z)
-    r = approximate(method, y, z, ζ; kw...)
-    return DiscreteApproximation(y, z, r.fun, r.test_index, true, r.history)
+    r = approximate(y, z, ζ, method; kw...)
+    return DiscreteApproximation(y, z, r.fun, r.test_index, true, r.history, r.status)
 end
 
 #####
@@ -317,17 +457,18 @@ Rewind a rational approximation to a state encountered during an iteration.
 # Examples
 ```jldoctest
 julia> r = approximate(x -> cos(20x), unit_interval)
-Barycentric{Float64, Float64} rational interpolant of type (24, 24) on the domain: Path{Float64} with 1 curve
+Thiele{Float64, Float64} rational of type (27, 27) constructed on: Segment(-1.0, 1.0)
 
 julia> rewind(r, 10)
-Barycentric{Float64, Float64} rational interpolant of type (10, 10) on the domain: Path{Float64} with 1 curve
+Thiele{Float64, Float64} rational of type (5, 4) constructed on: Segment(-1.0, 1.0)
 ```
 """
 function rewind(r::AbstractApproximation, idx::Integer)
     if isnothing(r.history)
         @error("No convergence history exists.")
     end
-    return typeof(r)(r.original, r.domain, r.history[idx].interpolant, r.allowed, r.path, r.history)
+    stop = ConvergenceStatus(:rewound, idx, r.history)
+    return typeof(r)(r.original, r.domain, r.history[idx].interpolant, r.allowed, r.path, r.history, stop)
 end
 
 """
@@ -420,23 +561,36 @@ function get_history(r::AbstractApproximation{T,S}; get_poles=!(r.allowed == tru
     return deg, err, zp, allowed, best
 end
 
-# Return values for quitting_check:
-#  -1: success
-#   0: continue
-#   n: iteration number to stop at
+# Index of the lowest-error iterate whose poles are all allowed. If none qualifies,
+# fall back to the final iterate. Callers that stop for their own reasons (a node that
+# could not be added, a NaN weight) use this directly to choose what to return.
+function best_acceptable(history, allowed)
+    err = [h.error for h in history]
+    if (allowed === true)
+        return argmin(i -> err[i], (i for i in eachindex(err) if !isnan(err[i])))
+    end
+    for k in sortperm(err)
+        history[k].poles = @coalesce history[k].poles poles(history[k].interpolant)
+        all(allowed, history[k].poles) && return k
+    end
+    return lastindex(err)
+end
+
+# Decide whether the iteration should stop, and on which iterate. Returns a tuple
+# `(reason, best)`; a reason of `:iterating` means carry on, and leaves `best` at 0.
+# Every other reason is one of those documented for `ConvergenceStatus`.
 function quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
     n = length(history)
     err = [h.error for h in history]
 
     # Check for convergence
     # If allowed === true, do not check for allowed poles
-    status = 0
     if (err[end] <= tol*fmax)
         if (allowed === true)
-            status = -1
+            return (:converged, n)
         else
             zp = history[end].poles = poles(history[end].interpolant)
-            status = all(allowed, zp) ? -1 : 0
+            all(allowed, zp) && return (:converged, n)
         end
     end
 
@@ -448,23 +602,11 @@ function quitting_check(history, stagnation, tol, fmax, max_iter, allowed)
         stagnant = all(plateau < e for e in last(err, stagnation)) || (min_k < n - 2stagnation)
     end
 
-    # Decide on unsuccessful stopping
-    if (n >= max_iter) || stagnant
-        # Look for the best acceptable approximation:
-        if (allowed === true)
-            n = argmin(i -> err[i], (i for i in eachindex(err) if !isnan(err[i])))
-        else
-            for k in sortperm(err)
-                history[k].poles = @coalesce history[k].poles poles(history[k].interpolant)
-                if all(allowed, history[k].poles)
-                    n = k
-                    break
-                end
-            end
-        end
-        status = n
-    end
-    return status
+    # Decide on unsuccessful stopping. Stagnation is tested first, so that a run which
+    # has genuinely plateaued at the last permitted iteration is not blamed on the budget.
+    stagnant && return (:stagnated, best_acceptable(history, allowed))
+    (n >= max_iter) && return (:max_degree, best_acceptable(history, allowed))
+    return (:iterating, 0)
 end
 
 #####
@@ -479,7 +621,7 @@ Create an approximation of the derivative of `r` on the same domain.
 function derivative(r::AbstractApproximation, order=1; kwargs...)
     # TODO: This ought to be handled by dispatch on a type parameter.
     return if isa(get_function(r), AbstractRationalInterpolant)
-        approximate(derivative(get_function(r), order), domain(r); method=typeof(get_function(r)), kwargs...)
+        approximate(derivative(get_function(r), order), domain(r), get_function(r); kwargs...)
     else
         @error("Not supported. Take the derivative of the `.fun` field.")
     end
@@ -496,17 +638,17 @@ end
 
 function Base.:+(r::AbstractApproximation, g::Function)
     f(z) = r(z) + g(z)
-    return approximate(f, domain(r); method=typeof(get_function(r)))
+    return approximate(f, domain(r), get_function(r))
 end
 
 function Base.:+(r::ContinuumApproximation, s::Number)
     rs = get_function(r) + s
-    return ContinuumApproximation(rs, domain(r), rs, r.allowed, r.path, r.history)
+    return ContinuumApproximation(rs, domain(r), rs, r.allowed, r.path, r.history, r.status)
 end
 
 function Base.:+(r::DiscreteApproximation, s::Number)
     rs = get_function(r) + s
-    return DiscreteApproximation(r.data .+ s, domain(r), rs, r.test_index, r.allowed, r.history)
+    return DiscreteApproximation(r.data .+ s, domain(r), rs, r.test_index, r.allowed, r.history, r.status)
 end
 
 Base.:+(s::Union{Function,Number}, r::AbstractApproximation) = r + s
@@ -519,12 +661,12 @@ Base.:-(r::Union{Function,Number}, s::AbstractApproximation) = -s + r
 # unary -
 function Base.:-(r::ContinuumApproximation)
     rs = -get_function(r)
-    return ContinuumApproximation(rs, domain(r), rs, r.allowed, r.path, r.history)
+    return ContinuumApproximation(rs, domain(r), rs, r.allowed, r.path, r.history, r.status)
 end
 
 function Base.:-(r::DiscreteApproximation)
     rs = -get_function(r)
-    return DiscreteApproximation(-r.data, domain(r), rs, r.test_index, r.allowed, r.history)
+    return DiscreteApproximation(-r.data, domain(r), rs, r.test_index, r.allowed, r.history, r.status)
 end
 
 # * and / with 3 levels of generality
@@ -537,17 +679,17 @@ end
 
 function Base.:*(r::AbstractApproximation, g::Function)
     f(z) = r(z) * g(z)
-    return approximate(f, domain(r); method=typeof(get_function(r)))
+    return approximate(f, domain(r), get_function(r))
 end
 
 function Base.:*(r::ContinuumApproximation, s::Number)
     rs = get_function(r) * s
-    return ContinuumApproximation(rs, domain(r), rs, r.allowed, r.path, r.history)
+    return ContinuumApproximation(rs, domain(r), rs, r.allowed, r.path, r.history, r.status)
 end
 
 function Base.:*(r::DiscreteApproximation, s::Number)
     rs = get_function(r) * s
-    return DiscreteApproximation(r.data * s, domain(r), rs, r.test_index, r.allowed, r.history)
+    return DiscreteApproximation(r.data * s, domain(r), rs, r.test_index, r.allowed, r.history, r.status)
 end
 
 Base.:*(s::Union{Function,Number}, r::AbstractApproximation) = r * s
@@ -561,12 +703,12 @@ end
 
 function Base.:/(r::AbstractApproximation, g::Function)
     f(z) = r(z) / g(z)
-    return approximate(f, domain(r); method=typeof(get_function(r)))
+    return approximate(f, domain(r), get_function(r))
 end
 
 function Base.:/(r::Function, s::AbstractApproximation)
     f(z) = r(z) / s.fun(z)
-    return approximate(f, domain(s); method=typeof(s.fun))
+    return approximate(f, domain(s), s.fun)
 end
 
 Base.:/(r::AbstractApproximation, s::Number) = iszero(s) ? throw(DomainError("Division by zero")) : r * (1 / s)
@@ -575,5 +717,5 @@ Base.:/(r::Number, s::AbstractApproximation) = (z -> r) / s
 # composition
 function Base.:∘(f::Function, g::AbstractApproximation)
     # No domain checking is attempted.
-    return approximate(f ∘ g.fun, g.domain; method=typeof(g.fun))
+    return approximate(f ∘ g.fun, g.domain, g.fun)
 end
