@@ -32,3 +32,10 @@ r = approximate(f, unit_circle, max_iter=10)
 r = minimax(r, 20)
 errorplot(r, use_abs=false)
 ```
+
+## References
+
+```@bibliography
+Pages = ["minimax.md"]
+Canonical = false
+```

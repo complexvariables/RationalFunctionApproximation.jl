@@ -116,15 +116,18 @@ If you want to contribute to the package, please see [the guidelines](https://gi
 
 ## Contents
 
-* [Installation](@ref) describes the algorithms available for rational approximation.
+* [Installation](@ref) describes how to install the package.
 * [Algorithms](@ref) describes the algorithms available for rational approximation.
 * [Approximation on domains](@ref) shows how to approximate functions on different domains.
 * [Discrete data](@ref) shows how to approximate data given as points and values rather than as functions.
 * [Minimax approximation](@ref) explains the difference between the default approximation and minimax approximation.
 * [Usage from Python](@ref) shows how to use the package from Python.
 * [Functions and types](@ref) collects the documentation strings of the major package features.
+* [References](@ref references) collects the full bibliography.
 
 ## References
 
 ```@bibliography
+Pages = ["index.md"]
+Canonical = false
 ```

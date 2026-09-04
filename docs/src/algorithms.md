@@ -165,3 +165,10 @@ To what extent might these poles be suitable for a different function that has t
 s = approximate(x -> exp(abs(x)), unit_interval, ζ; degree=20)
 max_err(r)
 ```
+
+## References
+
+```@bibliography
+Pages = ["algorithms.md"]
+Canonical = false
+```
