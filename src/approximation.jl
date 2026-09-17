@@ -218,6 +218,8 @@ function test_points(r::ContinuumApproximation; with_parameters=false)
     return with_parameters ? (s, z) : z
 end
 
+test_points(r::DiscreteApproximation) = r.domain[r.test_index]
+
 #####
 ##### Documentation strings
 #####
@@ -463,12 +465,28 @@ julia> rewind(r, 10)
 Thiele{Float64, Float64} rational of type (5, 4) constructed on: Segment(-1.0, 1.0)
 ```
 """
-function rewind(r::AbstractApproximation, idx::Integer)
-    if isnothing(r.history)
-        @error("No convergence history exists.")
-    end
-    stop = ConvergenceStatus(:rewound, idx, r.history)
-    return typeof(r)(r.original, r.domain, r.history[idx].interpolant, r.allowed, r.path, r.history, stop)
+function rewind(r::ContinuumApproximation, idx::Integer)
+    stop = _rewind_status(r, idx)
+    return ContinuumApproximation(r.original, r.domain, copy(r.history[idx].interpolant),
+        r.allowed, r.path, r.history, stop)
+end
+
+function rewind(r::DiscreteApproximation, idx::Integer)
+    stop = _rewind_status(r, idx)
+    g = copy(r.history[idx].interpolant)
+    selected = [_is_selected_node(g, z) for z in r.domain]
+    return DiscreteApproximation(r.data, r.domain, g, BitVector(.!selected),
+        r.allowed, r.history, stop)
+end
+
+_is_selected_node(g::AbstractRationalInterpolant, z) =
+    any(==(convert(eltype(g), z)), nodes(g))
+
+function _rewind_status(r::AbstractApproximation, idx::Integer)
+    isnothing(r.history) && throw(ArgumentError("No convergence history exists"))
+    checkbounds(r.history, idx)
+    iterations = isnothing(r.status) ? length(r.history) : r.status.iterations
+    return ConvergenceStatus(:rewound, idx, iterations, r.history[idx].error)
 end
 
 """
@@ -535,20 +553,19 @@ See also [`convergenceplot`](@ref).
 function get_history(r::AbstractApproximation{T,S}; get_poles=!(r.allowed == true)) where {T,S}
     hist = r.history
     deg = Int[]
-    zp = Vector{complex(S)}[]
+    zp = Vector{complex(eltype(get_function(r)))}[]
     err = Float64[]
     allowed = BitVector[]
     best = 0
     for (idx, record) in enumerate(hist)
         fun = record.interpolant
         push!(deg, degree(fun))
-        res = []
         if get_poles && ismissing(record.poles)
-            record.poles, res = residues(fun)
+            record.poles = poles(fun)
         end
         push!(zp, coalesce(record.poles, []))
         if !(r.allowed == true)
-            allow = [r.allowed(z) || abs(R) < eps(S) for (z, R) in zip(zp[end], res)]
+            allow = [r.allowed(z) for z in zp[end]]
             push!(allowed, allow)
         else
             push!(allowed, fill(true, length(zp[end])))
@@ -558,6 +575,7 @@ function get_history(r::AbstractApproximation{T,S}; get_poles=!(r.allowed == tru
             best = idx
         end
     end
+    isnothing(r.status) || (best = r.status.best)
     return deg, err, zp, allowed, best
 end
 

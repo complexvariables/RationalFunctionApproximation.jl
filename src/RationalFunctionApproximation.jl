@@ -31,6 +31,8 @@ include("thiele.jl")
 export ArnoldiBasis, ArnoldiPolynomial, PartialFractions
 include("parfrac.jl")
 
+include("Quadratic_Thiele.jl")
+
 # legacy implementation of AAA
 export aaa
 include("aaa.jl")

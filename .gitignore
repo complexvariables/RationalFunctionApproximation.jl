@@ -4,6 +4,7 @@
 .DS_Store
 .vscode
 test/Manifest.toml
+test/qtcf_output/
 docs/node_modules
 *.cov
 benchmark/Manifest.toml
