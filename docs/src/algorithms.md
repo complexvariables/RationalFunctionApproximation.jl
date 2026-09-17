@@ -165,3 +165,10 @@ These poles might be suitable for a different function that has the same singula
 s = approximate(x -> exp(abs(x)), -1..1, ζ; degree=20)
 max_err(r)
 ```
+
+## References
+
+```@bibliography
+Pages = ["algorithms.md"]
+Canonical = false
+```

@@ -1,8 +1,8 @@
-import Pkg; Pkg.update();
 using RationalFunctionApproximation
 using Documenter, DocumenterVitepress
 using DocumenterCitations
 bib = CitationBibliography(joinpath(@__DIR__, "src", "refs.bib"))
+include(joinpath(@__DIR__, "citations.jl"))
 
 DocMeta.setdocmeta!(RationalFunctionApproximation, :DocTestSetup, :(using RationalFunctionApproximation); recursive=true)
 
@@ -26,6 +26,7 @@ makedocs(;
         "Minimax" => "minimax.md",
         "Usage from Python" => "python.md",
         "Functions" => "functions.md",
+        "References" => "references.md",
     ],
 )
 
