@@ -3,7 +3,7 @@
 You can download and install this package using the general registry:
 
 ```julia
-import Pkg; Pkg.add("RationalFunctionInterpolation")
+import Pkg; Pkg.add("RationalFunctionApproximation")
 ```
 
 If you are going to use domains other than real intervals and the unit circle, you should also install `ComplexRegions`:
